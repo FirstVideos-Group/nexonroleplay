@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-example – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 860px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-code"></i>
+    <div>
+        <h1>nxn-example <span>v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Ez a resource a <strong>Nexon FiveM boilerplate</strong>-je. Minden új script ebből indul ki – tartalmaz kliens/szerver kommunikációt, NUI panelt, értesítési rendszert és exportokat.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-example/
+├── fxmanifest.lua
+├── config.lua
+├── shared/shared.lua
+├── client/client.lua
+├── server/server.lua
+└── html/ (index.html, style.css, app.js)</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.NotifyDuration</td><td>4000</td><td>Értesítés megjelenési ideje (ms)</td></tr>
+        <tr><td>Config.ExampleText</td><td>'Hello Nexon!'</td><td>Alapértelmezett szöveg</td></tr>
+        <tr><td>Config.UI.position</td><td>'top-right'</td><td>Értesítések pozíciója</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Leírás</th></tr>
+        <tr><td>openUI()</td><td>client</td><td>Megnyitja a UI panelt</td></tr>
+        <tr><td>closeUI()</td><td>client</td><td>Bezárja a UI panelt</td></tr>
+        <tr><td>isUIOpen()</td><td>client</td><td>Visszaadja, hogy nyitva van-e a UI</td></tr>
+        <tr><td>sendNotify(msg)</td><td>client</td><td>Értesítést küld a játékosnak</td></tr>
+        <tr><td>notifyPlayer(src, msg)</td><td>server</td><td>Értesítést küld egy adott játékosnak</td></tr>
+        <tr><td>broadcastNotify(msg)</td><td>server</td><td>Értesítést küld minden játékosnak</td></tr>
+        <tr><td>openUIForPlayer(src)</td><td>server</td><td>Megnyitja a UI-t egy adott játékosnál</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Kliens (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Szerver (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Másik resource-ból</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- UI megnyitása
+exports['nxn-example']:openUI()
+
+-- UI bezárása
+exports['nxn-example']:closeUI()
+
+-- Ellenőrzés
+if exports['nxn-example']:isUIOpen() then
+    print('A panel nyitva van')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Értesítés küldése egy játékosnak (src = player source)
+exports['nxn-example']:notifyPlayer(src, 'Üdvözöllek a szerveren!')
+
+-- Broadcast minden játékosnak
+exports['nxn-example']:broadcastNotify('Szerver újraindul 5 perc múlva!')
+
+-- UI megnyitása egy játékosnál
+exports['nxn-example']:openUIForPlayer(src)</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Egy másik nxn-* resource-ból is hívható:
+-- client oldalon:
+exports['nxn-example']:openUI()
+
+-- server oldalon:
+exports['nxn-example']:notifyPlayer(source, 'Hello a másik resource-ból!')</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-example:server:doAction</td><td>Client → Server</td><td>Akció küldése a szervernek</td></tr>
+        <tr><td>nxn-example:server:openUIForPlayer</td><td>Client → Server</td><td>UI megnyitás kérése</td></tr>
+        <tr><td>nxn-example:client:notify</td><td>Server → Client</td><td>Értesítés megjelenítése</td></tr>
+        <tr><td>nxn-example:client:openUI</td><td>Server → Client</td><td>UI panel megnyitása</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
