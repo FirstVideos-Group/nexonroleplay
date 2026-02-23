@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-database – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+            --warn: #f0a040;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); font-family: 'Consolas', monospace; }
+        .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+        .badge.warn { background: var(--warn); color: #111; }
+        .badge.green { background: var(--success); color: #111; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .info-box { background: #1a1c2a; border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--muted); }
+        .info-box strong { color: var(--text); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-database"></i>
+    <div>
+        <h1>nxn-database <span>v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-database</strong> a Nexon szerver centrális adatbázis-kezelő resource-a. <strong>oxmysql</strong>-re épül, kezeli a játékos alapadatait (join, last_online, playtime, metadata), és bővíthető interfészt nyújt más <code>nxn-*</code> resource-oknak.</p>
+
+    <div class="info-box">
+        <strong>Dependency:</strong> <code>oxmysql</code> – a resource csak akkor indul el, ha az oxmysql fut.
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-database/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── server.lua
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése a konzolban</td></tr>
+        <tr><td>Config.IdentifierType</td><td>'license'</td><td>Azonosító típusa: license | steam | discord | ip</td></tr>
+        <tr><td>Config.PlayersTable</td><td>'nxn_players'</td><td>Játékos tábla neve az adatbázisban</td></tr>
+        <tr><td>Config.AutoMigrate</td><td>true</td><td>Automatikus tábla-létrehozás induláskor</td></tr>
+        <tr><td>Config.HeartbeatInterval</td><td>300</td><td>last_online frissítés másodpercenként (0 = kikapcs)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-database"></i> Adatbázis séma – nxn_players</h2>
+    <table>
+        <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
+        <tr><td>id</td><td>INT UNSIGNED AI</td><td>Belső azonosító</td></tr>
+        <tr><td>identifier</td><td>VARCHAR(60) UNIQUE</td><td>Játékos licensz / steam / discord azonosítója</td></tr>
+        <tr><td>name</td><td>VARCHAR(60)</td><td>Játékon belüli név (automatikusan frissül)</td></tr>
+        <tr><td>first_joined</td><td>DATETIME</td><td>Első csatlakozás időpontja</td></tr>
+        <tr><td>last_online</td><td>DATETIME</td><td>Utolsó aktív időpont</td></tr>
+        <tr><td>total_playtime</td><td>INT UNSIGNED</td><td>Összesített játékidő (másodpercben)</td></tr>
+        <tr><td>metadata</td><td>LONGTEXT (JSON)</td><td>Szabad JSON mező – más resource-ok adatai</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Leírás</th></tr>
+        <tr><td>getPlayer(src)</td><td>server</td><td>Cache-elt játékosadat visszaadása</td></tr>
+        <tr><td>getIdentifier(src)</td><td>server</td><td>Játékos identifier string</td></tr>
+        <tr><td>getAllPlayers()</td><td>server</td><td>Összes online játékos cache-e</td></tr>
+        <tr><td>getPlayerByIdentifier(ident, cb)</td><td>server</td><td>DB lekérdezés identifier alapján (async)</td></tr>
+        <tr><td>getMeta(src, key)</td><td>server</td><td>Metadata JSON mező olvasása kulcs szerint</td></tr>
+        <tr><td>setMeta(src, key, value)</td><td>server</td><td>Metadata JSON mező írása / frissítése</td></tr>
+        <tr><td>queryAllPlayers(cb)</td><td>server</td><td>Teljes játékoslista DB-ből (admin)</td></tr>
+        <tr><td>registerTable(resourceName, tableInfo)</td><td>server</td><td>Más resource saját tábláját regisztrálhatja</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">getPlayer</div>
+        <div class="tab" onclick="switchTab(this,'t2')">getMeta / setMeta</div>
+        <div class="tab" onclick="switchTab(this,'t3')">registerTable</div>
+        <div class="tab" onclick="switchTab(this,'t4')">queryAllPlayers</div>
+        <div class="tab" onclick="switchTab(this,'t5')">getPlayerByIdentifier</div>
+    </div>
+
+    <div class="tab-content active" id="t1">
+        <pre><code>-- Egy másik nxn-* resource server.lua-jában:
+local player = exports['nxn-database']:getPlayer(source)
+if player then
+    print('Játékos neve: ' .. player.name)
+    print('Azonosító: ' .. player.identifier)
+    print('Utoljára online: ' .. player.last_online)
+    print('Játékidő (s): ' .. player.total_playtime)
+end</code></pre>
+    </div>
+
+    <div class="tab-content" id="t2">
+        <pre><code>-- Metadata írása (pl. nxn-job resource)
+exports['nxn-database']:setMeta(source, 'job', { name = 'police', grade = 2 })
+
+-- Metadata olvasása
+local job = exports['nxn-database']:getMeta(source, 'job')
+if job then
+    print('Munkakör: ' .. job.name .. ' | Rang: ' .. job.grade)
+end</code></pre>
+    </div>
+
+    <div class="tab-content" id="t3">
+        <pre><code>-- Másik resource regisztrál egy saját táblát induláskor:
+AddEventHandler('onResourceStart', function(res)
+    if res ~= GetCurrentResourceName() then return end
+    exports['nxn-database']:registerTable(GetCurrentResourceName(), {
+        name = 'nxn_vehicles',
+        sql  = [[
+            CREATE TABLE IF NOT EXISTS `nxn_vehicles` (
+                `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `identifier` VARCHAR(60)  NOT NULL,
+                `plate`      VARCHAR(8)   NOT NULL UNIQUE,
+                `model`      VARCHAR(60)  NOT NULL,
+                PRIMARY KEY (`id`),
+                INDEX `idx_owner` (`identifier`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ]]
+    })
+end)</code></pre>
+    </div>
+
+    <div class="tab-content" id="t4">
+        <pre><code>-- Admin parancsban / script-ben:
+exports['nxn-database']:queryAllPlayers(function(rows)
+    for _, row in ipairs(rows) do
+        print(row.name, row.identifier, row.last_online)
+    end
+end)</code></pre>
+    </div>
+
+    <div class="tab-content" id="t5">
+        <pre><code>-- Offline játékos adatának lekérése:
+exports['nxn-database']:getPlayerByIdentifier('license:abc123', function(row)
+    if row then
+        print('Játékos megtalálva: ' .. row.name)
+    else
+        print('Nem található ilyen azonosítóval')
+    end
+end)</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-database:server:playerLoaded</td><td>Server → Server</td><td>Más resource-ok figyelhetik, mikor töltött be egy játékos (src, playerData)</td></tr>
+    </table>
+
+    <div class="info-box" style="margin-top:24px">
+        <strong>Más resource-ból figyelés:</strong>
+        <pre style="margin-top:10px"><code>AddEventHandler('nxn-database:server:playerLoaded', function(src, data)
+    print(('Betöltött: %s | id: %d'):format(data.name, data.id))
+end)</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug logok</h2>
+    <p>A <code>Config.Debug = true</code> beállítással részletes naplókat kapsz a konzolban minden DB-műveletről, cache-hozzáférésről és heartbeat-frissítésről. Éles szerveren kapcsold ki.</p>
+
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
