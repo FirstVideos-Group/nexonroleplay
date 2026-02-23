@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-needs – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+            --warn: #f0a040;
+            --danger: #f05b5b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); font-family: 'Consolas', monospace; }
+        .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+        .badge.warn { background: var(--warn); color: #111; }
+        .badge.green { background: var(--success); color: #111; }
+        .badge.danger { background: var(--danger); color: #fff; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .info-box { background: #1a1c2a; border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--muted); }
+        .info-box.warn { border-color: var(--warn); }
+        .info-box strong { color: var(--text); }
+        .flow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; font-size: 13px; color: var(--muted); }
+        .flow-step { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px; color: var(--text); }
+        .flow-arrow { color: var(--accent); font-size: 18px; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-heart-check"></i>
+    <div>
+        <h1>nxn-needs <span>v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-needs</strong> kezeli a játékos alapvető szükségleteit: éhség, szomjúság, stressz, fáradtság. Az adatokat az <code>nxn_needs</code> táblában tárolja, az <strong>nxn-database</strong> <code>registerTable</code> exportján keresztül regisztrálva. A HUD resource az exportokat és a kliens eventet használhatja a megjelenítéshez.</p>
+
+    <div class="info-box">
+        <strong>Függőségek:</strong> <code>oxmysql</code>, <code>nxn-database</code> – mindkettőnek futnia kell az nxn-needs előtt.
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-needs/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-git-fork"></i> Adatfolyam</h2>
+    <div class="flow">
+        <div class="flow-step">nxn-database:<br/>playerLoaded</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">LoadNeeds()<br/>(DB / új rekord)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">needsCache[src]<br/>feltöltve</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">SyncClient()<br/>kliens kap adatot</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">nxn-needs:<br/>client:updated<br/>(HUD figyeli)</div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.Needs.*</td><td>–</td><td>Szükségletek min/max/default értékei</td></tr>
+        <tr><td>Config.AutoDecay.enabled</td><td>true</td><td>Automatikus csökkentés/növekedés</td></tr>
+        <tr><td>Config.AutoDecay.interval</td><td>60</td><td>Tick intervallum másodpercben</td></tr>
+        <tr><td>Config.AutoDecay.rates.*</td><td>–</td><td>Szükségletek változási rátája/percenként</td></tr>
+        <tr><td>Config.NeedsTable</td><td>'nxn_needs'</td><td>DB tábla neve</td></tr>
+        <tr><td>Config.SaveInterval</td><td>300</td><td>Periodikus DB-mentés (mp), 0 = kikapcs</td></tr>
+        <tr><td>Config.DamageOnEmpty.enabled</td><td>true</td><td>HP csökkentés ha hunger/thirst = 0</td></tr>
+        <tr><td>Config.DamageOnEmpty.interval</td><td>10</td><td>Damage check intervallum (mp)</td></tr>
+        <tr><td>Config.DamageOnEmpty.amount</td><td>1</td><td>HP csökkentés mértéke</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-database"></i> Adatbázis séma – nxn_needs</h2>
+    <table>
+        <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
+        <tr><td>id</td><td>INT UNSIGNED AI</td><td>Belső azonosító</td></tr>
+        <tr><td>identifier</td><td>VARCHAR(60) UNIQUE</td><td>Játékos azonosítója (nxn-database-ből)</td></tr>
+        <tr><td>hunger</td><td>FLOAT</td><td>Éhség szint (0–100)</td></tr>
+        <tr><td>thirst</td><td>FLOAT</td><td>Szomjúság szint (0–100)</td></tr>
+        <tr><td>stress</td><td>FLOAT</td><td>Stressz szint (0–100)</td></tr>
+        <tr><td>fatigue</td><td>FLOAT</td><td>Fáradtság szint (0–100)</td></tr>
+        <tr><td>updated_at</td><td>DATETIME</td><td>Utolsó frissítés (auto)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Leírás</th></tr>
+        <tr><td>getNeeds(src)</td><td>server</td><td>Összes szükséglet visszaadása (cache)</td></tr>
+        <tr><td>getNeed(src, need)</td><td>server</td><td>Egy konkrét szükséglet értéke</td></tr>
+        <tr><td>setNeed(src, need, value)</td><td>server</td><td>Szükséglet beállítása (clamp + sync)</td></tr>
+        <tr><td>modifyNeed(src, need, amount)</td><td>server</td><td>Relatív módosítás (+ vagy -)</td></tr>
+        <tr><td>resetNeeds(src)</td><td>server</td><td>Visszaállítás alapértékekre</td></tr>
+        <tr><td>saveNeeds(src)</td><td>server</td><td>Azonnali DB-mentés</td></tr>
+        <tr><td>getLocalNeeds()</td><td>client</td><td>Lokális needs tábla (kliens)</td></tr>
+        <tr><td>getLocalNeed(need)</td><td>client</td><td>Egy konkrét szükséglet kliens oldalon</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Evés / ivás</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Stressz kezelés</div>
+        <div class="tab" onclick="switchTab(this,'t3')">HUD figyelés (kliens)</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Admin reset</div>
+        <div class="tab" onclick="switchTab(this,'t5')">getNeed ellenőrzés</div>
+    </div>
+
+    <div class="tab-content active" id="t1">
+        <pre><code>-- nxn-food resource server.lua-jában:
+-- Hamburger evése: hunger +35
+exports['nxn-needs']:modifyNeed(source, 'hunger', 35)
+
+-- Víz ivása: thirst +40
+exports['nxn-needs']:modifyNeed(source, 'thirst', 40)
+
+-- Pontos beállítás
+exports['nxn-needs']:setNeed(source, 'hunger', 100)</code></pre>
+    </div>
+
+    <div class="tab-content" id="t2">
+        <pre><code>-- Stressz növelése (pl. lövöldözés után):
+exports['nxn-needs']:modifyNeed(source, 'stress', 20)
+
+-- Stressz csökkentése (pl. masszázs után):
+exports['nxn-needs']:modifyNeed(source, 'stress', -30)
+
+-- Fáradtság lekérdezése döntéshozatalhoz:
+local fatigue = exports['nxn-needs']:getNeed(source, 'fatigue')
+if fatigue > 80 then
+    -- játékos lassabb legyen
+end</code></pre>
+    </div>
+
+    <div class="tab-content" id="t3">
+        <pre><code>-- nxn-hud client.lua-jában:
+-- Figyeli az nxn-needs frissítési eventjét:
+AddEventHandler('nxn-needs:client:updated', function(needs)
+    -- needs = { hunger, thirst, stress, fatigue }
+    SendNUIMessage({
+        action = 'updateNeeds',
+        needs  = needs
+    })
+end)
+
+-- Vagy direkt lekérdezés:
+local needs = exports['nxn-needs']:getLocalNeeds()
+local hunger = exports['nxn-needs']:getLocalNeed('hunger')</code></pre>
+    </div>
+
+    <div class="tab-content" id="t4">
+        <pre><code>-- Admin parancsban:
+RegisterCommand('resetneeds', function(src, args)
+    local target = tonumber(args[1]) or src
+    exports['nxn-needs']:resetNeeds(target)
+end, true)
+
+-- Ellenőrzés előtte:
+local needs = exports['nxn-needs']:getNeeds(target)
+if needs then
+    print('Hunger: ' .. needs.hunger .. ' | Thirst: ' .. needs.thirst)
+end</code></pre>
+    </div>
+
+    <div class="tab-content" id="t5">
+        <pre><code>-- Szerver oldalon – éhes-e a játékos?
+local hunger = exports['nxn-needs']:getNeed(source, 'hunger')
+if hunger ~= nil and hunger < 20 then
+    -- Figyelmeztető üzenet küldése
+    exports['nxn-database']:setMeta(source, 'isHungry', true)
+end</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-needs:server:requestSync</td><td>Client → Server</td><td>Kliens szinkronizációt kér (spawn után)</td></tr>
+        <tr><td>nxn-needs:client:sync</td><td>Server → Client</td><td>Szerver elküldi a friss needs adatokat</td></tr>
+        <tr><td>nxn-needs:client:applyDamage</td><td>Server → Client</td><td>HP csökkentés (hunger/thirst = 0)</td></tr>
+        <tr><td>nxn-needs:client:updated</td><td>Client (local event)</td><td>Lokális event – HUD figyelheti a frissülést</td></tr>
+        <tr><td>nxn-needs:server:needsLoaded</td><td>Server (local event)</td><td>Needs betöltve – más resource-ok figyelhetik</td></tr>
+    </table>
+
+    <div class="info-box warn" style="margin-top:24px">
+        <strong>HUD integráció:</strong> Az <code>nxn-hud</code> resource a <code>nxn-needs:client:updated</code> lokális eventet hallgatja, és az <code>exports['nxn-needs']:getLocalNeeds()</code> exportot hívja az adatok megjelenítéséhez. Szerver oldalon a <code>getNeeds(src)</code> / <code>getNeed(src, need)</code> exportok elérhetők bármely más resource-ból.
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug logok</h2>
+    <p>A <code>Config.Debug = true</code> beállítással részletes naplókat kapsz minden DB-műveletről, cache-hozzáférésről, AutoDecay tickről és szinkronizációról. Éles szerveren kapcsold ki.</p>
+
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
