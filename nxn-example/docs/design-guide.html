@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nexon Design System – Dizájn Útmutató</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            /* ── Nexon Design System – Core Tokens ── */
+            --nxn-bg:        #0e0f14;
+            --nxn-surface:   #16181f;
+            --nxn-surface2:  #1e2030;
+            --nxn-border:    #2a2d3a;
+            --nxn-accent:    #5b6af0;
+            --nxn-text:      #e4e6f0;
+            --nxn-muted:     #6b6f85;
+            --nxn-success:   #3ecf8e;
+            --nxn-danger:    #f05b5b;
+            --nxn-warning:   #f0b55b;
+            --nxn-radius:    10px;
+            --nxn-font:      'Inter', 'Segoe UI', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--nxn-bg);
+            color: var(--nxn-text);
+            font-family: var(--nxn-font);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        /* ─── Header ─── */
+        header {
+            background: var(--nxn-surface);
+            border-bottom: 1px solid var(--nxn-border);
+            padding: 22px 48px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header i { font-size: 28px; color: var(--nxn-accent); }
+        header h1 { font-size: 20px; font-weight: 700; }
+        header .badge {
+            background: var(--nxn-accent);
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: .04em;
+        }
+        header .subtitle {
+            color: var(--nxn-muted);
+            font-size: 13px;
+            margin-left: auto;
+        }
+
+        /* ─── Layout ─── */
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 73px);
+        }
+
+        /* ─── Sidebar ─── */
+        nav.sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            background: var(--nxn-surface);
+            border-right: 1px solid var(--nxn-border);
+            padding: 28px 0;
+            position: sticky;
+            top: 73px;
+            height: calc(100vh - 73px);
+            overflow-y: auto;
+        }
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--nxn-muted);
+            padding: 14px 24px 6px;
+        }
+        nav.sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 24px;
+            color: var(--nxn-muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color .15s, background .15s;
+            border-left: 3px solid transparent;
+        }
+        nav.sidebar a:hover { color: var(--nxn-text); background: var(--nxn-surface2); }
+        nav.sidebar a.active {
+            color: var(--nxn-accent);
+            border-left-color: var(--nxn-accent);
+            background: rgba(91,106,240,.08);
+        }
+        nav.sidebar a i { font-size: 16px; }
+
+        /* ─── Main content ─── */
+        main {
+            flex: 1;
+            padding: 48px 56px;
+            max-width: 960px;
+        }
+
+        /* ─── Sections ─── */
+        .section { margin-bottom: 64px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--nxn-border);
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        .section-header i { font-size: 22px; color: var(--nxn-accent); }
+        .section-header h2 { font-size: 20px; font-weight: 700; }
+        .section-header .tag {
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: rgba(91,106,240,.18);
+            color: var(--nxn-accent);
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--nxn-text);
+            margin: 28px 0 12px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        p { color: var(--nxn-muted); margin-bottom: 14px; }
+
+        /* ─── Color Palette ─── */
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .swatch {
+            border-radius: var(--nxn-radius);
+            overflow: hidden;
+            border: 1px solid var(--nxn-border);
+        }
+        .swatch-color { height: 64px; }
+        .swatch-info {
+            background: var(--nxn-surface);
+            padding: 8px 10px;
+        }
+        .swatch-name { font-size: 12px; font-weight: 600; color: var(--nxn-text); }
+        .swatch-var { font-size: 11px; color: var(--nxn-muted); font-family: monospace; }
+        .swatch-hex { font-size: 11px; color: var(--nxn-muted); font-family: monospace; }
+
+        /* ─── Typography ─── */
+        .type-sample {
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+        }
+        .type-sample .meta {
+            min-width: 160px;
+            font-size: 11px;
+            color: var(--nxn-muted);
+            font-family: monospace;
+            flex-shrink: 0;
+        }
+
+        /* ─── Spacing ─── */
+        .spacing-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+        .spacing-box {
+            background: rgba(91,106,240,.25);
+            border: 1px solid var(--nxn-accent);
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .spacing-label { font-size: 12px; color: var(--nxn-muted); font-family: monospace; }
+
+        /* ─── Radius ─── */
+        .radius-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .radius-box {
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .radius-box .r-val { font-size: 13px; font-weight: 600; color: var(--nxn-text); }
+        .radius-box .r-name { font-size: 11px; color: var(--nxn-muted); }
+
+        /* ─── Components ─── */
+        .component-demo {
+            background: var(--nxn-surface2);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            padding: 28px 24px;
+            margin-bottom: 14px;
+        }
+        .component-label {
+            font-size: 11px;
+            color: var(--nxn-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .nxn-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--nxn-accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--nxn-radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity .15s;
+            font-family: var(--nxn-font);
+        }
+        .nxn-btn:hover { opacity: .85; }
+        .nxn-btn.ghost {
+            background: transparent;
+            border: 1px solid var(--nxn-border);
+            color: var(--nxn-text);
+        }
+        .nxn-btn.danger-btn { background: var(--nxn-danger); }
+        .nxn-btn.success-btn { background: var(--nxn-success); color: #0e0f14; }
+        .nxn-btn-icon {
+            background: none;
+            border: none;
+            color: var(--nxn-muted);
+            font-size: 18px;
+            cursor: pointer;
+            transition: color .15s;
+            line-height: 1;
+            padding: 4px;
+        }
+        .nxn-btn-icon:hover { color: var(--nxn-text); }
+
+        /* Panel */
+        .nxn-panel {
+            width: 340px;
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            box-shadow: 0 8px 32px rgba(0,0,0,.55);
+        }
+        .nxn-panel__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--nxn-border);
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .nxn-panel__header i { margin-right: 6px; color: var(--nxn-accent); }
+        .nxn-panel__body { padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+        .nxn-label { font-size: 13px; color: var(--nxn-muted); }
+
+        /* Notifications */
+        .notif-list { display: flex; flex-direction: column; gap: 8px; }
+        .nxn-notify {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            border-left: 3px solid var(--nxn-accent);
+            border-radius: var(--nxn-radius);
+            font-size: 13px;
+            max-width: 320px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.4);
+        }
+        .nxn-notify.success { border-left-color: var(--nxn-success); }
+        .nxn-notify.danger  { border-left-color: var(--nxn-danger); }
+        .nxn-notify.warning { border-left-color: var(--nxn-warning); }
+        .nxn-notify i { font-size: 16px; color: var(--nxn-accent); flex-shrink: 0; }
+        .nxn-notify.success i { color: var(--nxn-success); }
+        .nxn-notify.danger i  { color: var(--nxn-danger); }
+        .nxn-notify.warning i { color: var(--nxn-warning); }
+
+        /* HUD */
+        .hud-demo {
+            position: relative;
+            background: linear-gradient(135deg, #12141a 0%, #1a1d28 100%);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            height: 220px;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding: 16px;
+            gap: 10px;
+        }
+        .hud-bar-group { display: flex; flex-direction: column; gap: 6px; }
+        .hud-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hud-bar i { font-size: 14px; color: var(--nxn-muted); width: 16px; }
+        .hud-bar-track {
+            width: 120px;
+            height: 5px;
+            background: rgba(255,255,255,.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .hud-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+        .fill-health  { background: var(--nxn-success); }
+        .fill-armor   { background: #5b9cf0; }
+        .fill-stamina { background: var(--nxn-warning); }
+        .hud-label { font-size: 11px; color: var(--nxn-muted); min-width: 26px; text-align: right; }
+
+        /* Minimap placeholder */
+        .hud-minimap {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(91,106,240,.12);
+            border: 2px solid var(--nxn-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-bottom: 0;
+            align-self: flex-end;
+        }
+        .hud-minimap i { font-size: 28px; color: var(--nxn-border); }
+
+        /* Input */
+        .nxn-input {
+            width: 100%;
+            background: var(--nxn-bg);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            padding: 10px 14px;
+            color: var(--nxn-text);
+            font-size: 13px;
+            font-family: var(--nxn-font);
+            outline: none;
+            transition: border-color .15s;
+        }
+        .nxn-input:focus { border-color: var(--nxn-accent); }
+        .input-group { display: flex; flex-direction: column; gap: 6px; max-width: 280px; }
+        .input-group label { font-size: 12px; color: var(--nxn-muted); font-weight: 600; }
+
+        /* Badge */
+        .badge-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .nxn-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .nxn-badge.accent  { background: rgba(91,106,240,.2);  color: var(--nxn-accent); }
+        .nxn-badge.success { background: rgba(62,207,142,.2);  color: var(--nxn-success); }
+        .nxn-badge.danger  { background: rgba(240,91,91,.2);   color: var(--nxn-danger); }
+        .nxn-badge.warning { background: rgba(240,181,91,.2);  color: var(--nxn-warning); }
+        .nxn-badge.neutral { background: rgba(107,111,133,.15); color: var(--nxn-muted); }
+
+        /* Divider */
+        .nxn-divider {
+            border: none;
+            border-top: 1px solid var(--nxn-border);
+            margin: 6px 0;
+        }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th {
+            background: var(--nxn-surface);
+            color: var(--nxn-accent);
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--nxn-border);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--nxn-border); color: var(--nxn-muted); }
+        td:first-child { color: var(--nxn-text); font-family: monospace; font-size: 13px; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Code */
+        pre {
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            padding: 16px 18px;
+            overflow-x: auto;
+            font-size: 12.5px;
+            margin-bottom: 16px;
+            line-height: 1.65;
+        }
+        code { color: var(--nxn-success); font-family: 'Cascadia Code', 'Fira Code', monospace; }
+        .code-comment { color: var(--nxn-muted); }
+        .code-key     { color: #c792ea; }
+        .code-str     { color: #f5a97f; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab {
+            padding: 8px 18px;
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--nxn-muted);
+            transition: color .15s;
+            font-family: var(--nxn-font);
+        }
+        .tab.active { color: var(--nxn-text); background: var(--nxn-surface2); }
+        .tab-content {
+            display: none;
+            background: var(--nxn-surface2);
+            border: 1px solid var(--nxn-border);
+            border-radius: 0 8px 8px 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .tab-content.active { display: block; }
+        .tab-content pre { margin-bottom: 0; background: transparent; border: none; padding: 0; }
+
+        /* Rules grid */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .rule-card {
+            background: var(--nxn-surface);
+            border: 1px solid var(--nxn-border);
+            border-radius: var(--nxn-radius);
+            padding: 16px;
+        }
+        .rule-card .rule-icon { font-size: 22px; color: var(--nxn-accent); margin-bottom: 8px; }
+        .rule-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--nxn-text); }
+        .rule-card p { font-size: 12px; margin: 0; }
+
+        /* DO / DON'T */
+        .do-dont {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .do-box, .dont-box {
+            border-radius: var(--nxn-radius);
+            padding: 16px;
+            border: 1px solid var(--nxn-border);
+        }
+        .do-box   { border-top: 3px solid var(--nxn-success); background: rgba(62,207,142,.05); }
+        .dont-box { border-top: 3px solid var(--nxn-danger);  background: rgba(240,91,91,.05); }
+        .do-box   .dd-title { color: var(--nxn-success); font-size: 12px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .dont-box .dd-title { color: var(--nxn-danger);  font-size: 12px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .dd-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        .dd-list li { font-size: 12px; color: var(--nxn-muted); padding-left: 14px; position: relative; }
+        .dd-list li::before { content: '–'; position: absolute; left: 0; }
+
+        /* Scroll */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--nxn-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--nxn-border); border-radius: 3px; }
+
+        /* Animations */
+        @keyframes nxnFadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Active section highlight */
+        .section { scroll-margin-top: 90px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="hgi hgi-stroke hgi-paint-board"></i>
+    <div>
+        <h1>Nexon Design System</h1>
+    </div>
+    <span class="badge">v1.0</span>
+    <span class="subtitle">Egységes dizájnnyelv minden nxn-* resource számára</span>
+</header>
+
+<div class="layout">
+
+    <!-- Sidebar navigation -->
+    <nav class="sidebar">
+        <div class="nav-section-title">Alapok</div>
+        <a href="#colors" class="active" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-paint-bucket"></i> Színpaletta
+        </a>
+        <a href="#typography" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-text-font"></i> Tipográfia
+        </a>
+        <a href="#spacing" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-grid"></i> Térköz & Rács
+        </a>
+        <a href="#icons" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-star"></i> Ikonok
+        </a>
+
+        <div class="nav-section-title">Komponensek</div>
+        <a href="#buttons" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-cursor-01"></i> Gombok
+        </a>
+        <a href="#panel" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-layout-01"></i> Panel / Menü
+        </a>
+        <a href="#notifications" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-notification-01"></i> Értesítések
+        </a>
+        <a href="#hud" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-dashboard-speed-01"></i> HUD
+        </a>
+        <a href="#inputs" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-pencil-edit-01"></i> Inputok
+        </a>
+        <a href="#badges" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-tag-01"></i> Badge-ek
+        </a>
+
+        <div class="nav-section-title">Irányelvek</div>
+        <a href="#rules" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Dizájn szabályok
+        </a>
+        <a href="#animations" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-magic-wand-01"></i> Animációk
+        </a>
+        <a href="#doctemplate" onclick="setActive(this)">
+            <i class="hgi hgi-stroke hgi-file-02"></i> Doku sablon
+        </a>
+    </nav>
+
+    <main>
+
+        <!-- ═══════════════ COLORS ═══════════════ -->
+        <section class="section" id="colors">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-paint-bucket"></i>
+                <h2>Színpaletta</h2>
+                <span class="tag">Design Tokens</span>
+            </div>
+            <p>Az összes nxn-* resource kizárólag ezeket a CSS változókat használja. Soha ne hard-code-olj hex értéket — mindig hivatkozz a tokenre.</p>
+
+            <h3>Alap tokenek</h3>
+            <div class="palette">
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#0e0f14"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Background</div>
+                        <div class="swatch-var">--nxn-bg</div>
+                        <div class="swatch-hex">#0e0f14</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#16181f"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Surface</div>
+                        <div class="swatch-var">--nxn-surface</div>
+                        <div class="swatch-hex">#16181f</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#1e2030"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Surface 2</div>
+                        <div class="swatch-var">--nxn-surface2</div>
+                        <div class="swatch-hex">#1e2030</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#2a2d3a"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Border</div>
+                        <div class="swatch-var">--nxn-border</div>
+                        <div class="swatch-hex">#2a2d3a</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#5b6af0"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Accent</div>
+                        <div class="swatch-var">--nxn-accent</div>
+                        <div class="swatch-hex">#5b6af0</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#e4e6f0"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Text</div>
+                        <div class="swatch-var">--nxn-text</div>
+                        <div class="swatch-hex">#e4e6f0</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#6b6f85"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Muted</div>
+                        <div class="swatch-var">--nxn-muted</div>
+                        <div class="swatch-hex">#6b6f85</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#3ecf8e"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Success</div>
+                        <div class="swatch-var">--nxn-success</div>
+                        <div class="swatch-hex">#3ecf8e</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#f05b5b"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Danger</div>
+                        <div class="swatch-var">--nxn-danger</div>
+                        <div class="swatch-hex">#f05b5b</div>
+                    </div>
+                </div>
+                <div class="swatch">
+                    <div class="swatch-color" style="background:#f0b55b"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Warning</div>
+                        <div class="swatch-var">--nxn-warning</div>
+                        <div class="swatch-hex">#f0b55b</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Átlátszósági rétegek</h3>
+            <p>Overlay elemekhez (pl. tooltip háttér, aktív menüpont) az accent szín átlátszó változatát használd:</p>
+            <pre><code><span class="code-comment">/* Ajánlott értékek */</span>
+rgba(91, 106, 240, 0.08)   <span class="code-comment">/* aktív nav elem háttér */</span>
+rgba(91, 106, 240, 0.18)   <span class="code-comment">/* badge háttér */</span>
+rgba(0, 0, 0, 0.40)        <span class="code-comment">/* notify árnyék */</span>
+rgba(0, 0, 0, 0.55)        <span class="code-comment">/* panel árnyék */</span></code></pre>
+        </section>
+
+        <!-- ═══════════════ TYPOGRAPHY ═══════════════ -->
+        <section class="section" id="typography">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-text-font"></i>
+                <h2>Tipográfia</h2>
+                <span class="tag">Font & Méretek</span>
+            </div>
+            <p>Az elsődleges font az <strong>Inter</strong>, fallback a <strong>Segoe UI</strong>. Minden font-size px alapú. Soha ne használj 12px-nél kisebb betűméretet.</p>
+
+            <div class="type-sample">
+                <div class="meta">20px / 700<br>Panel cím, H1</div>
+                <div style="font-size:20px;font-weight:700;">nxn-example Panel</div>
+            </div>
+            <div class="type-sample">
+                <div class="meta">18px / 700<br>Section header, H2</div>
+                <div style="font-size:18px;font-weight:700;color:#5b6af0;">Konfiguráció</div>
+            </div>
+            <div class="type-sample">
+                <div class="meta">15px / 600<br>Panel fejléc</div>
+                <div style="font-size:15px;font-weight:600;">Játékos profil</div>
+            </div>
+            <div class="type-sample">
+                <div class="meta">14px / 500<br>Gomb, body szöveg</div>
+                <div style="font-size:14px;font-weight:500;">Akció indítása</div>
+            </div>
+            <div class="type-sample">
+                <div class="meta">13px / 400<br>Értesítés, táblázat</div>
+                <div style="font-size:13px;color:#6b6f85;">Ez egy értesítési szöveg.</div>
+            </div>
+            <div class="type-sample">
+                <div class="meta">12px / 400<br>Label, meta</div>
+                <div style="font-size:12px;color:#6b6f85;">Konfiguráció → Config.Debug</div>
+            </div>
+            <div class="type-sample">
+                <div class="meta">11px / 600–700<br>Badge, tag, nav title</div>
+                <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b6f85;">ALAPOK</div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ SPACING ═══════════════ -->
+        <section class="section" id="spacing">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-grid"></i>
+                <h2>Térköz &amp; Rács</h2>
+                <span class="tag">Spacing</span>
+            </div>
+            <p>Minden padding és margin 4px-es rácsra épül. Az alábbi értékek az ajánlott tokenek.</p>
+
+            <div class="spacing-row"><div class="spacing-box" style="width:4px;height:20px;"></div><span class="spacing-label">4px – micro gap (ikonok, badge padding)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:6px;height:20px;"></div><span class="spacing-label">6px – gap xs (lista elemek, notify gap)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:8px;height:20px;"></div><span class="spacing-label">8px – gap sm (gomb icon gap, tab gap)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:10px;height:20px;"></div><span class="spacing-label">10px – gap md (notify padding v, btn row)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:14px;height:20px;"></div><span class="spacing-label">14px – gap lg (panel body gap, section gap)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:16px;height:20px;"></div><span class="spacing-label">16px – padding md (gomb, code block)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:18px;height:20px;"></div><span class="spacing-label">18px – padding panel (panel body/header)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:24px;height:20px;"></div><span class="spacing-label">24px – padding xl (nav sidebar)</span></div>
+            <div class="spacing-row"><div class="spacing-box" style="width:40px;height:20px;"></div><span class="spacing-label">40px – padding page (header, main)</span></div>
+
+            <h3>Border-radius</h3>
+            <div class="radius-row">
+                <div class="radius-box" style="border-radius:4px;">
+                    <span class="r-val">4px</span>
+                    <span class="r-name">micro</span>
+                </div>
+                <div class="radius-box" style="border-radius:6px;">
+                    <span class="r-val">6px</span>
+                    <span class="r-name">sm</span>
+                </div>
+                <div class="radius-box" style="border-radius:8px;">
+                    <span class="r-val">8px</span>
+                    <span class="r-name">tab</span>
+                </div>
+                <div class="radius-box" style="border-radius:10px;">
+                    <span class="r-val">10px</span>
+                    <span class="r-name">--nxn-radius</span>
+                </div>
+                <div class="radius-box" style="border-radius:20px;">
+                    <span class="r-val">20px</span>
+                    <span class="r-name">pill/badge</span>
+                </div>
+                <div class="radius-box" style="border-radius:50%;">
+                    <span class="r-val">50%</span>
+                    <span class="r-name">kör</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ ICONS ═══════════════ -->
+        <section class="section" id="icons">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-star"></i>
+                <h2>Ikonok</h2>
+                <span class="tag">HugeIcons</span>
+            </div>
+            <p>Kizárólag a <strong>HugeIcons</strong> ikonkönyvtárat használjuk (<code>https://use.hugeicons.com/font/icons.css</code>). Mindig a <code>hgi-stroke</code> stílust alkalmazd; a filled változatot csak kivételes esetben.</p>
+
+            <h3>Méretezés</h3>
+            <table>
+                <tr><th>Kontextus</th><th>Méret</th><th>Példa osztály</th></tr>
+                <tr><td>Gomb inline</td><td>16px</td><td><code>font-size: 16px</code></td></tr>
+                <tr><td>Panel fejléc</td><td>18–22px</td><td><code>font-size: 18px</code></td></tr>
+                <tr><td>Section header</td><td>22px</td><td><code>font-size: 22px</code></td></tr>
+                <tr><td>Header/logo</td><td>28px</td><td><code>font-size: 28px</code></td></tr>
+                <tr><td>HUD elem</td><td>14px</td><td><code>font-size: 14px</code></td></tr>
+                <tr><td>Értesítés</td><td>16px</td><td><code>font-size: 16px</code></td></tr>
+            </table>
+
+            <h3>Szín szabályok</h3>
+            <p>Az ikonok alapértelmezetten <code>--nxn-accent</code> színt kapnak header kontextusban. Gombokban fehérek. Muted kontextusban <code>--nxn-muted</code>.</p>
+            <div class="component-demo">
+                <div style="display:flex;gap:24px;align-items:center;">
+                    <span style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <i class="hgi hgi-stroke hgi-home-01" style="font-size:24px;color:#5b6af0;"></i>
+                        <span style="font-size:11px;color:#6b6f85;">accent</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <i class="hgi hgi-stroke hgi-settings-01" style="font-size:24px;color:#e4e6f0;"></i>
+                        <span style="font-size:11px;color:#6b6f85;">text</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <i class="hgi hgi-stroke hgi-cancel-01" style="font-size:24px;color:#6b6f85;"></i>
+                        <span style="font-size:11px;color:#6b6f85;">muted</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <i class="hgi hgi-stroke hgi-checkmark-circle-01" style="font-size:24px;color:#3ecf8e;"></i>
+                        <span style="font-size:11px;color:#6b6f85;">success</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <i class="hgi hgi-stroke hgi-alert-01" style="font-size:24px;color:#f05b5b;"></i>
+                        <span style="font-size:11px;color:#6b6f85;">danger</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <i class="hgi hgi-stroke hgi-alert-circle" style="font-size:24px;color:#f0b55b;"></i>
+                        <span style="font-size:11px;color:#6b6f85;">warning</span>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ BUTTONS ═══════════════ -->
+        <section class="section" id="buttons">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-cursor-01"></i>
+                <h2>Gombok</h2>
+                <span class="tag">Components</span>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Elsődleges gombok</div>
+                <div class="btn-row">
+                    <button class="nxn-btn"><i class="hgi hgi-stroke hgi-play"></i> Akció indítása</button>
+                    <button class="nxn-btn danger-btn"><i class="hgi hgi-stroke hgi-delete-01"></i> Törlés</button>
+                    <button class="nxn-btn success-btn"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Megerősítés</button>
+                    <button class="nxn-btn ghost"><i class="hgi hgi-stroke hgi-cancel-01"></i> Mégse</button>
+                    <button class="nxn-btn-icon"><i class="hgi hgi-stroke hgi-cancel-01"></i></button>
+                </div>
+            </div>
+
+            <h3>CSS osztályok</h3>
+            <table>
+                <tr><th>Osztály</th><th>Használat</th></tr>
+                <tr><td>.nxn-btn</td><td>Elsődleges akció gomb (accent háttér)</td></tr>
+                <tr><td>.nxn-btn.ghost</td><td>Másodlagos, keret nélküli stílus</td></tr>
+                <tr><td>.nxn-btn.danger-btn</td><td>Romboló/törlő akciók</td></tr>
+                <tr><td>.nxn-btn.success-btn</td><td>Megerősítő/elfogadó akciók</td></tr>
+                <tr><td>.nxn-btn-icon</td><td>Ikon-only gomb (fejléc bezárás, stb.)</td></tr>
+            </table>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab(this,'btn-css')">CSS</div>
+                <div class="tab" onclick="switchTab(this,'btn-html')">HTML</div>
+            </div>
+            <div class="tab-content active" id="btn-css">
+<pre><code>.nxn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--nxn-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--nxn-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+}</code></pre>
+            </div>
+            <div class="tab-content" id="btn-html">
+<pre><code>&lt;button class="nxn-btn"&gt;
+    &lt;i class="hgi hgi-stroke hgi-play"&gt;&lt;/i&gt; Akció indítása
+&lt;/button&gt;
+
+&lt;button class="nxn-btn ghost"&gt;Mégse&lt;/button&gt;
+
+&lt;button class="nxn-btn-icon"&gt;
+    &lt;i class="hgi hgi-stroke hgi-cancel-01"&gt;&lt;/i&gt;
+&lt;/button&gt;</code></pre>
+            </div>
+        </section>
+
+        <!-- ═══════════════ PANEL ═══════════════ -->
+        <section class="section" id="panel">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-layout-01"></i>
+                <h2>Panel / Menü</h2>
+                <span class="tag">Components</span>
+            </div>
+            <p>A menüpanel az összes FiveM NUI felület alapeleme. Mindig rendelkezzen fejléccel (ikon + cím + bezárógomb) és törzzsel.</p>
+
+            <div class="component-demo">
+                <div class="component-label">Panel Demo</div>
+                <div class="nxn-panel">
+                    <div class="nxn-panel__header">
+                        <span><i class="hgi hgi-stroke hgi-home-01"></i> nxn-example</span>
+                        <button class="nxn-btn-icon"><i class="hgi hgi-stroke hgi-cancel-01"></i></button>
+                    </div>
+                    <div class="nxn-panel__body">
+                        <p class="nxn-label">Ez egy Nexon boilerplate panel.</p>
+                        <button class="nxn-btn">
+                            <i class="hgi hgi-stroke hgi-play"></i> Akció indítása
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Struktúra</h3>
+            <pre><code>&lt;div class="nxn-panel"&gt;
+    &lt;div class="nxn-panel__header"&gt;
+        &lt;span&gt;&lt;i class="hgi hgi-stroke hgi-home-01"&gt;&lt;/i&gt; Panel Cím&lt;/span&gt;
+        &lt;button class="nxn-btn-icon"&gt;
+            &lt;i class="hgi hgi-stroke hgi-cancel-01"&gt;&lt;/i&gt;
+        &lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="nxn-panel__body"&gt;
+        <span class="code-comment">&lt;!-- Tartalom ide --&gt;</span>
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <h3>Méretek & pozícionálás</h3>
+            <table>
+                <tr><th>Tulajdonság</th><th>Érték</th></tr>
+                <tr><td>Szélesség</td><td>300–400px (tartalomtól függően)</td></tr>
+                <tr><td>Pozíció</td><td><code>position: fixed; top:50%; left:50%; transform:translate(-50%,-50%)</code></td></tr>
+                <tr><td>Megjelenés</td><td><code>animation: nxnFadeIn .2s ease</code></td></tr>
+                <tr><td>Box-shadow</td><td><code>0 8px 32px rgba(0,0,0,.55)</code></td></tr>
+            </table>
+        </section>
+
+        <!-- ═══════════════ NOTIFICATIONS ═══════════════ -->
+        <section class="section" id="notifications">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-notification-01"></i>
+                <h2>Értesítések</h2>
+                <span class="tag">Components</span>
+            </div>
+            <p>Az értesítések jobb felső sarokból csúsznak be, és <code>nxnFadeIn</code> animációval jelennek meg. A bal keret színe jelzi a típust.</p>
+
+            <div class="component-demo">
+                <div class="component-label">Értesítés típusok</div>
+                <div class="notif-list">
+                    <div class="nxn-notify">
+                        <i class="hgi hgi-stroke hgi-information-circle"></i>
+                        <span>Ez egy általános értesítés.</span>
+                    </div>
+                    <div class="nxn-notify success">
+                        <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>
+                        <span>Akció sikeresen végrehajtva.</span>
+                    </div>
+                    <div class="nxn-notify danger">
+                        <i class="hgi hgi-stroke hgi-alert-01"></i>
+                        <span>Hiba történt a folyamat során.</span>
+                    </div>
+                    <div class="nxn-notify warning">
+                        <i class="hgi hgi-stroke hgi-alert-circle"></i>
+                        <span>Figyelem: ez a művelet nem visszavonható.</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Típusok</h3>
+            <table>
+                <tr><th>Osztály</th><th>Bal keret</th><th>Ikon szín</th><th>Használat</th></tr>
+                <tr><td>.nxn-notify</td><td>--nxn-accent</td><td>accent</td><td>Általános infó</td></tr>
+                <tr><td>.nxn-notify.success</td><td>--nxn-success</td><td>success</td><td>Sikeres akció</td></tr>
+                <tr><td>.nxn-notify.danger</td><td>--nxn-danger</td><td>danger</td><td>Hiba, tiltott</td></tr>
+                <tr><td>.nxn-notify.warning</td><td>--nxn-warning</td><td>warning</td><td>Figyelmeztetés</td></tr>
+            </table>
+
+            <h3>HTML szerkezet</h3>
+            <pre><code>&lt;div id="notify-container"&gt;&lt;/div&gt;
+
+<span class="code-comment">/* JS – értesítés hozzáadása */</span>
+function showNotify(msg, type = '') {
+    const el = document.createElement('div');
+    el.className = `nxn-notify ${type}`;
+    el.innerHTML = `&lt;i class="hgi hgi-stroke hgi-information-circle"&gt;&lt;/i&gt;&lt;span&gt;${msg}&lt;/span&gt;`;
+    document.getElementById('notify-container').appendChild(el);
+    setTimeout(() => el.remove(), Config.NotifyDuration);
+}</code></pre>
+        </section>
+
+        <!-- ═══════════════ HUD ═══════════════ -->
+        <section class="section" id="hud">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-dashboard-speed-01"></i>
+                <h2>HUD</h2>
+                <span class="tag">In-Game UI</span>
+            </div>
+            <p>A HUD-ok mindig <code>position: fixed</code>-del helyezkednek el, <code>background: transparent</code>-tal, és sosem blokkolják a játékteret. A progress bar-ok 5px magasak, lekerekített végekkel.</p>
+
+            <div class="component-demo">
+                <div class="component-label">HUD Demo – bal alsó sarok</div>
+                <div class="hud-demo">
+                    <div class="hud-bar-group">
+                        <div class="hud-bar">
+                            <i class="hgi hgi-stroke hgi-heart-01" style="color:#3ecf8e;"></i>
+                            <div class="hud-bar-track"><div class="hud-bar-fill fill-health" style="width:78%"></div></div>
+                            <span class="hud-label">78</span>
+                        </div>
+                        <div class="hud-bar">
+                            <i class="hgi hgi-stroke hgi-shield-01" style="color:#5b9cf0;"></i>
+                            <div class="hud-bar-track"><div class="hud-bar-fill fill-armor" style="width:45%"></div></div>
+                            <span class="hud-label">45</span>
+                        </div>
+                        <div class="hud-bar">
+                            <i class="hgi hgi-stroke hgi-lightning-01" style="color:#f0b55b;"></i>
+                            <div class="hud-bar-track"><div class="hud-bar-fill fill-stamina" style="width:62%"></div></div>
+                            <span class="hud-label">62</span>
+                        </div>
+                    </div>
+                    <div class="hud-minimap">
+                        <i class="hgi hgi-stroke hgi-maps-01"></i>
+                    </div>
+                </div>
+            </div>
+
+            <h3>HUD irányelvek</h3>
+            <table>
+                <tr><th>Szabály</th><th>Részlet</th></tr>
+                <tr><td>Háttér</td><td>Mindig <code>background: transparent</code> a body-n</td></tr>
+                <tr><td>Bar magasság</td><td>4–6px, <code>border-radius: 3px</code></td></tr>
+                <tr><td>Ikon méret</td><td>14px, <code>--nxn-muted</code> alapszín</td></tr>
+                <tr><td>Pozíció</td><td><code>position: fixed</code>, sarokban elhelyezve</td></tr>
+                <tr><td>Animáció</td><td>Értékváltozás: <code>transition: width .3s</code></td></tr>
+                <tr><td>Z-index</td><td>HUD: 100–999, Notify: 9999, Modal: 10000+</td></tr>
+            </table>
+        </section>
+
+        <!-- ═══════════════ INPUTS ═══════════════ -->
+        <section class="section" id="inputs">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-pencil-edit-01"></i>
+                <h2>Inputok</h2>
+                <span class="tag">Components</span>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Input mezők</div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                    <div class="input-group">
+                        <label>Játékos neve</label>
+                        <input class="nxn-input" type="text" placeholder="pl. NexonPlayer_01" />
+                    </div>
+                    <div class="input-group">
+                        <label>Összeg</label>
+                        <input class="nxn-input" type="number" placeholder="0" />
+                    </div>
+                </div>
+            </div>
+
+            <pre><code>&lt;div class="input-group"&gt;
+    &lt;label&gt;Mező neve&lt;/label&gt;
+    &lt;input class="nxn-input" type="text" placeholder="..." /&gt;
+&lt;/div&gt;
+
+<span class="code-comment">/* CSS */</span>
+.nxn-input {
+    background: var(--nxn-bg);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 10px 14px;
+    color: var(--nxn-text);
+    font-size: 13px;
+}
+.nxn-input:focus { border-color: var(--nxn-accent); }</code></pre>
+        </section>
+
+        <!-- ═══════════════ BADGES ═══════════════ -->
+        <section class="section" id="badges">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-tag-01"></i>
+                <h2>Badge-ek</h2>
+                <span class="tag">Components</span>
+            </div>
+
+            <div class="component-demo">
+                <div class="badge-row">
+                    <span class="nxn-badge accent">Aktív</span>
+                    <span class="nxn-badge success">Online</span>
+                    <span class="nxn-badge danger">Offline</span>
+                    <span class="nxn-badge warning">Pending</span>
+                    <span class="nxn-badge neutral">Ismeretlen</span>
+                </div>
+            </div>
+
+            <pre><code>&lt;span class="nxn-badge accent"&gt;Aktív&lt;/span&gt;
+&lt;span class="nxn-badge success"&gt;Online&lt;/span&gt;
+&lt;span class="nxn-badge danger"&gt;Offline&lt;/span&gt;
+&lt;span class="nxn-badge warning"&gt;Pending&lt;/span&gt;
+&lt;span class="nxn-badge neutral"&gt;Ismeretlen&lt;/span&gt;</code></pre>
+        </section>
+
+        <!-- ═══════════════ RULES ═══════════════ -->
+        <section class="section" id="rules">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>
+                <h2>Dizájn szabályok</h2>
+                <span class="tag">Guidelines</span>
+            </div>
+
+            <div class="rules-grid">
+                <div class="rule-card">
+                    <div class="rule-icon"><i class="hgi hgi-stroke hgi-paint-bucket"></i></div>
+                    <h4>Csak design tokenek</h4>
+                    <p>Soha ne írj hard-coded hex vagy rgb értéket – mindig <code>var(--nxn-*)</code> tokent használj.</p>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-icon"><i class="hgi hgi-stroke hgi-star"></i></div>
+                    <h4>Csak HugeIcons</h4>
+                    <p>Más ikonkönyvtár (FontAwesome, Material stb.) nem megengedett. Mindig <code>hgi-stroke</code> stílus.</p>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-icon"><i class="hgi hgi-stroke hgi-layout-01"></i></div>
+                    <h4>Moduláris UI</h4>
+                    <p>Minden komponens önállóan újrafelhasználható – panel, notify, badge, input saját CSS osztállyal rendelkezik.</p>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-icon"><i class="hgi hgi-stroke hgi-layers-01"></i></div>
+                    <h4>Réteg sorrend</h4>
+                    <p>HUD: z-index 100–999, értesítés: 9999, modal/panel: 10000+. Soha ne keverj z-index szinteket.</p>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-icon"><i class="hgi hgi-stroke hgi-magic-wand-01"></i></div>
+                    <h4>Animáció</h4>
+                    <p>Megjelenés: <code>nxnFadeIn .2s ease</code>. Hover: <code>opacity/color .15s</code>. Nincs backdrop-filter.</p>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-icon"><i class="hgi hgi-stroke hgi-link-01"></i></div>
+                    <h4>Export kompatibilitás</h4>
+                    <p>Minden resource exportálja UI-függvényeit. Más nxn-* resource-ok ezeket szabadon hívhatják.</p>
+                </div>
+            </div>
+
+            <h3>Do / Don't</h3>
+            <div class="do-dont">
+                <div class="do-box">
+                    <div class="dd-title"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Helyes</div>
+                    <ul class="dd-list">
+                        <li>Használj <code>var(--nxn-accent)</code> tokent</li>
+                        <li>Minden panel rendelkezzen fejléccel</li>
+                        <li>HugeIcons stroke stílussal</li>
+                        <li>nxnFadeIn animáció megjelenésnél</li>
+                        <li>4px rács alapú margók és paddingek</li>
+                        <li>Exportok minden resource-hoz</li>
+                    </ul>
+                </div>
+                <div class="dont-box">
+                    <div class="dd-title"><i class="hgi hgi-stroke hgi-cancel-circle"></i> Helytelen</div>
+                    <ul class="dd-list">
+                        <li>Hard-coded színértékek (<code>#5b6af0</code> közvetlenül)</li>
+                        <li>backdrop-filter használata</li>
+                        <li>Más ikonkönyvtár (FA, MDI stb.)</li>
+                        <li>Framework (ESX, QBCore) integráció alapból</li>
+                        <li>Véletlenszerű z-index értékek</li>
+                        <li>Egységesítő CSS token nélküli saját stílus</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ ANIMATIONS ═══════════════ -->
+        <section class="section" id="animations">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-magic-wand-01"></i>
+                <h2>Animációk</h2>
+                <span class="tag">Motion</span>
+            </div>
+            <p>Az összes Nexon animáció rövid (max. 300ms) és minimális. A <code>nxnFadeIn</code> az egyetlen globálisan kötelező keyframe.</p>
+
+            <table>
+                <tr><th>Animáció</th><th>Időtartam</th><th>Használat</th></tr>
+                <tr><td>nxnFadeIn</td><td>.2s ease</td><td>Panel, értesítés, modal megjelenése</td></tr>
+                <tr><td>opacity transition</td><td>.15s</td><td>Gomb hover, ikon hover</td></tr>
+                <tr><td>color transition</td><td>.15s</td><td>Nav link hover, btn-icon hover</td></tr>
+                <tr><td>width transition</td><td>.3s</td><td>HUD progress bar értékváltozás</td></tr>
+                <tr><td>border-color transition</td><td>.15s</td><td>Input focus</td></tr>
+            </table>
+
+            <pre><code>@keyframes nxnFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+<span class="code-comment">/* Megjelenő elemeken */</span>
+.nxn-panel, .nxn-notify {
+    animation: nxnFadeIn .2s ease;
+}</code></pre>
+        </section>
+
+        <!-- ═══════════════ DOC TEMPLATE ═══════════════ -->
+        <section class="section" id="doctemplate">
+            <div class="section-header">
+                <i class="hgi hgi-stroke hgi-file-02"></i>
+                <h2>Dokumentáció sablon</h2>
+                <span class="tag">Template</span>
+            </div>
+            <p>Minden <code>nxn-*</code> resource-hoz kötelező egy <code>docs/index.html</code> dokumentáció. Az alábbi struktúrát és stílusvariánsokat kell követni.</p>
+
+            <h3>Kötelező szekciók</h3>
+            <table>
+                <tr><th>Szekció</th><th>Tartalom</th></tr>
+                <tr><td>Header</td><td>Resource neve, verziószám, HugeIcons ikon</td></tr>
+                <tr><td>Bevezető</td><td>Rövid leírás, mire való a script</td></tr>
+                <tr><td>Fájlstruktúra</td><td><code>pre/code</code> blokkban könyvtárfa</td></tr>
+                <tr><td>Konfiguráció</td><td>Táblázat: kulcs / alapértelmezett / leírás</td></tr>
+                <tr><td>Exportok</td><td>Táblázat: export neve / oldal / leírás</td></tr>
+                <tr><td>Kód példák</td><td>Tab-os kód snippet (Kliens / Szerver / Cross-resource)</td></tr>
+                <tr><td>Net Events</td><td>Táblázat: event neve / irány / leírás</td></tr>
+            </table>
+
+            <h3>Minimális sablon boilerplate</h3>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab(this,'doc-head')">Head</div>
+                <div class="tab" onclick="switchTab(this,'doc-body')">Body struktúra</div>
+                <div class="tab" onclick="switchTab(this,'doc-css')">CSS változók</div>
+            </div>
+            <div class="tab-content active" id="doc-head">
+<pre><code>&lt;head&gt;
+    &lt;meta charset="UTF-8"/&gt;
+    &lt;title&gt;nxn-SCRIPTNAME – Dokumentáció&lt;/title&gt;
+    &lt;link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/&gt;
+    &lt;style&gt;
+        <span class="code-comment">/* Design tokenek – KÖTELEZŐ */</span>
+        :root {
+            --accent: #5b6af0;  --bg: #0e0f14;
+            --surface: #16181f; --border: #2a2d3a;
+            --text: #e4e6f0;    --muted: #6b6f85;
+            --success: #3ecf8e;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;</code></pre>
+            </div>
+            <div class="tab-content" id="doc-body">
+<pre><code>&lt;header&gt;
+    &lt;i class="hgi hgi-stroke hgi-code"&gt;&lt;/i&gt;
+    &lt;div&gt;&lt;h1&gt;nxn-SCRIPTNAME &lt;span&gt;v1.0.0&lt;/span&gt;&lt;/h1&gt;&lt;/div&gt;
+&lt;/header&gt;
+&lt;main&gt;
+    &lt;p&gt;Rövid leírás...&lt;/p&gt;
+    &lt;h2&gt;&lt;i class="hgi hgi-stroke hgi-folder-02"&gt;&lt;/i&gt; Fájlstruktúra&lt;/h2&gt;
+    &lt;pre&gt;&lt;code&gt;...&lt;/code&gt;&lt;/pre&gt;
+    &lt;h2&gt;&lt;i class="hgi hgi-stroke hgi-settings-01"&gt;&lt;/i&gt; Konfiguráció&lt;/h2&gt;
+    &lt;table&gt;...&lt;/table&gt;
+    &lt;h2&gt;&lt;i class="hgi hgi-stroke hgi-export-01"&gt;&lt;/i&gt; Exportok&lt;/h2&gt;
+    &lt;table&gt;...&lt;/table&gt;
+    &lt;h2&gt;&lt;i class="hgi hgi-stroke hgi-code-circle"&gt;&lt;/i&gt; Példák&lt;/h2&gt;
+    &lt;div class="tabs"&gt;...&lt;/div&gt;
+    &lt;h2&gt;&lt;i class="hgi hgi-stroke hgi-chat-01"&gt;&lt;/i&gt; Net Events&lt;/h2&gt;
+    &lt;table&gt;...&lt;/table&gt;
+&lt;/main&gt;</code></pre>
+            </div>
+            <div class="tab-content" id="doc-css">
+<pre><code><span class="code-comment">/* Dokumentáció CSS tokenek – azonos az in-game tokenekkel */</span>
+:root {
+    --accent:  #5b6af0;  <span class="code-comment">/* = --nxn-accent  */</span>
+    --bg:      #0e0f14;  <span class="code-comment">/* = --nxn-bg      */</span>
+    --surface: #16181f;  <span class="code-comment">/* = --nxn-surface */</span>
+    --border:  #2a2d3a;  <span class="code-comment">/* = --nxn-border  */</span>
+    --text:    #e4e6f0;  <span class="code-comment">/* = --nxn-text    */</span>
+    --muted:   #6b6f85;  <span class="code-comment">/* = --nxn-muted   */</span>
+    --success: #3ecf8e;  <span class="code-comment">/* = --nxn-success */</span>
+}</code></pre>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    function switchTab(el, id) {
+        const parent = el.closest('.section') || document;
+        const allTabs = el.parentElement.querySelectorAll('.tab');
+        const allContents = el.parentElement.nextElementSibling
+            ? Array.from(document.querySelectorAll('.tab-content'))
+                .filter(c => el.parentElement.nextElementSibling === c ||
+                    el.parentElement.parentElement.contains(c))
+            : [];
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+
+    function setActive(link) {
+        document.querySelectorAll('nav.sidebar a').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+    }
+
+    // Aktív nav link automatikus frissítése scrollnál
+    const sections = document.querySelectorAll('.section');
+    const navLinks = document.querySelectorAll('nav.sidebar a');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(sec => {
+            const top = sec.getBoundingClientRect().top;
+            if (top <= 110) current = sec.id;
+        });
+        navLinks.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    });
+</script>
+</body>
+</html>
