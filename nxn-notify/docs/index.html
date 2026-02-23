@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-notify – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --surface2: #1e2030;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+            --danger: #f05b5b;
+            --warning: #f0b55b;
+            --radius: 10px;
+            --font: 'Inter', 'Segoe UI', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.7; font-size: 14px; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; line-height: 1.65; }
+        code { color: var(--success); font-family: 'Consolas', monospace; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        tr:last-child td { border-bottom: none; }
+        .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-right: 4px; vertical-align: middle; }
+        .badge-accent  { background: rgba(91,106,240,.2);  color: var(--accent); }
+        .badge-success { background: rgba(62,207,142,.2);  color: var(--success); }
+        .badge-danger  { background: rgba(240,91,91,.2);   color: var(--danger); }
+        .badge-warning { background: rgba(240,181,91,.2);  color: var(--warning); }
+        .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: var(--surface2); }
+        .tab-content { display: none; background: var(--surface2); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; margin-bottom: 16px; }
+        .tab-content.active { display: block; }
+        .info-box { background: #1a1c2a; border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--muted); }
+        .info-box strong { color: var(--text); }
+
+        /* ── Elonezet ── */
+        .preview-wrap {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .preview-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin-bottom: 8px; }
+        .nxn-notify-preview {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--radius);
+            max-width: 320px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .nxn-notify-preview.success { border-left-color: var(--success); }
+        .nxn-notify-preview.danger  { border-left-color: var(--danger); }
+        .nxn-notify-preview.warning { border-left-color: var(--warning); }
+        .nxn-notify-preview i { font-size: 16px; color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+        .nxn-notify-preview.success i { color: var(--success); }
+        .nxn-notify-preview.danger  i { color: var(--danger); }
+        .nxn-notify-preview.warning i { color: var(--warning); }
+        .nxn-notify-preview__body { display: flex; flex-direction: column; gap: 2px; }
+        .nxn-notify-preview__title { font-size: 12px; font-weight: 700; color: var(--text); }
+        .nxn-notify-preview__msg   { font-size: 13px; color: var(--muted); line-height: 1.5; }
+        .nxn-notify-preview__bar   { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); width: 60%; border-radius: 0; }
+        .nxn-notify-preview.success .nxn-notify-preview__bar { background: var(--success); }
+        .nxn-notify-preview.danger  .nxn-notify-preview__bar { background: var(--danger); }
+        .nxn-notify-preview.warning .nxn-notify-preview__bar { background: var(--warning); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-notification-01"></i>
+    <div><h1>nxn-notify <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-notify</strong> a Nexon szerver vizuális értesítési rendszere. Minden más <code>nxn-*</code> resource ezen keresztül jelenít meg értesítéseket – szerver- és kliens-exportok egyaránt elérhetők. A megjelenés a Nexon Design System notification komponensét követi.</p>
+
+    <div class="info-box">
+        <strong>Nincsenek külső függőségek</strong> – az nxn-notify önállóan fut, bármely más resource meghívhatja.
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-eye"></i> Előnézet</h2>
+    <div class="preview-wrap">
+        <div class="preview-label">Értesítés típusok</div>
+        <div class="nxn-notify-preview">
+            <i class="hgi hgi-stroke hgi-information-circle"></i>
+            <div class="nxn-notify-preview__body">
+                <div class="nxn-notify-preview__title">Értesítés</div>
+                <div class="nxn-notify-preview__msg">Ez egy általános értesítés.</div>
+            </div>
+            <div class="nxn-notify-preview__bar"></div>
+        </div>
+        <div class="nxn-notify-preview success">
+            <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>
+            <div class="nxn-notify-preview__body">
+                <div class="nxn-notify-preview__title">Sikeres</div>
+                <div class="nxn-notify-preview__msg">A művelet sikeresen végrehajtva.</div>
+            </div>
+            <div class="nxn-notify-preview__bar"></div>
+        </div>
+        <div class="nxn-notify-preview danger">
+            <i class="hgi hgi-stroke hgi-alert-01"></i>
+            <div class="nxn-notify-preview__body">
+                <div class="nxn-notify-preview__title">Hiba</div>
+                <div class="nxn-notify-preview__msg">Hiba történt a folyamat során.</div>
+            </div>
+            <div class="nxn-notify-preview__bar"></div>
+        </div>
+        <div class="nxn-notify-preview warning">
+            <i class="hgi hgi-stroke hgi-alert-circle"></i>
+            <div class="nxn-notify-preview__body">
+                <div class="nxn-notify-preview__title">Figyelmeztetés</div>
+                <div class="nxn-notify-preview__msg">Figyelem: ez a művelet nem visszavonható.</div>
+            </div>
+            <div class="nxn-notify-preview__bar"></div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-notify/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.Duration</td><td>4000</td><td>Megjelenési idő milliszekundumban</td></tr>
+        <tr><td>Config.MaxVisible</td><td>5</td><td>Max egyidejű értesítések száma</td></tr>
+        <tr><td>Config.Position</td><td>'top-right'</td><td>Pozíció: top-right | top-left | bottom-right | bottom-left</td></tr>
+        <tr><td>Config.SlideFrom</td><td>nil</td><td>Animáció iránya (nil = auto). right | left | top | bottom</td></tr>
+        <tr><td>Config.Sound.enabled</td><td>false</td><td>Hangjelzés értesítésnél</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Leírás</th></tr>
+        <tr><td>notify(src, msg, type, dur, title)</td><td>server</td><td>Értesítés küldése egy játékosnak</td></tr>
+        <tr><td>info(src, msg, dur)</td><td>server</td><td>Info értesítés küldése</td></tr>
+        <tr><td>success(src, msg, dur)</td><td>server</td><td>Siker értesítés küldése</td></tr>
+        <tr><td>danger(src, msg, dur)</td><td>server</td><td>Hiba értesítés küldése</td></tr>
+        <tr><td>warning(src, msg, dur)</td><td>server</td><td>Figyelmeztetés küldése</td></tr>
+        <tr><td>broadcast(msg, type, dur, title)</td><td>server</td><td>Broadcast minden online játékosnak</td></tr>
+        <tr><td>notify(msg, type, dur, title)</td><td>client</td><td>Értesítés megjelenítése kliens oldalon</td></tr>
+        <tr><td>info(msg, dur)</td><td>client</td><td>Info értesítés kliens oldalon</td></tr>
+        <tr><td>success(msg, dur)</td><td>client</td><td>Siker értesítés kliens oldalon</td></tr>
+        <tr><td>danger(msg, dur)</td><td>client</td><td>Hiba értesítés kliens oldalon</td></tr>
+        <tr><td>warning(msg, dur)</td><td>client</td><td>Figyelmeztetés kliens oldalon</td></tr>
+        <tr><td>sendRaw(data)</td><td>client</td><td>Közvetlen NUI üzenet (haladó)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Szerver → Játékos</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Broadcast</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Kliens oldal</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Egyedi cím + időtartam</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- Bármely nxn-* resource server.lua-jából:
+exports['nxn-notify']:success(source, 'Autó sikeresen garázsba helyezve!')
+exports['nxn-notify']:danger(source, 'Nincs elég pénzed!')
+exports['nxn-notify']:warning(source, 'Figyelj, alacsony az életed!')
+exports['nxn-notify']:info(source, 'A szerver újraindul 5 perc múlva.')
+
+-- Általános típus-választós hívás:
+exports['nxn-notify']:notify(source, 'Üzenet szöveg', 'success')</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Minden online játékosnak egyszerre:
+exports['nxn-notify']:broadcast('A szerver újraindul 5 perc múlva!', 'warning')
+exports['nxn-notify']:broadcast('Esemény kezdődik!', 'info', 6000)</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Kliens oldali resource-ból (pl. nxn-hud client.lua):
+exports['nxn-notify']:success('Sikeresen bejelentkeztél!')
+exports['nxn-notify']:danger('Éhes vagy, egyél valamit!')
+
+-- Ellenőrzés után:
+local needs = exports['nxn-needs']:getLocalNeeds()
+if needs.hunger < 20 then
+    exports['nxn-notify']:warning('Nagyon éhes vagy!')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- Egyedi cím és időtartam megadása:
+exports['nxn-notify']:notify(source, 'Megkaptad a rendőr munkakört.', 'success', 6000, 'Munkakör')
+
+-- Kliens oldalon:
+exports['nxn-notify']:notify('Elkészült a járműved.', 'info', 5000, 'Garázs')</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-notify:client:show</td><td>Server → Client</td><td>Értesítés megjelenítése egy játékosnál (vagy -1 = broadcast)</td></tr>
+    </table>
+
+    <div class="info-box" style="margin-top:24px">
+        <strong>Típusok és ikonok:</strong>
+        <table style="margin-top:10px;margin-bottom:0">
+            <tr><th>Típus</th><th>Bal keret</th><th>Ikon</th><th>Alapértelmezett cím</th></tr>
+            <tr><td><span class="badge badge-accent">info</span></td><td style="color:var(--accent)">--nxn-accent</td><td>hgi-information-circle</td><td>Értesítés</td></tr>
+            <tr><td><span class="badge badge-success">success</span></td><td style="color:var(--success)">--nxn-success</td><td>hgi-checkmark-circle-01</td><td>Sikeres</td></tr>
+            <tr><td><span class="badge badge-danger">danger</span></td><td style="color:var(--danger)">--nxn-danger</td><td>hgi-alert-01</td><td>Hiba</td></tr>
+            <tr><td><span class="badge badge-warning">warning</span></td><td style="color:var(--warning)">--nxn-warning</td><td>hgi-alert-circle</td><td>Figyelmeztetés</td></tr>
+        </table>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug logok</h2>
+    <p>A <code>Config.Debug = true</code> beállítással részletes naplókat kapsz minden értesítés-küldésről, net event fogadásról és NUI üzenetről. Éles szerveren kapcsold ki.</p>
+
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

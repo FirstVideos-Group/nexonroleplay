@@ -1,0 +1,182 @@
+/* ============================================================
+   nxn-notify | style.css
+   Nexon Design System tokenek alapjan
+   ============================================================ */
+
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: var(--nxn-font);
+}
+
+/* ── Container poziciok ───────────────────────────────────── */
+
+#notify-container {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+#notify-container.pos-top-right {
+    top: 20px;
+    right: 20px;
+    align-items: flex-end;
+}
+#notify-container.pos-top-left {
+    top: 20px;
+    left: 20px;
+    align-items: flex-start;
+}
+#notify-container.pos-bottom-right {
+    bottom: 20px;
+    right: 20px;
+    align-items: flex-end;
+    flex-direction: column-reverse;
+}
+#notify-container.pos-bottom-left {
+    bottom: 20px;
+    left: 20px;
+    align-items: flex-start;
+    flex-direction: column-reverse;
+}
+
+/* ── Notify elem ──────────────────────────────────────────── */
+
+.nxn-notify {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-left: 3px solid var(--nxn-accent);
+    border-radius: var(--nxn-radius);
+    min-width: 260px;
+    max-width: 320px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    pointer-events: none;
+    animation: nxnSlideIn .2s ease forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.nxn-notify.success { border-left-color: var(--nxn-success); }
+.nxn-notify.danger  { border-left-color: var(--nxn-danger); }
+.nxn-notify.warning { border-left-color: var(--nxn-warning); }
+
+/* ── Notify tartalom ──────────────────────────────────────── */
+
+.nxn-notify__icon {
+    font-size: 16px;
+    color: var(--nxn-accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.nxn-notify.success .nxn-notify__icon { color: var(--nxn-success); }
+.nxn-notify.danger  .nxn-notify__icon { color: var(--nxn-danger); }
+.nxn-notify.warning .nxn-notify__icon { color: var(--nxn-warning); }
+
+.nxn-notify__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.nxn-notify__title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--nxn-text);
+    letter-spacing: .02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nxn-notify__msg {
+    font-size: 13px;
+    color: var(--nxn-muted);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+/* ── Progress bar (idozites) ──────────────────────────────── */
+
+.nxn-notify__progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--nxn-accent);
+    border-radius: 0 0 0 var(--nxn-radius);
+    animation: nxnProgress linear forwards;
+    transform-origin: left;
+}
+.nxn-notify.success .nxn-notify__progress { background: var(--nxn-success); }
+.nxn-notify.danger  .nxn-notify__progress { background: var(--nxn-danger); }
+.nxn-notify.warning .nxn-notify__progress { background: var(--nxn-warning); }
+
+/* ── Kivetel animacio ─────────────────────────────────────── */
+
+.nxn-notify.removing {
+    animation: nxnSlideOut .2s ease forwards;
+}
+
+/* ── Animaciok ────────────────────────────────────────────── */
+
+@keyframes nxnSlideIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes nxnSlideInLeft {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes nxnSlideInTop {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nxnSlideInBottom {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nxnSlideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes nxnProgress {
+    from { width: 100%; }
+    to   { width: 0%; }
+}
