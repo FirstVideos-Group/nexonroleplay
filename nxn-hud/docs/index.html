@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-hud – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:#5b6af0; --bg:#0e0f14; --surface:#16181f;
+            --surface2:#1e2030; --border:#2a2d3a; --text:#e4e6f0;
+            --muted:#6b6f85; --success:#3ecf8e; --danger:#f05b5b;
+            --warning:#f0b55b; --radius:10px; --font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:920px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted);transition:color .15s}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+        .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:4px;vertical-align:middle}
+        .b-acc{background:rgba(91,106,240,.2);color:var(--accent)}
+        .b-ok{background:rgba(62,207,142,.2);color:var(--success)}
+        .b-warn{background:rgba(240,181,91,.2);color:var(--warning)}
+        .b-muted{background:rgba(107,111,133,.15);color:var(--muted)}
+
+        /* HUD elonezet */
+        .hud-preview{
+            background:linear-gradient(135deg,#12141a,#1a1d28);
+            border:1px solid var(--border);border-radius:var(--radius);
+            height:180px;position:relative;overflow:hidden;
+            display:flex;align-items:flex-end;padding:16px;
+        }
+        .hud-preview-inner{display:flex;flex-direction:column;gap:5px}
+        .hud-bar-row-p{display:flex;align-items:center;gap:6px;height:18px}
+        .hud-icon-p{font-size:13px;width:14px;color:var(--muted)}
+        .hud-track-p{width:90px;height:4px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+        .hud-fill-p{height:100%;border-radius:3px}
+        .hud-val-p{font-size:11px;color:var(--muted);min-width:22px;text-align:right}
+        .hud-badge-prev{display:flex;align-items:center;gap:5px;background:rgba(22,24,31,.7);border:1px solid var(--border);border-radius:6px;padding:3px 8px;margin-top:2px}
+        .hud-badge-val-p{font-size:12px;color:var(--text);font-weight:600}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-dashboard-speed-01"></i>
+    <div><h1>nxn-hud <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-hud</strong> a Nexon szerver moduláris játékos HUD-ja. Minden elem külön modul fájlban él, egyszerűen bővíthető. Az <code>nxn-needs</code> exportjait és eventjeit használja, az <code>nxn-notify</code> rendszerrel kompatibilis.</p>
+
+    <div class="info-box"><strong>Függőség:</strong> <code>nxn-needs</code> – a HUD hunger/thirst/stress adatai innen jönnek.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-eye"></i> Előnézet</h2>
+    <div class="hud-preview">
+        <div class="hud-preview-inner">
+            <div class="hud-bar-row-p">
+                <i class="hgi hgi-stroke hgi-heart-01 hud-icon-p" style="color:var(--danger)"></i>
+                <div class="hud-track-p"><div class="hud-fill-p" style="width:78%;background:var(--danger)"></div></div>
+                <span class="hud-val-p">78</span>
+            </div>
+            <div class="hud-bar-row-p">
+                <i class="hgi hgi-stroke hgi-shield-01 hud-icon-p" style="color:#5b9cf0"></i>
+                <div class="hud-track-p"><div class="hud-fill-p" style="width:40%;background:#5b9cf0"></div></div>
+                <span class="hud-val-p">40</span>
+            </div>
+            <div class="hud-bar-row-p">
+                <i class="hgi hgi-stroke hgi-hamburger-01 hud-icon-p" style="color:var(--warning)"></i>
+                <div class="hud-track-p"><div class="hud-fill-p" style="width:65%;background:var(--warning)"></div></div>
+                <span class="hud-val-p">65</span>
+            </div>
+            <div class="hud-bar-row-p">
+                <i class="hgi hgi-stroke hgi-water-polo hud-icon-p" style="color:#5bc4f0"></i>
+                <div class="hud-track-p"><div class="hud-fill-p" style="width:82%;background:#5bc4f0"></div></div>
+                <span class="hud-val-p">82</span>
+            </div>
+            <div class="hud-badge-prev">
+                <i class="hgi hgi-stroke hgi-clock-01" style="font-size:13px;color:var(--muted)"></i>
+                <span class="hud-badge-val-p">09:47  23.02.</span>
+            </div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-hud/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua          &lt;– kozponti manager, exportok
+├── modules/
+│   ├── health.lua          poll: HP + armor
+│   ├── needs.lua           nxn-needs spawn init
+│   ├── stamina.lua         poll: stamina, auto show/hide
+│   ├── oxygen.lua          poll: viz alatti O2, auto show/hide
+│   ├── stress.lua          nxn-needs event alapu, auto show/hide
+│   ├── money.lua           passziv, kulso resource tolti
+│   ├── job.lua             passziv, kulso resource tolti
+│   ├── playerid.lua        spawn utan server ID
+│   └── datetime.lua        valos ido, percenkent
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.Position</td><td>'bottom-left'</td><td>HUD helye: bottom-left | bottom-right | top-left | top-right</td></tr>
+        <tr><td>Config.PollInterval</td><td>500</td><td>Health/stamina lekérdezési intervallum (ms)</td></tr>
+        <tr><td>Config.OxygenPollInterval</td><td>300</td><td>Oxigén lekérdezési intervallum (ms)</td></tr>
+        <tr><td>Config.Modules.*.enabled</td><td>varies</td><td>Modul engedélyezése</td></tr>
+        <tr><td>Config.Modules.*.alwaysVisible</td><td>varies</td><td>Mindig látszik (true) vagy csak eseménykor (false)</td></tr>
+        <tr><td>Config.Modules.*.threshold</td><td>varies</td><td>Megjelenési küszincs (stamina, oxygen, stress)</td></tr>
+        <tr><td>Config.Modules.*.hideDelay</td><td>varies</td><td>Elrejtés késleltetése ms-ban</td></tr>
+        <tr><td>Config.Modules.*.order</td><td>1-10</td><td>Megjelenési sorrend</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-puzzle-piece-01"></i> Modulok áttekintése</h2>
+    <table>
+        <tr><th>Modul</th><th>Típus</th><th>Alapért. látható</th><th>Adat forrása</th></tr>
+        <tr><td>health</td><td>bar (HP + armor)</td><td><span class="badge b-ok">mindig</span></td><td>GTA nativ API (poll)</td></tr>
+        <tr><td>hunger</td><td>bar</td><td><span class="badge b-ok">mindig</span></td><td>nxn-needs event</td></tr>
+        <tr><td>thirst</td><td>bar</td><td><span class="badge b-ok">mindig</span></td><td>nxn-needs event</td></tr>
+        <tr><td>stamina</td><td>bar</td><td><span class="badge b-warn">futáskor</span></td><td>GTA nativ API (poll)</td></tr>
+        <tr><td>oxygen</td><td>bar</td><td><span class="badge b-warn">vízben</span></td><td>GTA nativ API (poll)</td></tr>
+        <tr><td>stress</td><td>bar</td><td><span class="badge b-warn">küszincs felett</span></td><td>nxn-needs event</td></tr>
+        <tr><td>money</td><td>badge</td><td><span class="badge b-muted">opcionális</span></td><td>updateModuleData export</td></tr>
+        <tr><td>job</td><td>badge</td><td><span class="badge b-muted">opcionális</span></td><td>updateModuleData export</td></tr>
+        <tr><td>playerid</td><td>badge</td><td><span class="badge b-muted">opcionális</span></td><td>GTA nativ (spawn)</td></tr>
+        <tr><td>datetime</td><td>badge</td><td><span class="badge b-muted">opcionális</span></td><td>JS Date() (perc/min)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>setVisible(bool)</td><td>Teljes HUD elrejtése / mutatása</td></tr>
+        <tr><td>isVisible()</td><td>HUD aktuális láthatóságának lekérdezése</td></tr>
+        <tr><td>setModule(name, bool)</td><td>Egy modul be- / kikapcsolása</td></tr>
+        <tr><td>getModuleState(name)</td><td>Egy modul állapota</td></tr>
+        <tr><td>getAllModuleStates()</td><td>Összes modul állapota</td></tr>
+        <tr><td>setPosition(pos)</td><td>Pozíció változtatása menet közben</td></tr>
+        <tr><td>updateModule(name, value)</td><td>Modul értékének frissítése (külső resource-ból)</td></tr>
+        <tr><td>updateModuleData(name, data)</td><td>Komplex adat küldése (penz, munkákkör stb)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">HUD el/megmutatása</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Modul kapcsolás</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Pénz / Munka adat</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Stress notify</div>
+        <div class="tab" onclick="switchTab(this,'t5')">Bovítés: új modul</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- HUD eltuntetese (pl. cutscene alatt)
+exports['nxn-hud']:setVisible(false)
+
+-- HUD visszahozasa
+exports['nxn-hud']:setVisible(true)</code></pre></div>
+
+    <div class="tab-content" id="t2"><pre><code>-- Penz modul bekapcsolasa
+exports['nxn-hud']:setModule('money', true)
+
+-- Stress modul kikapcsolasa
+exports['nxn-hud']:setModule('stress', false)
+
+-- Osszes modul allapot lekerese
+local states = exports['nxn-hud']:getAllModuleStates()
+for name, enabled in pairs(states) do
+    print(name, enabled)
+end</code></pre></div>
+
+    <div class="tab-content" id="t3"><pre><code>-- nxn-finance / nxn-job resource kliens oldalon:
+exports['nxn-hud']:updateModuleData('money', {
+    amount   = 15000,
+    currency = '$'
+})
+
+exports['nxn-hud']:updateModuleData('job', {
+    name  = 'Rendőr',
+    grade = 'Főhadnagy'
+})</code></pre></div>
+
+    <div class="tab-content" id="t4"><pre><code>-- Ha a stress magas, notify is erkezik (nxn-needs + nxn-notify kombinalva)
+-- nxn-needs event alapon a stress.lua kezeli a show/hide-ot
+-- Notify kuldése peldaul:
+AddEventHandler('nxn-needs:client:updated', function(needs)
+    if needs.stress > 80 then
+        exports['nxn-notify']:warning('Nagyon stresszes vagy!')
+    end
+end)</code></pre></div>
+
+    <div class="tab-content" id="t5"><pre><code>-- Uj modul hozzaadasa (pl. nxn-hud/modules/fuel.lua):
+
+-- 1. Config.lua-ban:
+Config.Modules.fuel = { enabled = true, alwaysVisible = false,
+                        threshold = 20, hideDelay = 3000, order = 11 }
+
+-- 2. modules/fuel.lua:
+CreateThread(function()
+    while true do
+        Wait(1000)
+        if not hudVisible or not moduleStates['fuel'] then goto continue end
+        -- ... lekérdezés ...
+        NXN.HUD.Send('updateModule', { module = 'fuel', value = fuelValue })
+        ::continue::
+    end
+end)
+
+-- 3. html/index.html-ben egy uj .hud-module blokk
+-- 4. fxmanifest.lua client_scripts-be: 'modules/fuel.lua'</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events / Helyi Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-needs:client:updated</td><td>Local (figyel)</td><td>Hunger, thirst, stress frissítése</td></tr>
+        <tr><td>playerSpawned</td><td>Local (figyel)</td><td>Init HUD + needs kezdeti adat</td></tr>
+    </table>
+
+    <div class="info-box warn" style="margin-top:24px">
+        <strong>Modul bővítés:</strong> Új elem hozzáadásához 4 lépés kell: config bejegyzés, Lua modul fájl a <code>modules/</code> mappában, HTML blokk az <code>index.html</code>-ben, és a fxmanifest client_scripts lista bővítése.
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug logok</h2>
+    <p>A <code>Config.Debug = true</code> beállítással minden NUI send, modul frissítés és poll log megjelenik a konzolban.</p>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

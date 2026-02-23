@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <div id="hud-root">
+
+        <!-- Health + Armor -->
+        <div class="hud-module" data-module="health" data-order="1">
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-heart-01 hud-icon icon-health"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-health" id="bar-health" style="width:100%"></div>
+                </div>
+                <span class="hud-val" id="val-health">100</span>
+            </div>
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-shield-01 hud-icon icon-armor"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-armor" id="bar-armor" style="width:0%"></div>
+                </div>
+                <span class="hud-val" id="val-armor">0</span>
+            </div>
+        </div>
+
+        <!-- Hunger -->
+        <div class="hud-module" data-module="hunger" data-order="2">
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-hamburger-01 hud-icon icon-hunger"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-hunger" id="bar-hunger" style="width:100%"></div>
+                </div>
+                <span class="hud-val" id="val-hunger">100</span>
+            </div>
+        </div>
+
+        <!-- Thirst -->
+        <div class="hud-module" data-module="thirst" data-order="3">
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-water-polo hud-icon icon-thirst"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-thirst" id="bar-thirst" style="width:100%"></div>
+                </div>
+                <span class="hud-val" id="val-thirst">100</span>
+            </div>
+        </div>
+
+        <!-- Stamina -->
+        <div class="hud-module hud-module--temporary" data-module="stamina" data-order="4" style="display:none">
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-lightning-01 hud-icon icon-stamina"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-stamina" id="bar-stamina" style="width:100%"></div>
+                </div>
+                <span class="hud-val" id="val-stamina">100</span>
+            </div>
+        </div>
+
+        <!-- Oxygen -->
+        <div class="hud-module hud-module--temporary" data-module="oxygen" data-order="5" style="display:none">
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-bubble-chat-01 hud-icon icon-oxygen"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-oxygen" id="bar-oxygen" style="width:100%"></div>
+                </div>
+                <span class="hud-val" id="val-oxygen">100</span>
+            </div>
+        </div>
+
+        <!-- Stress -->
+        <div class="hud-module hud-module--temporary" data-module="stress" data-order="6" style="display:none">
+            <div class="hud-bar-row">
+                <i class="hgi hgi-stroke hgi-brain hud-icon icon-stress"></i>
+                <div class="hud-track">
+                    <div class="hud-fill fill-stress" id="bar-stress" style="width:0%"></div>
+                </div>
+                <span class="hud-val" id="val-stress">0</span>
+            </div>
+        </div>
+
+        <!-- Money (opcionalis) -->
+        <div class="hud-module hud-module--badge" data-module="money" data-order="7" style="display:none">
+            <i class="hgi hgi-stroke hgi-money-bag-01 hud-icon icon-money"></i>
+            <span class="hud-badge-val" id="val-money">$0</span>
+        </div>
+
+        <!-- Job (opcionalis) -->
+        <div class="hud-module hud-module--badge" data-module="job" data-order="8" style="display:none">
+            <i class="hgi hgi-stroke hgi-briefcase-01 hud-icon icon-job"></i>
+            <span class="hud-badge-val" id="val-job">N/A</span>
+        </div>
+
+        <!-- Player ID (opcionalis) -->
+        <div class="hud-module hud-module--badge" data-module="playerid" data-order="9" style="display:none">
+            <i class="hgi hgi-stroke hgi-id-verified hud-icon icon-id"></i>
+            <span class="hud-badge-val" id="val-playerid">#0</span>
+        </div>
+
+        <!-- Datetime (opcionalis) -->
+        <div class="hud-module hud-module--badge" data-module="datetime" data-order="10" style="display:none">
+            <i class="hgi hgi-stroke hgi-clock-01 hud-icon icon-datetime"></i>
+            <span class="hud-badge-val" id="val-datetime">--:--</span>
+        </div>
+
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
