@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-seatbelt-extras – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box.ok{border-color:var(--success)}
+        .info-box.danger{border-color:var(--danger)}
+        .info-box strong{color:var(--text)}
+
+        /* Threshold vizualizacio */
+        .threshold-vis{
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:8px;padding:16px 20px;margin-bottom:16px;
+            font-size:12px;
+        }
+        .tbar{
+            position:relative;height:22px;border-radius:4px;
+            background:linear-gradient(to right,
+                #3ecf8e 0%,              /* 0-15: semmi */
+                #3ecf8e 8%,
+                #f0b55b 8%,              /* 15-35: minor */
+                #f0b55b 20%,
+                #f05b5b 20%,             /* 35-60: major, no eject */
+                #f05b5b 35%,
+                #9b3af0 35%,             /* 60+: ejection */
+                #9b3af0 100%
+            );
+            margin:8px 0 4px;
+        }
+        .tbar-labels{
+            display:flex;justify-content:space-between;
+            font-size:11px;color:var(--muted);padding:0 2px;
+        }
+        .tbar-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11px;}
+        .tleg{display:flex;align-items:center;gap:6px;}
+        .tleg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+        /* Scenario tablazat */
+        .scenario-row td:nth-child(2){color:var(--warning);}
+        .scenario-row.ok td:nth-child(2){color:var(--success);}
+        .scenario-row.danger td:nth-child(2){color:var(--danger);}
+        .scenario-row.eject td:nth-child(2){color:#9b3af0;}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-car-01"></i>
+    <div><h1>nxn-seatbelt-extras <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-seatbelt-extras</strong> kiegészíti az <strong>nxn-seatbelt</strong> rendszert fizikai öv-hatásokkal: kireputélés, sérülés, effektek. Minden viselkedés konfigurálható threshold-okkal és szorzókkal.</p>
+
+    <div class="info-box"><strong>Függőség:</strong> Az <code>nxn-seatbelt</code> resource futnia kell. A script a <code>dependencies</code> listaból automatikusan elindatja.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-speedometer-01"></i> Threshold vizualizáció (alapértékek)</h2>
+    <div class="threshold-vis">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">ΔV (km/h) – sebesség-esés az utközésnél</div>
+        <div class="tbar"></div>
+        <div class="tbar-labels">
+            <span>0</span><span>15</span><span>35</span><span>60</span><span>100+</span>
+        </div>
+        <div class="tbar-legend">
+            <div class="tleg"><div class="tleg-dot" style="background:#3ecf8e"></div><span>Semmi (0–15)</span></div>
+            <div class="tleg"><div class="tleg-dot" style="background:#f0b55b"></div><span>Minor notify (15–35)</span></div>
+            <div class="tleg"><div class="tleg-dot" style="background:#f05b5b"></div><span>Major + sérülés (35–60)</span></div>
+            <div class="tleg"><div class="tleg-dot" style="background:#9b3af0"></div><span>Ejection + súlyos sérülés (60+)</span></div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-table-01"></i> Szcenáriók</h2>
+    <table>
+        <tr><th>Helyzet</th><th>Öv</th><th>deltaV</th><th>Eredmény</th></tr>
+        <tr class="scenario-row ok"><td>Apro lassulas</td><td>bármi</td><td>&lt;15</td><td>Semmi</td></tr>
+        <tr class="scenario-row"><td>Kis ütközés</td><td>bármi</td><td>15–35</td><td>Notify + event</td></tr>
+        <tr class="scenario-row danger"><td>Nagy ütközés</td><td>Bekotve</td><td>35+</td><td>Ragdoll (kis) + csökkentett sérülés + effekt</td></tr>
+        <tr class="scenario-row danger"><td>Nagy ütközés</td><td>Kicsatolva</td><td>35–60</td><td>Ragdoll (nagy) + teljes sérülés</td></tr>
+        <tr class="scenario-row eject"><td>Nagy ütközés</td><td>Kicsatolva</td><td>60+</td><td>Kireputélés + súlyos sérülés</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-seatbelt-extras/
+├── fxmanifest.lua     ← dependency: nxn-seatbelt
+├── config.lua         ← threshold-ok, szorzók, effektek
+├── shared.lua         ← NXN.SeatbeltExt logger
+├── client.lua         ← ütközés-észlelés, fizika, exportok
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció blökkjai</h2>
+    <table>
+        <tr><th>Blokk</th><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config</td><td>SampleInterval</td><td>100 ms</td><td>Sebesség mintavétel gyakorisága</td></tr>
+        <tr><td>Config</td><td>MinCollisionSpeed</td><td>15 km/h</td><td>Minimum deltaV amitol utközésnak számit</td></tr>
+        <tr><td>Ejection</td><td>speedThreshold</td><td>60 km/h</td><td>Kireputélés min. deltaV</td></tr>
+        <tr><td>Ejection</td><td>forceMultiplier</td><td>1.8</td><td>Impulzus szorzó kireputélésnél</td></tr>
+        <tr><td>Damage</td><td>unfasteningSpeedThreshold</td><td>40 km/h</td><td>Kicsatolt öv: sérülés min. deltaV</td></tr>
+        <tr><td>Damage</td><td>fasteningSpeedThreshold</td><td>80 km/h</td><td>Bekotott öv: sérülés min. deltaV</td></tr>
+        <tr><td>Damage</td><td>unfasteningDamageMultiplier</td><td>1.0</td><td>Kicsatolt öv sérzés szorzó</td></tr>
+        <tr><td>Damage</td><td>fasteningDamageMultiplier</td><td>0.25</td><td>Bekotott öv sérzés szorzó</td></tr>
+        <tr><td>PostCrash</td><td>cameraShakeDuration</td><td>2.0 mp</td><td>Kamera remeges ideje</td></tr>
+        <tr><td>PostCrash</td><td>ragdollDuration</td><td>1500 ms</td><td>Ragdoll ideje kicsatolt ovnel</td></tr>
+        <tr><td>PostCrash</td><td>ragdollFasteningMs</td><td>400 ms</td><td>Ragdoll ideje bekotott ovnel</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>setEnabled(state)</td><td>–</td><td>Extras rendszer ki/be</td></tr>
+        <tr><td>isEnabled()</td><td>boolean</td><td>Extras engedelyállapot</td></tr>
+        <tr><td>simulateCrash(deltaV)</td><td>–</td><td>Manuális ütközés szimulálás</td></tr>
+        <tr><td>getEjectionThreshold()</td><td>number</td><td>Kireputélés küszoböbérték</td></tr>
+        <tr><td>setEjectionThreshold(val)</td><td>–</td><td>Kireputélés küszoböbérték állítás</td></tr>
+        <tr><td>getDamageConfig()</td><td>table</td><td>Sérülés konfiguráció visszaadása</td></tr>
+        <tr><td>setEjectionEnabled(state)</td><td>–</td><td>Kireputélés ki/be</td></tr>
+        <tr><td>setDamageEnabled(state)</td><td>–</td><td>Sérülés ki/be</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-broadcast"></i> Kliensoldali Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Adat</th><th>Mikor</th></tr>
+        <tr><td>nxn-seatbelt-extras:collision</td><td>{ type, deltaV, fastened }</td><td>Minor/major ütközés</td></tr>
+        <tr><td>nxn-seatbelt-extras:ejected</td><td>{ deltaV }</td><td>Játékos kireputélt</td></tr>
+        <tr><td>nxn-seatbelt-extras:damaged</td><td>{ deltaV, damage, fastened }</td><td>Sérülés alkalmazva</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Balesetet-észlelő</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Traffipax integráció</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Ejection tiltasa (példa)</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- Automatikus baleset-észlelő integráció:
+AddEventHandler('nxn-seatbelt-extras:collision', function(data)
+    if data.type == 'major' and not data.fastened then
+        -- Mentső kiváltása
+        TriggerServerEvent('nxn-emergency:server:accident', {
+            deltaV   = data.deltaV,
+            fastened = data.fastened,
+            coords   = GetEntityCoords(PlayerPedId()),
+        })
+    end
+end)
+
+-- Kireputélés esemény:
+AddEventHandler('nxn-seatbelt-extras:ejected', function(data)
+    print('Kireputélés! deltaV: ' .. data.deltaV)
+end)</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Traffipax: kicsatolt öv ellenorzése + ütközés
+AddEventHandler('nxn-seatbelt-extras:collision', function(data)
+    local isFastened = exports['nxn-seatbelt']:isFastened()
+    if not isFastened and data.deltaV > 40 then
+        TriggerServerEvent('nxn-traffipax:server:fine', {
+            reason = 'Biztonsagi ov kicsatolva + baleset',
+            amount = 25000
+        })
+    end
+end)</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- Ejection tiltasa (pl. rendorsegi mentes)
+exports['nxn-seatbelt-extras']:setEjectionEnabled(false)
+
+-- Manualis szimulacio (pl. IED baleset)
+exports['nxn-seatbelt-extras']:simulateCrash(85.0)  -- 85 km/h deltaV
+
+-- Threshold dinamikus allitasa
+exports['nxn-seatbelt-extras']:setEjectionThreshold(45.0)  -- alacsonyabb kuszob</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> eseten minden sebesseg-mintavetel, utkozest-esléelés es effekt-alkalmazas megjelenik <code>[nxn-seatbelt-extras] [DEBUG]</code> prefixszel. Tipp: először csak <code>Major collision</code> sorokra szűrj rá.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
