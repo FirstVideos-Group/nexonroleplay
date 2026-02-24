@@ -1,0 +1,217 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: transparent;
+    color: #e4e6f0;
+}
+
+:root {
+    --accent:   #5b6af0;
+    --accent2:  #7b88f5;
+    --bg:       rgba(14, 15, 20, 0.97);
+    --surface:  #16181f;
+    --surface2: #1e2030;
+    --border:   #2a2d3a;
+    --text:     #e4e6f0;
+    --muted:    #6b6f85;
+    --success:  #3ecf8e;
+    --danger:   #f05b5b;
+    --radius:   12px;
+}
+
+/* ── Overlay ─────────────────────────────────────────────── */
+#overlay {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(8, 9, 14, 0.82);
+    z-index: 9999;
+    transition: opacity 0.35s ease;
+}
+#overlay.hidden { opacity: 0; pointer-events: none; display: none; }
+
+/* ── Panel ───────────────────────────────────────────────── */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 560px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    animation: slideUp 0.3s cubic-bezier(.22,.68,0,1.2);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.panel-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--border);
+}
+.panel-header i { font-size: 26px; color: var(--accent); flex-shrink: 0; }
+.panel-title  { font-size: 17px; font-weight: 700; }
+.panel-sub    { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ── Steps ──────────────────────────────────────────────── */
+.steps {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+.step {
+    flex: 1; padding: 12px 8px;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+.step.active { color: var(--text); border-bottom-color: var(--accent); }
+.step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    transition: background 0.2s;
+}
+.step.active .step-num { background: var(--accent); color: #fff; }
+.step.done   .step-num { background: var(--success); color: #fff; }
+
+/* ── Step content ───────────────────────────────────────── */
+.step-content {
+    display: none; padding: 20px 24px;
+    overflow-y: auto; flex: 1;
+}
+.step-content.active { display: block; }
+
+/* ── Form ────────────────────────────────────────────────── */
+.form-grid { display: flex; flex-direction: column; gap: 16px; }
+
+.field label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--muted); margin-bottom: 7px;
+    letter-spacing: .04em; text-transform: uppercase;
+}
+.req { color: var(--accent); }
+
+input[type=text], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+}
+input[type=text]:focus, select:focus { border-color: var(--accent); }
+input.error { border-color: var(--danger); }
+
+.date-row { display: flex; gap: 8px; }
+.date-row select { flex: 1; }
+
+/* ── Radio group ────────────────────────────────────────── */
+.radio-group { display: flex; gap: 10px; }
+.radio-btn {
+    flex: 1; padding: 10px 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: center; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.radio-btn.active {
+    background: rgba(91,106,240,.16);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+/* ── Swatches ────────────────────────────────────────────── */
+.swatch-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+.swatch {
+    padding: 7px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+.swatch.active {
+    background: rgba(91,106,240,.18);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+/* ── Hair style scroll ──────────────────────────────────── */
+.select-scroll {
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+
+/* ── Face sliders ────────────────────────────────────────── */
+.face-info {
+    background: rgba(91,106,240,.1);
+    border: 1px solid rgba(91,106,240,.25);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 18px;
+}
+.sliders-grid { display: flex; flex-direction: column; gap: 14px; }
+.slider-row { display: flex; align-items: center; gap: 12px; }
+.slider-row label { font-size: 12px; color: var(--muted); width: 110px; flex-shrink: 0; font-weight: 600; }
+.slider-row input[type=range] {
+    flex: 1; accent-color: var(--accent);
+    height: 4px; border: none; padding: 0;
+    background: var(--border);
+    border-radius: 4px; cursor: pointer;
+}
+.slider-val { font-size: 12px; color: var(--text); width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Footer ─────────────────────────────────────────────── */
+.panel-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+}
+.footer-right { display: flex; align-items: center; gap: 14px; }
+.step-label { font-size: 12px; color: var(--muted); }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+    padding: 9px 22px; border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    border: none; cursor: pointer;
+    font-family: inherit; transition: all 0.18s;
+}
+.btn-primary {
+    background: var(--accent); color: #fff;
+}
+.btn-primary:hover { background: var(--accent2); }
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }

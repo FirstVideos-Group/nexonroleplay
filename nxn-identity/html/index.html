@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+</head>
+<body>
+<div id="overlay" class="hidden">
+
+    <div class="panel">
+        <!-- Header -->
+        <div class="panel-header">
+            <i class="hgi hgi-stroke hgi-user-circle"></i>
+            <div>
+                <div class="panel-title">Karakter létrehozása</div>
+                <div class="panel-sub">Add meg karaktered adatait – ezek lesznek a játékban</div>
+            </div>
+        </div>
+
+        <!-- Step indicators -->
+        <div class="steps">
+            <div class="step active" data-step="1"><span class="step-num">1</span> Személyes adatok</div>
+            <div class="step" data-step="2"><span class="step-num">2</span> Megjelenés</div>
+            <div class="step" data-step="3"><span class="step-num">3</span> Részletek</div>
+        </div>
+
+        <!-- Step 1: Alap adatok -->
+        <div class="step-content active" id="step-1">
+            <div class="form-grid">
+                <div class="field">
+                    <label>Keresztnév <span class="req">*</span></label>
+                    <input id="inp-firstname" type="text" placeholder="pl. János" maxlength="40"/>
+                </div>
+                <div class="field">
+                    <label>Vezetéknév <span class="req">*</span></label>
+                    <input id="inp-lastname" type="text" placeholder="pl. Kovács" maxlength="40"/>
+                </div>
+                <div class="field">
+                    <label>Nem <span class="req">*</span></label>
+                    <div class="radio-group" id="gender-group"></div>
+                </div>
+                <div class="field">
+                    <label>Születési dátum <span class="req">*</span></label>
+                    <div class="date-row">
+                        <select id="inp-bday"></select>
+                        <select id="inp-bmonth"></select>
+                        <select id="inp-byear"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Megjelenes -->
+        <div class="step-content" id="step-2">
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Bőrszín</label>
+                    <div class="swatch-row" id="skin-color-row"></div>
+                </div>
+                <div class="field full">
+                    <label>Hajstílus</label>
+                    <div class="select-scroll" id="hair-style-row"></div>
+                </div>
+                <div class="field">
+                    <label>Hajszín</label>
+                    <div class="swatch-row" id="hair-color-row"></div>
+                </div>
+                <div class="field">
+                    <label>Hajfény</label>
+                    <div class="swatch-row" id="hair-highlight-row"></div>
+                </div>
+                <div class="field full">
+                    <label>Szemszín</label>
+                    <div class="swatch-row" id="eye-color-row"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Arc reszletek (face features slider-ek) -->
+        <div class="step-content" id="step-3">
+            <div class="face-info"><i class="hgi hgi-stroke hgi-information-circle"></i> Az alábbi csúszkák finomhangolják a karakter arcvonásait.</div>
+            <div id="face-sliders" class="sliders-grid"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="panel-footer">
+            <button class="btn btn-ghost" id="btn-back">Vissza</button>
+            <div class="footer-right">
+                <div class="step-label" id="step-label">1 / 3</div>
+                <button class="btn btn-primary" id="btn-next">Következő</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

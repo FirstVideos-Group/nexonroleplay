@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-identity – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.ok{border-color:var(--success)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+
+        /* DB schema */
+        .schema-table td:first-child{color:#8ab4f8;}
+        .schema-table td:nth-child(2){color:var(--warning);}
+
+        /* Flow */
+        .flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:20px;}
+        .flow-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;text-align:center;min-width:120px;}
+        .flow-step.ok{border-color:var(--success);color:var(--success);}
+        .flow-step.accent{border-color:var(--accent);color:var(--accent);}
+        .flow-arrow{font-size:18px;color:var(--muted);padding:0 6px;}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-user-circle"></i>
+    <div><h1>nxn-identity <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-identity</strong> kezeli a játékos karakterének adatait: személyes azonosítók, megjelenés (skin), arcvonások és mentett pozíció. Szorosan együttműködik az <strong>nxn-database</strong>-zel.</p>
+
+    <div class="info-box"><strong>Függőség:</strong> nxn-database (identifier + registerTable + playerLoaded event). Az nxn-notify opcionális.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-workflow-square-01"></i> Betöltési folyamat</h2>
+    <div class="flow">
+        <div class="flow-step accent">nxn-database<br>playerLoaded</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">nxn_identities<br>lekérdezés</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step ok">Van adat?<br>→ Spawn</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step" style="border-color:var(--warning);color:var(--warning)">Nincs adat?<br>→ Karakter UI</div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-database-02"></i> Adatbázis séma – nxn_identities</h2>
+    <table class="schema-table">
+        <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
+        <tr><td>identifier</td><td>VARCHAR(60)</td><td>nxn-database azonosítóval megegyező, UNIQUE</td></tr>
+        <tr><td>firstname</td><td>VARCHAR(40)</td><td>Keresztnév – külön oszlop</td></tr>
+        <tr><td>lastname</td><td>VARCHAR(40)</td><td>Vezetéknév – külön oszlop</td></tr>
+        <tr><td>gender</td><td>TINYINT</td><td>0 = férfi, 1 = nő</td></tr>
+        <tr><td>birth_day/month/year</td><td>TINYINT/SMALLINT</td><td>Születési dátum – külön oszlopok</td></tr>
+        <tr><td>skin_color</td><td>TINYINT</td><td>GTA bőrszín index</td></tr>
+        <tr><td>eye_color</td><td>TINYINT</td><td>GTA szemszín index</td></tr>
+        <tr><td>hair_style</td><td>TINYINT</td><td>Hajstílus index (config-listából)</td></tr>
+        <tr><td>hair_color</td><td>TINYINT</td><td>GTA hajszín paletta index</td></tr>
+        <tr><td>hair_highlight</td><td>TINYINT</td><td>GTA hajfény paletta index</td></tr>
+        <tr><td>face_features</td><td>LONGTEXT (JSON)</td><td>20 elemű float tömb – arcvonások</td></tr>
+        <tr><td>outfit</td><td>LONGTEXT (JSON)</td><td>Ruhakompilcáció – [{comp,draw,tex}]</td></tr>
+        <tr><td>pos_x/y/z/heading</td><td>FLOAT</td><td>Utolsó mentett pozíció és irány</td></tr>
+        <tr><td>created_at / updated_at</td><td>DATETIME</td><td>Automatikus időbélyeg</td></tr>
+    </table>
+
+    <div class="info-box ok"><strong>Tervezési elvek:</strong> Minden egyedi adat (név, nem, születési dátum, skin indexek, pozíció) külön DB oszlopban van. Csak az arcvonások (face_features) és a teljes outfit JSON-ban, mert ezek természetüknél fogva lista-adatok.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getIdentity(src)</td><td>table|nil</td><td>Teljes identitás sor (összes adat)</td></tr>
+        <tr><td>getFullName(src)</td><td>string|nil</td><td>'Keresztnév Vezékn.' formátum</td></tr>
+        <tr><td>getFirstName(src)</td><td>string|nil</td><td>Csak keresztnév</td></tr>
+        <tr><td>getLastName(src)</td><td>string|nil</td><td>Csak vezetéknév</td></tr>
+        <tr><td>getGender(src)</td><td>number|nil</td><td>0=férfi, 1=nő</td></tr>
+        <tr><td>getBirthDate(src)</td><td>string|nil</td><td>'ÉÉÉÉ.HH.NN'</td></tr>
+        <tr><td>getAge(src)</td><td>number|nil</td><td>Kiszámított életkor</td></tr>
+        <tr><td>hasIdentity(src)</td><td>boolean</td><td>Van-e már karaktere</td></tr>
+        <tr><td>getAllIdentities()</td><td>table</td><td>Összes online karakter cache-je</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getIdentity()</td><td>table|nil</td><td>Helyi karakter adat</td></tr>
+        <tr><td>hasIdentity()</td><td>boolean</td><td>Be van-e töltve identitás</td></tr>
+        <tr><td>reapplySkin()</td><td>–</td><td>Skin újraalkalmazása (pl. ruha csere után)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-broadcast"></i> Események</h2>
+    <table>
+        <tr><th>Event</th><th>Oldal</th><th>Adat</th><th>Mikor</th></tr>
+        <tr><td>nxn-identity:server:identityCreated</td><td>Szerver</td><td>(src, identityRow)</td><td>Új karakter létrehozva</td></tr>
+        <tr><td>nxn-identity:client:spawned</td><td>Kliens</td><td>{ identity }</td><td>Játékos sikeresen spawnolt</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Igazolvány integráció</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Életkor ellenőrzés</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Skin újraalkalmazás</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-idcard/server.lua – igazolvány adatlap
+RegisterNetEvent('nxn-idcard:server:getMyData')
+AddEventHandler('nxn-idcard:server:getMyData', function()
+    local src  = source
+    local ident = exports['nxn-identity']:getIdentity(src)
+    if not ident then
+        TriggerClientEvent('nxn-notify:client:send', src, 'Nincs karaktered!', 'danger')
+        return
+    end
+
+    TriggerClientEvent('nxn-idcard:client:showCard', src, {
+        name      = exports['nxn-identity']:getFullName(src),
+        gender    = ident.gender == 0 and 'Férfi' or 'Nő',
+        birthdate = exports['nxn-identity']:getBirthDate(src),
+        age       = exports['nxn-identity']:getAge(src),
+    })
+end)</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Alkohol/szórakozóhely belépés ellenőrzés:
+local age = exports['nxn-identity']:getAge(source)
+if not age or age < 18 then
+    TriggerClientEvent('nxn-notify:send', source, 'Csak 18+ léphet be!', 'danger')
+    return
+end</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- nxn-clothing után skin frissités (kliens oldal):
+AddEventHandler('nxn-clothing:outfitApplied', function()
+    exports['nxn-identity']:reapplySkin()
+end)
+
+-- Vagy skin mentés és újratöltés:
+TriggerServerEvent('nxn-identity:server:updateSkin', {
+    hair_style = 3, hair_color = 1, hair_highlight = 29,
+    skin_color = 0, eye_color = 7,
+    outfit = { {11, 42, 0}, {8, 15, 0} },
+})</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> esetén minden DB lekérdezés, skin alkalmazás, spawn esemény és pozíciómentés megjelenik <code>[nxn-identity] [DEBUG]</code> prefixszel a konzolban.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
