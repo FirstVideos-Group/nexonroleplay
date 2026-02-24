@@ -1,0 +1,191 @@
+/* ============================================================
+   nxn-minimap | style.css – Nexon Design System
+   ============================================================ */
+
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   rgba(91,106,240,0.55);
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter','Segoe UI',sans-serif;
+
+    /* Minimap méret – JS felülírja init-kor */
+    --nmap-w: 200px;
+    --nmap-h: 200px;
+
+    /* Keretsarok vastagság */
+    --corner-size:  14px;
+    --corner-thick: 2px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: var(--nxn-font);
+    pointer-events: none;
+}
+
+/* ── Root pozíciók ─────────────────────────────────────────── */
+
+#nmap-root {
+    position: fixed;
+    z-index: 200;
+    transition: opacity .3s;
+}
+
+#nmap-root.pos-bottom-left  { bottom: 0; left: 0; }
+#nmap-root.pos-bottom-right { bottom: 0; right: 0; }
+#nmap-root.pos-top-left     { top: 0;    left: 0; }
+#nmap-root.pos-top-right    { top: 0;    right: 0; }
+
+#nmap-root.hidden { opacity: 0; }
+
+/* ── Keret ─────────────────────────────────────────────────── */
+
+#nmap-frame {
+    position: relative;
+    width:  var(--nmap-w);
+    height: var(--nmap-h);
+    /* Nincs háttér – a GTA natív minimap látszik alatta */
+}
+
+/* Sarkok (L-alakú szegélyek) */
+.nmap-corner {
+    position: absolute;
+    width:  var(--corner-size);
+    height: var(--corner-size);
+}
+
+.nmap-corner--tl {
+    top: 0; left: 0;
+    border-top:  var(--corner-thick) solid var(--nxn-border);
+    border-left: var(--corner-thick) solid var(--nxn-border);
+}
+.nmap-corner--tr {
+    top: 0; right: 0;
+    border-top:   var(--corner-thick) solid var(--nxn-border);
+    border-right: var(--corner-thick) solid var(--nxn-border);
+}
+.nmap-corner--bl {
+    bottom: 0; left: 0;
+    border-bottom: var(--corner-thick) solid var(--nxn-border);
+    border-left:   var(--corner-thick) solid var(--nxn-border);
+}
+.nmap-corner--br {
+    bottom: 0; right: 0;
+    border-bottom: var(--corner-thick) solid var(--nxn-border);
+    border-right:  var(--corner-thick) solid var(--nxn-border);
+}
+
+/* ── GPS jelzés ────────────────────────────────────────────── */
+
+.nmap-gps {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(14, 15, 20, 0.82);
+    border: 1px solid var(--nxn-border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    animation: nmapFadeIn .25s ease forwards;
+}
+
+.nmap-gps i {
+    font-size: 10px;
+    color: var(--nxn-success);
+}
+
+.nmap-gps span {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--nxn-success);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    white-space: nowrap;
+}
+
+/* GPS pulzáló pont animáció */
+.nmap-gps i {
+    animation: nmapGpsPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes nmapGpsPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+}
+
+/* ── Kerületi sáv ──────────────────────────────────────────── */
+
+.nmap-district {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(14, 15, 20, 0.85);
+    border-top: 1px solid var(--nxn-border);
+    border-radius: 0 0 4px 4px;
+    padding: 4px 8px;
+    animation: nmapFadeIn .25s ease forwards;
+}
+
+.nmap-district-inner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nmap-district-num {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--nxn-accent);
+    letter-spacing: .03em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nmap-district-sep {
+    width: 1px;
+    height: 10px;
+    background: var(--nxn-border);
+    flex-shrink: 0;
+}
+
+.nmap-district-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--nxn-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: .02em;
+}
+
+/* ── Animációk ─────────────────────────────────────────────── */
+
+@keyframes nmapFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.nmap-fading-out {
+    animation: nmapFadeOut .2s ease forwards;
+}
+
+@keyframes nmapFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}

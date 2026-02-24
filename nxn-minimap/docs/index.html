@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-minimap – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:920px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+        .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:4px}
+        .b-ok{background:rgba(62,207,142,.2);color:var(--success)}
+        .b-warn{background:rgba(240,181,91,.2);color:var(--warning)}
+        .b-muted{background:rgba(107,111,133,.15);color:var(--muted)}
+        .b-acc{background:rgba(91,106,240,.2);color:var(--accent)}
+
+        /* Minimap preview */
+        .nmap-prev-wrap{
+            display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;
+        }
+        .nmap-prev{
+            position:relative;
+            width:200px;height:200px;
+            background: repeating-linear-gradient(45deg,#1a1d28,#1a1d28 10px,#1e2130 10px,#1e2130 20px);
+            border-radius:4px;
+            overflow:hidden;
+        }
+        /* Sarkok */
+        .npc{position:absolute;width:14px;height:14px;}
+        .npc-tl{top:0;left:0;border-top:2px solid rgba(91,106,240,.7);border-left:2px solid rgba(91,106,240,.7);}
+        .npc-tr{top:0;right:0;border-top:2px solid rgba(91,106,240,.7);border-right:2px solid rgba(91,106,240,.7);}
+        .npc-bl{bottom:0;left:0;border-bottom:2px solid rgba(91,106,240,.7);border-left:2px solid rgba(91,106,240,.7);}
+        .npc-br{bottom:0;right:0;border-bottom:2px solid rgba(91,106,240,.7);border-right:2px solid rgba(91,106,240,.7);}
+        /* GPS badge */
+        .npg{
+            position:absolute;top:6px;right:6px;
+            background:rgba(14,15,20,.85);
+            border:1px solid rgba(91,106,240,.55);
+            border-radius:5px;padding:3px 7px;
+            display:flex;align-items:center;gap:4px;
+        }
+        .npg i{font-size:10px;color:var(--success);}
+        .npg span{font-size:9px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:.07em}
+        /* District sáv */
+        .npd{
+            position:absolute;bottom:0;left:0;right:0;
+            background:rgba(14,15,20,.85);
+            border-top:1px solid rgba(91,106,240,.55);
+            padding:4px 8px;display:flex;align-items:center;gap:6px;
+        }
+        .npd-num{font-size:11px;font-weight:800;color:var(--accent);}
+        .npd-sep{width:1px;height:10px;background:rgba(91,106,240,.4);flex-shrink:0}
+        .npd-name{font-size:10px;font-weight:600;color:var(--muted);}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-maps-square-navigation"></i>
+    <div><h1>nxn-minimap <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-minimap</strong> a Nexon szerver újradizájnolt minimap scriptje. A GTA natív minimapját nem váltja ki – felette egy NUI overlay keretet, GPS-jelzőt és kerületi sávot jelenít meg. A felesleges natív HUD elemeket (körzetszöveg, területnév) elrejti, mivel azokat az <code>nxn-location-hud</code> kezeli.</p>
+
+    <div class="info-box"><strong>Fontos:</strong> ez a resource <em>nem</em> rejti el a natív minimapot, csak keret + adatok kerülnek fölé. A GPS útvonal (kék vonal) és a waypoint továbbra is a GTA rajzolja.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-eye"></i> Előnézet</h2>
+    <div class="nmap-prev-wrap">
+        <div>
+            <p style="margin-bottom:8px;font-size:12px">Alap (GPS aktív + kerület sáv)</p>
+            <div class="nmap-prev">
+                <div class="npc npc-tl"></div><div class="npc npc-tr"></div>
+                <div class="npc npc-bl"></div><div class="npc npc-br"></div>
+                <div class="npg">
+                    <i class="hgi hgi-stroke hgi-navigation-03"></i>
+                    <span>GPS AKTÍV</span>
+                </div>
+                <div class="npd">
+                    <span class="npd-num">III</span>
+                    <span class="npd-sep"></span>
+                    <span class="npd-name">Rockford Hills</span>
+                </div>
+            </div>
+        </div>
+        <div>
+            <p style="margin-bottom:8px;font-size:12px">GPS nincs / kerület nincs</p>
+            <div class="nmap-prev">
+                <div class="npc npc-tl"></div><div class="npc npc-tr"></div>
+                <div class="npc npc-bl"></div><div class="npc npc-br"></div>
+            </div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-minimap/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua           ← natív minimap kezelés + NUI overlay + exportok
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.MinimapEnabled</td><td>true</td><td>Minimap látszik-e induláskor</td></tr>
+        <tr><td>Config.Width / Height</td><td>200</td><td>NUI overlay mérete (px) – igazítsd a natív minimaphoz</td></tr>
+        <tr><td>Config.Position</td><td>'bottom-left'</td><td>NUI overlay pozíciója</td></tr>
+        <tr><td>Config.ShowBlips</td><td>true</td><td>Blipek megjelenítése</td></tr>
+        <tr><td>Config.ShowAreas</td><td>true</td><td>Területek megjelenítése</td></tr>
+        <tr><td>Config.ShowGPS</td><td>true</td><td>GPS jelzés engedélyezve</td></tr>
+        <tr><td>Config.GPSActiveLabel</td><td>'GPS AKTIV'</td><td>GPS badge szövege</td></tr>
+        <tr><td>Config.ShowDistrict</td><td>true</td><td>Kerületi sáv engedélyezve</td></tr>
+        <tr><td>Config.HideNativeHUDComponents</td><td>true</td><td>Natív körzet/utca szöveg elrejtése</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>setVisible(bool)</td><td>Minimap overlay + natív minimap elrejtése/mutatása</td></tr>
+        <tr><td>isVisible()</td><td>Aktuális láthatóság</td></tr>
+        <tr><td>setBlips(bool)</td><td>Blipek be/ki (Lua + vizuális)</td></tr>
+        <tr><td>setAreas(bool)</td><td>Területek be/ki</td></tr>
+        <tr><td>setGPSEnabled(bool)</td><td>GPS útvonal be/ki (waypoint törlés is)</td></tr>
+        <tr><td>setDistrict(num, name, color)</td><td>Kerületi sáv feltöltése (nxn-districts hívja)</td></tr>
+        <tr><td>clearDistrict()</td><td>Kerületi sáv elrejtése (ismeretlen terület)</td></tr>
+        <tr><td>setPosition(pos)</td><td>NUI overlay pozíció váltás</td></tr>
+        <tr><td>getDistrict()</td><td>Aktuális district adat lekérése</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">nxn-districts integráció</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Cutscene / esemény</div>
+        <div class="tab" onclick="switchTab(this,'t3')">HUD panel kapcsolás</div>
+        <div class="tab" onclick="switchTab(this,'t4')">GPS kezelés</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-districts / client.lua:
+-- Játékos belép egy kerületbe:
+AddEventHandler('nxn-districts:entered', function(data)
+    -- data.number: 3 | data.name: 'Rockford Hills' | data.color: '#5b6af0'
+    exports['nxn-minimap']:setDistrict(data.number, data.name, data.color)
+end)
+
+-- Ismeretlen terület (pl. vízen):
+AddEventHandler('nxn-districts:unknown', function()
+    exports['nxn-minimap']:clearDistrict()
+end)</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Cutscene alatt minimapot elrejtjük:
+AddEventHandler('nxn-cutscene:start', function()
+    exports['nxn-minimap']:setVisible(false)
+end)
+AddEventHandler('nxn-cutscene:end', function()
+    exports['nxn-minimap']:setVisible(true)
+end)</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- HUD panel-ből blip kapcsolás:
+exports['nxn-minimap']:setBlips(false)  -- blipek ki
+exports['nxn-minimap']:setBlips(true)   -- blipek be
+
+-- Teljes minimap ki/be:
+exports['nxn-minimap']:setVisible(false)
+exports['nxn-minimap']:setVisible(true)</code></pre></div>
+    <div class="tab-content" id="t4"><pre><code>-- GPS kikapcsolása (waypoint is törlődik):
+exports['nxn-minimap']:setGPSEnabled(false)
+
+-- GPS visszakapcsolása:
+exports['nxn-minimap']:setGPSEnabled(true)
+-- Megjegyzés: a waypoint újra kell jelölni ha le lett törölve</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> esetén minden NUI küldés és export hívás megjelenik a konzolban <code>[nxn-minimap] [DEBUG]</code> prefixszel.</p>
+
+    <div class="info-box warn"><strong>Kompatibilitás:</strong> Az <code>nxn-location-hud</code> szintén elrejti a natív körzet/utca szöveget – ha mindkét resource fut, ez nem okoz konfliktust (redundáns, de ártalmatlan).</div>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

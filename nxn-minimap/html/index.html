@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- NUI overlay a GTA natív minimap FÖLÉ -->
+<div id="nmap-root">
+
+    <!-- ── Minimap keret ────────────────────────────────────────── -->
+    <div id="nmap-frame">
+
+        <!-- Sarkok -->
+        <div class="nmap-corner nmap-corner--tl"></div>
+        <div class="nmap-corner nmap-corner--tr"></div>
+        <div class="nmap-corner nmap-corner--bl"></div>
+        <div class="nmap-corner nmap-corner--br"></div>
+
+        <!-- GPS jelzés (jobb felső sarok) -->
+        <div class="nmap-gps" id="nmap-gps" style="display:none">
+            <i class="hgi hgi-stroke hgi-navigation-03"></i>
+            <span id="nmap-gps-label">GPS AKTÍV</span>
+        </div>
+
+        <!-- Kerületi szám panel (alsó sáv) -->
+        <div class="nmap-district" id="nmap-district" style="display:none">
+            <div class="nmap-district-inner">
+                <span class="nmap-district-num" id="nmap-district-num">I</span>
+                <span class="nmap-district-sep"></span>
+                <span class="nmap-district-name" id="nmap-district-name">Kerület</span>
+            </div>
+        </div>
+
+    </div>
+    <!-- /nmap-frame -->
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
