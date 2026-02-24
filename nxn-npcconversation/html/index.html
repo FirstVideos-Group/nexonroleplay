@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="npc-overlay" class="hidden">
+
+    <!-- NPC név sáv -->
+    <div id="npc-namebar">
+        <div class="npc-name-inner">
+            <i class="hgi hgi-stroke hgi-user-circle" id="npc-icon"></i>
+            <span class="npc-name-label" id="npc-name">NPC</span>
+        </div>
+        <button class="nxn-btn-icon" id="btn-close" onclick="closeUI()">
+            <i class="hgi hgi-stroke hgi-cancel-01"></i>
+        </button>
+    </div>
+
+    <!-- NPC válasz szöveg -->
+    <div class="npc-response-wrap" id="npc-response-wrap" style="display:none">
+        <div class="npc-response-bubble" id="npc-response"></div>
+    </div>
+
+    <!-- Opció lista -->
+    <div class="npc-options" id="npc-options">
+        <!-- JS tölti -->
+    </div>
+
+    <!-- Hint -->
+    <div class="npc-hint">
+        <span>ESC – bezárás</span>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

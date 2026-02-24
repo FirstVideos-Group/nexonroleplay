@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-npcconversation – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+        .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:4px}
+        .b-ok{background:rgba(62,207,142,.2);color:var(--success)}
+        .b-muted{background:rgba(107,111,133,.15);color:var(--muted)}
+        .b-acc{background:rgba(91,106,240,.2);color:var(--accent)}
+
+        /* UI prevügyelm */
+        .ui-prev{
+            display:flex;justify-content:center;margin-bottom:20px;
+        }
+        .prev-overlay{
+            width:480px;display:flex;flex-direction:column;gap:6px;
+            font-family:var(--font);
+        }
+        .prev-namebar{
+            display:flex;justify-content:space-between;align-items:center;
+            background:var(--surface);border:1px solid var(--border);
+            border-bottom:2px solid var(--accent);
+            border-radius:10px 10px 0 0;padding:10px 14px;
+        }
+        .prev-name-inner{display:flex;align-items:center;gap:8px;}
+        .prev-name-inner i{font-size:18px;color:var(--accent);}
+        .prev-name-label{font-size:15px;font-weight:600;color:var(--text);}
+        .prev-response{
+            background:var(--surface2);border:1px solid var(--border);
+            border-left:3px solid var(--accent);padding:12px 16px;
+        }
+        .prev-response-text{font-size:13px;color:var(--text);font-style:italic;line-height:1.6;}
+        .prev-response-text::before{content:'"';color:var(--accent);font-style:normal;font-weight:700;margin-right:2px;}
+        .prev-response-text::after{content:'"';color:var(--accent);font-style:normal;font-weight:700;margin-left:2px;}
+        .prev-options{
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:0 0 10px 10px;padding:10px;display:flex;flex-direction:column;gap:4px;
+        }
+        .prev-opt{
+            display:flex;align-items:center;gap:10px;
+            background:var(--surface2);border:1px solid transparent;
+            border-radius:8px;padding:10px 14px;
+            font-size:13px;color:var(--muted);
+        }
+        .prev-opt.active{
+            background:rgba(91,106,240,.08);border-color:var(--accent);color:var(--text);
+        }
+        .prev-opt i{font-size:15px;color:var(--muted);}
+        .prev-opt.active i{color:var(--accent);}
+        .prev-opt-label{flex:1;font-weight:500;}
+        .prev-badge{
+            font-size:10px;font-weight:700;padding:2px 7px;
+            border-radius:20px;background:rgba(91,106,240,.18);color:var(--accent);
+        }
+        .prev-arrow{font-size:12px;color:var(--border);}
+        .prev-hint{text-align:center;font-size:11px;color:var(--muted);padding:2px 0;}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-message-02"></i>
+    <div><h1>nxn-npcconversation <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-npcconversation</strong> az NPC-kkel folytatott beszélgetések alap-rendszere. Az NPC-ket a config fájlban vagy más resource-ok exportjaival lehet regisztrálni, minden NPC külön diálógus opciókkal rendelkezik amelyek kliensoldali esemenyeket tudnak kiváltani.</p>
+
+    <div class="info-box"><strong>Függőség:</strong> nincs kötelező függőség, önállóan fut. Más resource-ok az export API-n keresztül tudnak NPC-ket és diálógusokat hozzáadni.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-eye"></i> UI Előnézet</h2>
+    <div class="ui-prev">
+        <div class="prev-overlay">
+            <div class="prev-namebar">
+                <div class="prev-name-inner">
+                    <i class="hgi hgi-stroke hgi-user-circle"></i>
+                    <span class="prev-name-label">Lefoglalási Ügyinzétő</span>
+                </div>
+                <i class="hgi hgi-stroke hgi-cancel-01" style="font-size:16px;color:var(--muted)"></i>
+            </div>
+            <div class="prev-response">
+                <span class="prev-response-text">Jó napot kívánok! Miben segíthetek?</span>
+            </div>
+            <div class="prev-options">
+                <div class="prev-opt active">
+                    <i class="hgi hgi-stroke hgi-car-01"></i>
+                    <span class="prev-opt-label">Jármű kiváltása</span>
+                    <span class="prev-badge">AKTÍV</span>
+                    <i class="hgi hgi-stroke hgi-arrow-right-01 prev-arrow"></i>
+                </div>
+                <div class="prev-opt">
+                    <i class="hgi hgi-stroke hgi-dollar-01"></i>
+                    <span class="prev-opt-label">Mennyibe kerül?</span>
+                    <i class="hgi hgi-stroke hgi-arrow-right-01 prev-arrow"></i>
+                </div>
+                <div class="prev-opt">
+                    <i class="hgi hgi-stroke hgi-message-01"></i>
+                    <span class="prev-opt-label">Szia, hogy vagy?</span>
+                    <i class="hgi hgi-stroke hgi-arrow-right-01 prev-arrow"></i>
+                </div>
+            </div>
+            <div class="prev-hint">ESC – bezárás</div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-npcconversation/
+├── fxmanifest.lua
+├── config.lua          ← NPC-k és diálógus opciók
+├── shared.lua          ← NXN.NPC logger
+├── client.lua          ← spawn, interakció, UI, exportok
+├── server.lua          ← event forward (bővíthető)
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.InteractDistance</td><td>2.5</td><td>Interakció távolság (méter)</td></tr>
+        <tr><td>Config.InteractKey</td><td>38 (E)</td><td>GTA input kód</td></tr>
+        <tr><td>Config.HintDistance</td><td>5.0</td><td>Szöveges hint megjelenesi táv</td></tr>
+        <tr><td>Config.NPCs[id].label</td><td>–</td><td>NPC neve a UI-ban</td></tr>
+        <tr><td>Config.NPCs[id].model</td><td>–</td><td>GTA ped model neve</td></tr>
+        <tr><td>Config.NPCs[id].coords</td><td>–</td><td>vector4 (x, y, z, heading)</td></tr>
+        <tr><td>Config.NPCs[id].scenario</td><td>nil</td><td>GTA ambient scenario</td></tr>
+        <tr><td>Config.NPCs[id].blip</td><td>–</td><td>Blip beállítások (enabled, sprite, color, label)</td></tr>
+        <tr><td>Config.NPCs[id].dialogues</td><td>[]</td><td>Diálógus opciók tömbje</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-puzzle-piece-01"></i> Diálógus opció formátum</h2>
+    <pre><code>{
+    id       = 'vehicle_claim',        -- egyedi azonosító
+    label    = 'Jármű kiváltása',       -- UI-ban megjeleno szöveg
+    icon     = 'hgi-car-01',           -- HugeIcons neve (hgi- prefix)
+    response = 'Kiváltanám a járműt!', -- NPC válasz szövege
+    event    = 'nxn-impound:claim',    -- kliensoldali event (nil = csak szöveg)
+}</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>registerNPC(id, cfg)</td><td>Uj NPC regisztrálása + spawnojása más resource-ból</td></tr>
+        <tr><td>unregisterNPC(id)</td><td>NPC eltávolítása és despawnolása</td></tr>
+        <tr><td>addDialogue(npcId, option)</td><td>Extra diálógus opció hozzáadása</td></tr>
+        <tr><td>removeDialogue(npcId, optionId)</td><td>Diálógus opció eltávolítása</td></tr>
+        <tr><td>openConversation(npcId)</td><td>Beszélgetés kényszermegnyitása</td></tr>
+        <tr><td>closeConversation()</td><td>Beszélgetés bezárása</td></tr>
+        <tr><td>spawnNPC(npcId)</td><td>NPC manuális spawnolása</td></tr>
+        <tr><td>despawnNPC(npcId)</td><td>NPC despawnolása</td></tr>
+        <tr><td>getSpawnedNPCs()</td><td>Jelenleg spawnolt NPC-k listája</td></tr>
+        <tr><td>getCurrentNPC()</td><td>Jelenlegi beszélgetésben lévő NPC id</td></tr>
+        <tr><td>isConversationOpen()</td><td>Nyitva van-e a beszélgetés UI</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">NPC regisztrálás</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Diálógus hozzáadás</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Event kezelés</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Jármű lefoglalás példa</td></div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-impound/client.lua:
+exports['nxn-npcconversation']:registerNPC('impound_npc', {
+    label    = 'Lefoglalási Ügyinzétő',
+    model    = 's_m_m_security_01',
+    coords   = vector4(404.9, -1631.9, 29.3, 90.0),
+    scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
+    blip     = { enabled=true, sprite=446, color=1, label='Lefoglalt járművek', scale=0.8 },
+    dialogues = {
+        {
+            id='greet', label='Jó napot!', icon='hgi-message-01',
+            response='Jó napot kívánok! Miben segíthetek?', event=nil
+        },
+    }
+})</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Dinamikus diálógus hozzáadása (például lefoglalt jármű esetén):
+exports['nxn-npcconversation']:addDialogue('impound_npc', {
+    id       = 'vehicle_claim_ABC123',
+    label    = 'Jármű kiváltása (ABC-123)',
+    icon     = 'hgi-car-01',
+    response = 'Rendben, előkészítem a járművet!',
+    event    = 'nxn-impound:client:claimVehicle',
+})
+
+-- Eltávolítás kiváltás után:
+exports['nxn-npcconversation']:removeDialogue('impound_npc', 'vehicle_claim_ABC123')</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- nxn-impound/client.lua – event fogadása:
+AddEventHandler('nxn-impound:client:claimVehicle', function(data)
+    -- data.npcId, data.optionId automatikusan át van adva
+    TriggerServerEvent('nxn-impound:server:claim', data.optionId)
+end)</code></pre></div>
+    <div class="tab-content" id="t4"><pre><code>-- Teljes folyamat: jármű lefoglalás + NPC dialógus integráció
+
+-- 1. Az NPC már regisztrálva van (registerNPC)
+-- 2. Jármű lefoglalásakor:
+RegisterNetEvent('nxn-impound:client:vehicleImpounded')
+AddEventHandler('nxn-impound:client:vehicleImpounded', function(plate)
+    exports['nxn-npcconversation']:addDialogue('impound_npc', {
+        id       = 'claim_' .. plate,
+        label    = 'Jármű kiváltása (' .. plate .. ')',
+        icon     = 'hgi-car-01',
+        response = 'Megtaláltam! 5000 $ az ára.',
+        event    = 'nxn-impound:client:claimVehicle',
+    })
+end)
+
+-- 3. Kiváltás után eltávolítjuk:
+RegisterNetEvent('nxn-impound:client:vehicleClaimed')
+AddEventHandler('nxn-impound:client:vehicleClaimed', function(plate)
+    exports['nxn-npcconversation']:removeDialogue('impound_npc', 'claim_' .. plate)
+end)</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> esetén minden NPC spawn, diálógus kiválasztás és event kiváltás megjelenik <code>[nxn-npcconversation] [DEBUG]</code> prefixszel.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
