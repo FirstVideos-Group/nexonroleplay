@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-seatbelt – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning);}
+        .info-box.ok{border-color:var(--success);}
+        .info-box strong{color:var(--text)}
+
+        /* Flow diagram */
+        .flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-bottom:20px;}
+        .flow-step{
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:8px;padding:10px 16px;
+            font-size:12px;color:var(--text);text-align:center;min-width:110px;
+        }
+        .flow-step.active{border-color:var(--accent);color:var(--accent);}
+        .flow-step.warn{border-color:var(--warning);color:var(--warning);}
+        .flow-step.ok{border-color:var(--success);color:var(--success);}
+        .flow-arrow{font-size:18px;color:var(--muted);padding:0 6px;}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-steering-wheel"></i>
+    <div><h1>nxn-seatbelt <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-seatbelt</strong> kezeli a játszos biztonsagi övét: be- és kicsatolás, figyelmezteto hang, kiszalás blokkálás és export API más resource-ok (traffipax, rendorseg) számára. Automatikusan szinkronizál az <strong>nxn-vehicle-hud</strong>-dal.</p>
+
+    <div class="info-box ok"><strong>Integrációk:</strong> nxn-vehicle-hud (setSeatbelt), nxn-notify (ertesitesek)</div>
+
+    <h2><i class="hgi hgi-stroke hgi-workflow-square-01"></i> Működési folyamat</h2>
+    <div class="flow">
+        <div class="flow-step active">Járműbe szállás</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">Kicsatolt öv</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">Figyelmezteto hang<br><small>(2 percig)</small></div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step">[B] Bekotés</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step ok">Bekotott öv</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step">[B] Kicsatolás</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step">Kiszallás</div>
+    </div>
+    <div class="info-box warn"><strong>Fontos:</strong> Bekotott övnél a kiszalás blokkolódik – először ki kell csatolni az övet.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-seatbelt/
+├── fxmanifest.lua
+├── config.lua           ← hang, időzítők, gombok
+├── shared.lua           ← NXN.Seatbelt logger
+├── client.lua           ← logika + exportok
+├── html/index.html      ← NUI hanglejatszó (lathatatlan)
+├── sounds/
+│   └── seatbelt_warning.ogg   ← figyelmezteto hangfajl
+└── docs/index.html</code></pre>
+
+    <div class="info-box"><strong>Hangfajl:</strong> Helyezz el egy <code>seatbelt_warning.ogg</code> fájlt a <code>sounds/</code> mappába. A fájlnevet a <code>Config.WarningSoundFile</code>-ban lehet változtatni.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.ToggleKey</td><td>57 (B)</td><td>GTA input kód az öv toggle-hoz</td></tr>
+        <tr><td>Config.ToggleKeyLabel</td><td>'B'</td><td>UI-ban megjeleno billentyu label</td></tr>
+        <tr><td>Config.WarningSoundFile</td><td>'seatbelt_warning.ogg'</td><td>Hangfájl neve a sounds/ mappában</td></tr>
+        <tr><td>Config.WarningSoundVolume</td><td>0.5</td><td>Hangerő (0.0 – 1.0)</td></tr>
+        <tr><td>Config.WarningSoundDuration</td><td>120</td><td>Figyelmeztetes lejatszasi ideje (mp)</td></tr>
+        <tr><td>Config.WarningSoundInterval</td><td>3.0</td><td>Hangok kozott eltelt ido (mp)</td></tr>
+        <tr><td>Config.BlockExitWhenFastened</td><td>true</td><td>Kiszallas blokkolasa bekotott ovnel</td></tr>
+        <tr><td>Config.AutoUnbuckleSpeedThreshold</td><td>nil</td><td>Km/h felett auto kicsatol (nil = ki)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>isFastened()</td><td>boolean</td><td>Öv be van-e kotve</td></tr>
+        <tr><td>setFastened(state)</td><td>–</td><td>Öv allapotat külsőleg állítja</td></tr>
+        <tr><td>fasten()</td><td>–</td><td>Öv bekotese</td></tr>
+        <tr><td>unfasten()</td><td>–</td><td>Öv kicsatolasa</td></tr>
+        <tr><td>isInVehicle()</td><td>boolean</td><td>Jatekos jarmube van-e</td></tr>
+        <tr><td>playWarning()</td><td>–</td><td>Figyelmezteto hang manualis inditasa</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Traffipax ellenőrzés</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Rendorségi leállítás</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Allapot lekérdezés</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-traffipax/client.lua
+local function CheckSeatbelt()
+    if GetResourceState('nxn-seatbelt') ~= 'started' then return end
+
+    local isFastened = exports['nxn-seatbelt']:isFastened()
+    local isInCar    = exports['nxn-seatbelt']:isInVehicle()
+
+    if isInCar and not isFastened then
+        -- Birsagolasi logika
+        TriggerServerEvent('nxn-traffipax:server:fine', {
+            reason = 'Nincs bekapcsolva a biztonsagi ov',
+            amount = 15000
+        })
+    end
+end</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Rendorsegi ellenorzes - ov allapot lekerdezes
+local isFastened = exports['nxn-seatbelt']:isFastened()
+if not isFastened then
+    exports['nxn-notify']:send('Nincs bekotve a biztonsagi ov!', 'danger')
+end
+
+-- Kiszallas utan auto kicsatolas (pl. mentese)
+exports['nxn-seatbelt']:setFastened(false)</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- Allapot lekerdezes + HUD szinkron manualis kenyszeritessel
+local seatbeltOk = exports['nxn-seatbelt']:isFastened()
+local inCar      = exports['nxn-seatbelt']:isInVehicle()
+
+print(('Ov: %s | Jarmuben: %s'):format(
+    tostring(seatbeltOk),
+    tostring(inCar)
+))
+
+-- Figyelmeztetes manualis lejatszasa
+exports['nxn-seatbelt']:playWarning()</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> nxn-vehicle-hud integráció</h2>
+    <p>Az ov allapota automatikusan továbbítódik az <code>nxn-vehicle-hud</code> <code>setSeatbelt(fastened)</code> exportjához minden állapotváltozáskor. Ha az nxn-vehicle-hud nincs elindítva, a rendszer figyelmeztet de nem omlik össze.</p>
+    <pre><code>-- Automatikusan meghivja (nxn-seatbelt belsejeben):
+exports['nxn-vehicle-hud']:setSeatbelt(true)   -- bekotes
+exports['nxn-vehicle-hud']:setSeatbelt(false)  -- kicsatolas</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> eseten minden allapotvaltozas, hang event es HUD szinkron megjelenik <code>[nxn-seatbelt] [DEBUG]</code> prefixszel a konzolban.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
