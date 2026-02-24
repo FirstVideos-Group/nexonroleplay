@@ -1,0 +1,304 @@
+/* ============================================================
+   nxn-location-hud | style.css – Nexon Design System tokenek
+   ============================================================ */
+
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: var(--nxn-font);
+    pointer-events: none;
+}
+
+/* ── Root pozíciók ───────────────────────────────────────── */
+
+#lhud-root {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 100;
+    transition: opacity .3s;
+}
+
+#lhud-root.pos-bottom-left  { bottom: 24px; left: 200px; align-items: flex-start; }
+#lhud-root.pos-bottom-right { bottom: 24px; right: 24px; align-items: flex-end; }
+#lhud-root.pos-top-left     { top: 24px;    left: 200px; align-items: flex-start; }
+#lhud-root.pos-top-right    { top: 24px;    right: 24px; align-items: flex-end; }
+
+#lhud-root.hidden { opacity: 0; }
+
+/* ── Fő lokációs blokk ──────────────────────────────────── */
+
+.lhud-main-block {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: rgba(22, 24, 31, 0.78);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 8px 12px;
+    min-width: 180px;
+    max-width: 240px;
+}
+
+/* Minimap koordináta sor */
+.lhud-minimap-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--nxn-border);
+}
+
+.lhud-icon {
+    font-size: 12px;
+    color: var(--nxn-accent);
+    flex-shrink: 0;
+}
+
+.lhud-coords {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}
+
+/* Helyszínszövegek */
+.lhud-location-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.lhud-district {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--nxn-muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lhud-street {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nxn-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lhud-cross {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Zóna blokk ─────────────────────────────────────────── */
+
+.lhud-zone-block {
+    background: rgba(22, 24, 31, 0.78);
+    border: 1px solid var(--nxn-border);
+    border-left: 3px solid var(--nxn-accent);
+    border-radius: var(--nxn-radius);
+    padding: 7px 10px;
+    max-width: 240px;
+    animation: lhudFadeIn .2s ease forwards;
+}
+
+.lhud-zone-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lhud-zone-block i {
+    font-size: 15px;
+    color: var(--nxn-accent);
+    flex-shrink: 0;
+}
+
+.lhud-zone-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.lhud-zone-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--nxn-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lhud-zone-gang {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Veszély blokk ───────────────────────────────────────── */
+
+.lhud-danger-block {
+    background: rgba(22, 24, 31, 0.78);
+    border: 1px solid var(--nxn-border);
+    border-left: 3px solid var(--nxn-danger);
+    border-radius: var(--nxn-radius);
+    padding: 7px 10px;
+    max-width: 240px;
+    animation: lhudFadeIn .2s ease forwards;
+}
+
+.lhud-danger-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lhud-danger-icon {
+    font-size: 15px;
+    color: var(--nxn-danger);
+    flex-shrink: 0;
+}
+
+.lhud-danger-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.lhud-danger-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--nxn-danger);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+/* Dot sor (1-5 szint) */
+.lhud-danger-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.lhud-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--nxn-border);
+    transition: background .2s;
+    flex-shrink: 0;
+}
+
+.lhud-dot.active-1 { background: var(--nxn-success); }
+.lhud-dot.active-2 { background: var(--nxn-success); }
+.lhud-dot.active-3 { background: var(--nxn-warning); }
+.lhud-dot.active-4 { background: var(--nxn-danger);  }
+.lhud-dot.active-5 { background: var(--nxn-danger);  }
+
+/* ── Státusz sor ───────────────────────────────────────────── */
+
+.lhud-status-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.lhud-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(22, 24, 31, 0.78);
+    border: 1px solid var(--nxn-border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    animation: lhudFadeIn .2s ease forwards;
+}
+
+.lhud-badge i {
+    font-size: 13px;
+    color: var(--nxn-muted);
+}
+
+.lhud-badge-val {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--nxn-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* Körözés badge piros */
+.lhud-badge-danger i,
+.lhud-badge-danger .lhud-badge-val {
+    color: var(--nxn-danger);
+}
+
+/* Csillagok */
+.lhud-wanted-stars {
+    display: flex;
+    gap: 1px;
+}
+
+.lhud-wanted-stars i {
+    font-size: 10px;
+    color: var(--nxn-border);
+    transition: color .2s;
+}
+
+.lhud-wanted-stars i.active {
+    color: var(--nxn-warning);
+}
+
+/* ── Modulok általános ──────────────────────────────────────── */
+
+.lhud-module {
+    animation: lhudFadeIn .25s ease forwards;
+}
+
+.lhud-module--fading-out {
+    animation: lhudFadeOut .2s ease forwards;
+}
+
+/* ── Animációk ────────────────────────────────────────────── */
+
+@keyframes lhudFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lhudFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(5px); }
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="lhud-root">
+
+    <!-- ── Fő lokációs blokk ───────────────────────────────── -->
+    <div class="lhud-main-block">
+
+        <!-- Minimap kerete (koordináta) -->
+        <div class="lhud-module lhud-minimap-wrap" data-module="minimap" data-order="3">
+            <div class="lhud-minimap-bar">
+                <i class="hgi hgi-stroke hgi-maps-location-01 lhud-icon"></i>
+                <span class="lhud-coords" id="val-coords">0 / 0</span>
+            </div>
+        </div>
+
+        <!-- Körzet + Utca ───────────────────────────────── -->
+        <div class="lhud-location-texts">
+
+            <div class="lhud-module lhud-district-wrap" data-module="district" data-order="1">
+                <span class="lhud-district" id="val-district">Ismeretlen</span>
+            </div>
+
+            <div class="lhud-module lhud-street-wrap" data-module="street" data-order="2">
+                <span class="lhud-street" id="val-street">Ismeretlen</span>
+                <span class="lhud-cross" id="val-cross"></span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Zona blokk (nxn-gang) ───────────────────────────── -->
+    <div class="lhud-module lhud-zone-block" data-module="zone" data-order="4" style="display:none">
+        <div class="lhud-zone-inner">
+            <i class="hgi hgi-stroke hgi-territory"></i>
+            <div class="lhud-zone-texts">
+                <span class="lhud-zone-name" id="val-zone-name">Ismeretlen zona</span>
+                <span class="lhud-zone-gang" id="val-zone-gang"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Veszély blokk (nxn-dispatch) ──────────────────────── -->
+    <div class="lhud-module lhud-danger-block" data-module="danger" data-order="5" style="display:none">
+        <div class="lhud-danger-inner">
+            <i class="hgi hgi-stroke hgi-alert-01 lhud-danger-icon"></i>
+            <div class="lhud-danger-texts">
+                <span class="lhud-danger-label" id="val-danger-label">VESZELY</span>
+                <div class="lhud-danger-dots" id="danger-dots">
+                    <span class="lhud-dot" data-dot="1"></span>
+                    <span class="lhud-dot" data-dot="2"></span>
+                    <span class="lhud-dot" data-dot="3"></span>
+                    <span class="lhud-dot" data-dot="4"></span>
+                    <span class="lhud-dot" data-dot="5"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Státusz sor (opcionális modulok) ───────────────────── -->
+    <div class="lhud-status-row" id="lhud-status-row">
+
+        <!-- Körözés (nxn-wantedstatus) -->
+        <div class="lhud-module lhud-badge lhud-badge-danger" data-module="wanted" data-order="6" style="display:none">
+            <i class="hgi hgi-stroke hgi-police-badge-01"></i>
+            <span class="lhud-badge-val" id="val-wanted">KÖRÖZOTT</span>
+            <div class="lhud-wanted-stars" id="wanted-stars">
+                <i class="hgi hgi-stroke hgi-star"></i>
+                <i class="hgi hgi-stroke hgi-star"></i>
+                <i class="hgi hgi-stroke hgi-star"></i>
+                <i class="hgi hgi-stroke hgi-star"></i>
+                <i class="hgi hgi-stroke hgi-star"></i>
+            </div>
+        </div>
+
+        <!-- Játékos státusz -->
+        <div class="lhud-module lhud-badge" data-module="playerstatus" data-order="7" style="display:none">
+            <i class="hgi hgi-stroke hgi-user-01" id="icon-playerstatus"></i>
+            <span class="lhud-badge-val" id="val-playerstatus">GYALOG</span>
+        </div>
+
+    </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

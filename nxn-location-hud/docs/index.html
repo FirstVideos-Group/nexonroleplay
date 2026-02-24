@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-location-hud – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:920px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+        .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:4px}
+        .b-ok{background:rgba(62,207,142,.2);color:var(--success)}
+        .b-warn{background:rgba(240,181,91,.2);color:var(--warning)}
+        .b-muted{background:rgba(107,111,133,.15);color:var(--muted)}
+        .b-acc{background:rgba(91,106,240,.2);color:var(--accent)}
+        /* Preview */
+        .lhud-prev{background:linear-gradient(135deg,#12141a,#1a1d28);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin-bottom:16px;max-width:300px}
+        .lp-main{background:rgba(22,24,31,.78);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;min-width:180px;display:flex;flex-direction:column;gap:3px}
+        .lp-top{display:flex;align-items:center;gap:5px;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:2px}
+        .lp-coord{font-size:11px;color:var(--muted)}
+        .lp-dist{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+        .lp-street{font-size:13px;font-weight:600;color:var(--text)}
+        .lp-cross{font-size:11px;color:var(--muted)}
+        .lp-zone{background:rgba(22,24,31,.78);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:7px 10px;display:flex;align-items:center;gap:8px;min-width:180px}
+        .lp-zone i{font-size:15px;color:var(--accent)}
+        .lp-zn{font-size:12px;font-weight:700;color:var(--text)}
+        .lp-zg{font-size:11px;color:var(--muted)}
+        .lp-danger{background:rgba(22,24,31,.78);border:1px solid var(--border);border-left:3px solid var(--danger);border-radius:var(--radius);padding:7px 10px;display:flex;align-items:center;gap:8px;min-width:180px}
+        .lp-di{font-size:15px;color:var(--danger)}
+        .lp-dl{font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.06em}
+        .lp-dots{display:flex;gap:3px;margin-top:2px}
+        .lp-dot{width:7px;height:7px;border-radius:50%;background:var(--border)}
+        .lp-dot.a{background:var(--danger)}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-maps-location-01"></i>
+    <div><h1>nxn-location-hud <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-location-hud</strong> a Nexon szerver moduláris lokációs HUD-ja. Körzet, utca, koordináta, zóna, veszely szint, körözés és játékos státusz modulokból épül fel. Az <code>nxn-gang</code>, <code>nxn-dispatch</code> és <code>nxn-wantedstatus</code> exportokon keresztül tölti fel az adatokat.</p>
+
+    <div class="info-box"><strong>Függőség:</strong> nincs kötelező függőség, önállóan fut.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-eye"></i> Előnézet</h2>
+    <div class="lhud-prev">
+        <div class="lp-main">
+            <div class="lp-top">
+                <i class="hgi hgi-stroke hgi-maps-location-01" style="font-size:12px;color:var(--accent)"></i>
+                <span class="lp-coord">142 / -987</span>
+            </div>
+            <span class="lp-dist">Rockford Hills</span>
+            <span class="lp-street">Eclipse Blvd</span>
+            <span class="lp-cross">∩ Vinewood Blvd</span>
+        </div>
+        <div class="lp-zone">
+            <i class="hgi hgi-stroke hgi-territory"></i>
+            <div>
+                <div class="lp-zn">Ballas terület</div>
+                <div class="lp-zg">Ballas – Lila</div>
+            </div>
+        </div>
+        <div class="lp-danger">
+            <i class="hgi hgi-stroke hgi-alert-01 lp-di"></i>
+            <div>
+                <div class="lp-dl">AKTÍV LÖVÖLDÖZÉS</div>
+                <div class="lp-dots">
+                    <div class="lp-dot a"></div>
+                    <div class="lp-dot a"></div>
+                    <div class="lp-dot a"></div>
+                    <div class="lp-dot"></div>
+                    <div class="lp-dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-location-hud/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua             ← init, exportok
+├── modules/
+│   ├── district.lua         ← körzet nevének lekérdezése (poll)
+│   ├── street.lua           ← utca nevének lekérdezése (poll)
+│   ├── minimap.lua          ← koordináta kijelző (poll)
+│   ├── zone.lua             ← passzív, nxn-gang tölti
+│   ├── danger.lua           ← passzív, nxn-dispatch tölti
+│   ├── wanted.lua           ← passzív, nxn-wantedstatus tölti
+│   └── playerstatus.lua     ← játékos állapot poll
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.Position</td><td>'bottom-left'</td><td>HUD helye: bottom-left | bottom-right | top-left | top-right</td></tr>
+        <tr><td>Config.PollInterval</td><td>2000</td><td>Körzet/utca frissítés (ms)</td></tr>
+        <tr><td>Config.StatusPollInterval</td><td>800</td><td>Játékos státusz frissítés (ms)</td></tr>
+        <tr><td>Config.ShowMinimap</td><td>true</td><td>Koordináta sor megjelenítése</td></tr>
+        <tr><td>Config.Modules.danger.threshold</td><td>1</td><td>Min. veszely szint a megjelenéshez (1-5)</td></tr>
+        <tr><td>Config.Modules.danger.hideDelay</td><td>8000</td><td>Eltűnés késleltetése ms-ban</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-puzzle-piece-01"></i> Modulok</h2>
+    <table>
+        <tr><th>Modul</th><th>Láthatóság</th><th>Adat forrása</th></tr>
+        <tr><td>district</td><td><span class="badge b-ok">mindig</span></td><td>GetNameOfZone – poll</td></tr>
+        <tr><td>street</td><td><span class="badge b-ok">mindig</span></td><td>GetStreetNameAtCoord – poll</td></tr>
+        <tr><td>minimap</td><td><span class="badge b-ok">mindig</span></td><td>GetEntityCoords – poll</td></tr>
+        <tr><td>zone</td><td><span class="badge b-warn">banda zona belépésnekor</span></td><td>nxn-gang → setZone()</td></tr>
+        <tr><td>danger</td><td><span class="badge b-warn">küszböb fölött</span></td><td>nxn-dispatch → setDanger()</td></tr>
+        <tr><td>wanted</td><td><span class="badge b-muted">opcionális, ha körözött</span></td><td>nxn-wantedstatus → setWanted()</td></tr>
+        <tr><td>playerstatus</td><td><span class="badge b-muted">opcionális</span></td><td>GTA natív API – poll</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>setVisible(bool)</td><td>HUD elrejtése / mutatása</td></tr>
+        <tr><td>isVisible()</td><td>HUD aktuális láthatósága</td></tr>
+        <tr><td>setModule(name, bool)</td><td>Modul be- / kikapcsolása</td></tr>
+        <tr><td>getModuleState(name)</td><td>Modul állapota</td></tr>
+        <tr><td>getAllModuleStates()</td><td>Összes modul állapota</td></tr>
+        <tr><td>setPosition(pos)</td><td>Pozíció váltás menet közben</td></tr>
+        <tr><td>setZone(name, gang, color)</td><td>Zóna + banda adat (nxn-gang hívja)</td></tr>
+        <tr><td>clearZone()</td><td>Zóna adat törlése, modul elrejtése</td></tr>
+        <tr><td>setDanger(level, label)</td><td>Veszely szint 0-5 (nxn-dispatch hívja)</td></tr>
+        <tr><td>setWanted(wanted, level, label)</td><td>Körözés adat (nxn-wantedstatus hívja)</td></tr>
+        <tr><td>setPlayerStatus(status)</td><td>Játékos állapot (külső resource is hívhatja)</td></tr>
+        <tr><td>updateModuleData(name, data)</td><td>Általános adat push (bővítéshez)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">nxn-gang integrálás</div>
+        <div class="tab" onclick="switchTab(this,'t2')">nxn-dispatch</div>
+        <div class="tab" onclick="switchTab(this,'t3')">nxn-wantedstatus</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Modul kapcsolás</div>
+        <div class="tab" onclick="switchTab(this,'t5')">Bővítés</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-gang / client.lua:
+AddEventHandler('nxn-gang:zoneEntered', function(data)
+    exports['nxn-location-hud']:setModule('zone', true)
+    exports['nxn-location-hud']:setZone(
+        data.zoneName,   -- 'Davis'
+        data.gangName,   -- 'Ballas'
+        data.color       -- '#8b00ff'
+    )
+end)
+
+AddEventHandler('nxn-gang:zoneLeft', function()
+    exports['nxn-location-hud']:clearZone()
+end)</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- nxn-dispatch / client.lua:
+AddEventHandler('nxn-dispatch:alert', function(level, label)
+    -- level: 1-5, label: 'AKTIV LOVOLDOZES'
+    exports['nxn-location-hud']:setModule('danger', true)
+    exports['nxn-location-hud']:setDanger(level, label)
+end)
+
+AddEventHandler('nxn-dispatch:clear', function()
+    exports['nxn-location-hud']:setDanger(0)
+end)</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- nxn-wantedstatus / client.lua:
+RegisterNetEvent('nxn-wantedstatus:client:update')
+AddEventHandler('nxn-wantedstatus:client:update', function(wanted, stars, label)
+    exports['nxn-location-hud']:setModule('wanted', true)
+    exports['nxn-location-hud']:setWanted(wanted, stars, label)
+end)</code></pre></div>
+    <div class="tab-content" id="t4"><pre><code>-- Játékos státusz modul bekapcsolása
+exports['nxn-location-hud']:setModule('playerstatus', true)
+
+-- HUD elrejtése cutscene alatt
+exports['nxn-location-hud']:setVisible(false)
+
+-- Pozíció váltás
+exports['nxn-location-hud']:setPosition('bottom-right')</code></pre></div>
+    <div class="tab-content" id="t5"><pre><code>-- 1. config.lua:
+Config.Modules.mission = { enabled=true, alwaysVisible=false, order=8 }
+
+-- 2. modules/mission.lua:
+-- NXN.LocHUD.Log('mission modul betoltve')
+-- ... passziv vagy poll ...
+-- NXN.LocHUD.Send('updateModule', { module='mission', ... })
+
+-- 3. html/index.html: uj .lhud-module div blokk
+-- 4. fxmanifest.lua: 'modules/mission.lua' a client_scripts-be
+-- 5. app.js updateModule(): uj 'mission' ag</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> esetén minden poll változás és export hívás megjelenik a konzolban.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
