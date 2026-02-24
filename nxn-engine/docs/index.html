@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-engine – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.ok{border-color:var(--success)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box.danger{border-color:var(--danger)}
+        .info-box strong{color:var(--text)}
+
+        /* Allapot badge */
+        .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+        .badge-ok{background:rgba(62,207,142,.15);color:var(--success);}
+        .badge-damaged{background:rgba(240,181,91,.15);color:var(--warning);}
+        .badge-critical{background:rgba(240,91,91,.15);color:var(--danger);}
+        .badge-off{background:rgba(107,111,133,.15);color:var(--muted);}
+
+        /* HP vizualizacio */
+        .hp-bar-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px;}
+        .hp-bar{height:16px;border-radius:6px;background:var(--border);overflow:hidden;position:relative;margin-top:8px;}
+        .hp-fill{height:100%;border-radius:6px;transition:width .3s;}
+        .hp-markers{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;}
+
+        /* Flow */
+        .flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:20px;}
+        .flow-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;text-align:center;min-width:100px;}
+        .flow-step.ok{border-color:var(--success);color:var(--success);}
+        .flow-step.warn{border-color:var(--warning);color:var(--warning);}
+        .flow-step.danger{border-color:var(--danger);color:var(--danger);}
+        .flow-arrow{font-size:18px;color:var(--muted);padding:0 6px;}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-engine-01"></i>
+    <div><h1>nxn-engine <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-engine</strong> kezeli a jármű motorának indítását/leállítását, HP-alapú sérülését és szinkronizál az <strong>nxn-vehicle-hud</strong>-dal. Export API-ja előkészítve az <strong>nxn-keys</strong> (kulcsrendszer) és <strong>nxn-hotwire</strong> (autólopás) resource-okhoz.</p>
+
+    <div class="info-box"><strong>Integrációk:</strong> nxn-vehicle-hud (setEngineState), nxn-notify, nxn-seatbelt-extras (collision event)</div>
+
+    <h2><i class="hgi hgi-stroke hgi-workflow-square-01"></i> Indítás folyamata</h2>
+    <div class="flow">
+        <div class="flow-step">[G] Toggle</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">engineLocked?</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">Auth callback?<br><small>(nxn-keys)</small></div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">HP &gt; 0?</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step ok">Motor indul</div>
+    </div>
+    <div class="info-box warn"><strong>Hotwire:</strong> A <code>hotwireStart()</code> export kihagyja a lock és auth ellenőrzést, de a motor HP-t még ellenőrzi.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-battery-charging-01"></i> Motor HP állapotok</h2>
+    <div class="hp-bar-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--muted)">Motor HP %</span>
+            <div style="display:flex;gap:8px">
+                <span class="badge badge-ok">ok: 40-100%</span>
+                <span class="badge badge-damaged">damaged: 15-40%</span>
+                <span class="badge badge-critical">critical: 0-15%</span>
+                <span class="badge badge-off">off: motor leáll</span>
+            </div>
+        </div>
+        <div class="hp-bar">
+            <div class="hp-fill" style="width:100%;background:linear-gradient(to right,var(--danger) 0%,var(--danger) 15%,var(--warning) 15%,var(--warning) 40%,var(--success) 40%,var(--success) 100%)"></div>
+        </div>
+        <div class="hp-markers"><span>0</span><span>15%</span><span>40%</span><span>100%</span></div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Sérülés konfiguráció</h2>
+    <table>
+        <tr><th>Blokk</th><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>EngineDamage</td><td>damagedThreshold</td><td>40%</td><td>Alatta: 'damaged' HUD állapot</td></tr>
+        <tr><td>EngineDamage</td><td>criticalThreshold</td><td>15%</td><td>Alatta: 'critical' + leállás eshetősége</td></tr>
+        <tr><td>EngineDamage</td><td>criticalStallChance</td><td>0.15</td><td>Valószínűség/perc hogy leáll a motor</td></tr>
+        <tr><td>overheat</td><td>rpmThreshold</td><td>0.95</td><td>E felett kezd melegni</td></tr>
+        <tr><td>overheat</td><td>heatRate</td><td>0.05 HP/mp</td><td>Sérülés ráta túlhevülésnél</td></tr>
+        <tr><td>collision</td><td>thresholds</td><td>[20-40: 3%...]</td><td>deltaV -> sérülés%  tábla</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>startEngine(silent?)</td><td>boolean</td><td>Motor indítás (lock+auth+HP ellenőrzés)</td></tr>
+        <tr><td>stopEngine(silent?)</td><td>–</td><td>Motor leállítás</td></tr>
+        <tr><td>isRunning()</td><td>boolean</td><td>Motor jár-e</td></tr>
+        <tr><td>getEngineHP()</td><td>number</td><td>Motor HP % (0-100)</td></tr>
+        <tr><td>setEngineHP(pct)</td><td>–</td><td>Motor HP beállítás külsőleg</td></tr>
+        <tr><td>applyDamage(pct, reason?)</td><td>–</td><td>Sérülés alkalmazása</td></tr>
+        <tr><td>getEngineState()</td><td>string</td><td>'ok'|'damaged'|'critical'|'off'</td></tr>
+        <tr><td>setLocked(state)</td><td>–</td><td>Motor zárolás (nxn-keys)</td></tr>
+        <tr><td>isLocked()</td><td>boolean</td><td>Zárás állapot</td></tr>
+        <tr><td>registerStartAuthCallback(fn)</td><td>–</td><td>Auth callback regisztrálás (nxn-keys)</td></tr>
+        <tr><td>clearStartAuthCallback()</td><td>–</td><td>Auth callback törlés</td></tr>
+        <tr><td>hotwireStart(vehicle?, silent?)</td><td>boolean</td><td>Hotwire start (nxn-hotwire)</td></tr>
+        <tr><td>isInVehicle()</td><td>boolean</td><td>Játékos járműben van-e</td></tr>
+        <tr><td>getCurrentVehicle()</td><td>number</td><td>Aktuális jármű entitas</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-broadcast"></i> Kliensoldali Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Adat</th><th>Mikor</th></tr>
+        <tr><td>nxn-engine:started</td><td>{ vehicle, hp, hotwire? }</td><td>Motor elindult</td></tr>
+        <tr><td>nxn-engine:stopped</td><td>{ vehicle }</td><td>Motor leállt</td></tr>
+        <tr><td>nxn-engine:damaged</td><td>{ vehicle, hp, dmg, reason }</td><td>Sérülés alkalmazva</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">nxn-keys integráció</div>
+        <div class="tab" onclick="switchTab(this,'t2')">nxn-hotwire integráció</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Szerváles/élmény példa</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-keys/client.lua inicializalas:
+
+-- 1. Auth callback regisztralasa - ez fut le minden inditasnal
+exports['nxn-engine']:registerStartAuthCallback(function(vehicleEntity)
+    local plate = GetVehicleNumberPlateText(vehicleEntity)
+    -- Ellenorizd hogy a jatekosnak van-e kulcsa ehhez a rendszamhoz
+    local hasKey = NXN.Keys.HasKeyForPlate(plate)
+    NXN.Keys.Log(('Auth check: plate=%s hasKey=%s'):format(plate, tostring(hasKey)))
+    return hasKey
+end)
+
+-- 2. Kulcs nelkul le is zaroljuk (pl. jarmu ellopas utan):
+exports['nxn-engine']:setLocked(true)
+
+-- 3. Kulcs visszaadasa utan feloldas:
+exports['nxn-engine']:setLocked(false)</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- nxn-hotwire/client.lua:
+
+-- Hotwire siker utan motor inditasa:
+local ok = exports['nxn-engine']:hotwireStart()
+if ok then
+    -- Motor elindult, kezeld a kulcs-allapotot
+    exports['nxn-notify']:send('Sikeres hotwire!', 'success')
+else
+    exports['nxn-notify']:send('A motor tul sulyosan serult.', 'danger')
+end
+
+-- Motor allapot ellenorzese hotwire elott:
+local hp = exports['nxn-engine']:getEngineHP()
+if hp < 10 then
+    exports['nxn-notify']:send('A motor tul torott a hotwire-hoz.', 'danger')
+end</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- Motor serules esemeny figyelese:
+AddEventHandler('nxn-engine:damaged', function(data)
+    print(('Motor serules: reason=%s dmg=%.1f hp=%.1f'):format(
+        data.reason, data.dmg, data.hp
+    ))
+    if data.hp <= 0 then
+        TriggerServerEvent('nxn-mechanic:server:engineDestroyed', {
+            vehicle = data.vehicle
+        })
+    end
+end)
+
+-- Motor HP manualis allitasa (pl. szerelo utan):
+exports['nxn-engine']:setEngineHP(100)  -- teli repair
+exports['nxn-engine']:setEngineHP(50)   -- felig megjavitva</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> eseten minden motor-esemeny, RPM mintavetel, HUD szinkron es serules megjelenik <code>[nxn-engine] [DEBUG]</code> prefixszel. Tipp: figyelj a <code>Overheat</code> es <code>Kolliziо serules</code> sorokra.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
