@@ -1,0 +1,118 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    pointer-events: none;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ── Nagy tablak: teteje kozepen ─────────────────────────── */
+
+.signs-large {
+    position: fixed;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    z-index: 100;
+}
+
+.sign-large {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity var(--fade-in, 600ms) ease;
+}
+
+.sign-large.visible {
+    opacity: 1;
+}
+
+.sign-large.hiding {
+    transition: opacity var(--fade-out, 400ms) ease;
+    opacity: 0;
+}
+
+.sign-large img {
+    width: auto;
+    height: 96px;
+    max-width: 480px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.55));
+}
+
+.sign-large .sign-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+/* ── Info tablak: jobb oldal kozepen ─────────────────────── */
+
+.signs-info {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    z-index: 100;
+}
+
+.sign-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--fade-in, 400ms) ease;
+    transform: translateX(16px);
+}
+
+.sign-info.visible {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity var(--fade-in, 400ms) ease,
+                transform var(--fade-in, 400ms) cubic-bezier(.22,.68,0,1.2);
+}
+
+.sign-info.hiding {
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity var(--fade-out, 300ms) ease,
+                transform var(--fade-out, 300ms) ease;
+}
+
+.sign-info img {
+    width: auto;
+    height: 64px;
+    max-width: 120px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 10px rgba(0,0,0,0.5));
+}
+
+.sign-info .sign-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+}

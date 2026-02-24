@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <!-- Kerek sebesseg tabla: 40 km/h -->
+  <circle cx="80" cy="80" r="76" fill="white" stroke="#CC0000" stroke-width="12"/>
+  <text x="80" y="72" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="44" font-weight="900" fill="#111">40</text>
+  <text x="80" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#555">km/h</text>
+</svg>

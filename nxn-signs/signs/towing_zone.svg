@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" width="160" height="200">
+  <!-- Teglalap informacios tabla: Towing Zone -->
+  <rect width="160" height="200" rx="6" fill="#003087"/>
+  <rect x="8" y="8" width="144" height="184" rx="3" fill="none" stroke="white" stroke-width="2"/>
+  <!-- Vontatasi ikon egyszerusitve -->
+  <text x="80" y="80" text-anchor="middle" font-family="Arial" font-size="42" fill="white">&#128663;</text>
+  <line x1="20" y1="96" x2="140" y2="96" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <text x="80" y="126" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="17" font-weight="900" fill="white">TOWING</text>
+  <text x="80" y="152" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="17" font-weight="900" fill="white">ZONE</text>
+  <text x="80" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.6)">NO PARKING</text>
+</svg>

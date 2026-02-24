@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-signs – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted);pointer-events:all}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.ok{border-color:var(--success)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+
+        /* Kategoria preview */
+        .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+        .cat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;}
+        .cat-card h3{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+        .cat-card p{font-size:12px;color:var(--muted);margin:0;}
+        .cat-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.04em;}
+        .cat-large{background:rgba(91,106,240,.18);color:#5b6af0;}
+        .cat-info{background:rgba(62,207,142,.14);color:#3ecf8e;}
+
+        /* Sign mock */
+        .sign-mock{background:#111;border-radius:8px;padding:20px;display:flex;gap:24px;align-items:flex-start;margin-bottom:16px;}
+        .mock-large{background:#1a5c2a;border-radius:6px;padding:12px 32px;color:white;font-weight:900;font-size:18px;letter-spacing:2px;border:2px solid rgba(255,255,255,.3);}
+        .mock-info{background:#003087;border-radius:6px;padding:10px 16px;color:white;font-size:12px;font-weight:700;text-align:center;width:80px;}
+        .mock-label{font-size:10px;color:var(--muted);text-align:center;margin-top:6px;letter-spacing:.05em;text-transform:uppercase;}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-sign-direction-01"></i>
+    <div><h1>nxn-signs <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-signs</strong> zóna-alapú jelzőtábla-megjelenítő rendszer. SVG fájlokat használ, fade-in/out animációkkal, két kategóriában: nagy és infó táblák.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-layout-top"></i> Kategóriák</h2>
+    <div class="cat-grid">
+        <div class="cat-card">
+            <h3><span class="cat-badge cat-large">large</span> Nagy tábla</h3>
+            <p>Képernyő tetején középen jelenik meg, 96px magas SVG. Időkorlátos vagy &ouml;r&ouml;k. Pl. területbe lépési tábla.</p>
+        </div>
+        <div class="cat-card">
+            <h3><span class="cat-badge cat-info">info</span> Info tábla</h3>
+            <p>Jobb oldal közepén jelenik meg, 64px magas SVG. Folyamatosan látszik amíg a játékos a zónában van. Pl. sebesség, vontatási zóna.</p>
+        </div>
+    </div>
+
+    <div class="sign-mock">
+        <div>
+            <div class="mock-large">WELCOME TO DOWNTOWN</div>
+            <div class="mock-label">large &mdash; teteje középen</div>
+        </div>
+        <div>
+            <div class="mock-info">40<br><span style="font-size:9px;font-weight:400">km/h</span></div>
+            <div class="mock-label">info &mdash; jobb oldal</div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-signs/
+├── fxmanifest.lua
+├── config.lua          ← zónák, pozíciók, sugarak, fájlok
+├── shared.lua          ← NXN.Signs logger
+├── client.lua          ← zóna-ellenorzés, exportok
+├── html/
+│   ├── index.html        ← NUI kontenner
+│   ├── style.css         ← large + info elrendezés
+│   └── app.js            ← showSign/hideSign logika
+├── signs/              ← SVG fájlok
+│   ├── downtown_welcome.svg
+│   ├── airport_welcome.svg
+│   ├── speed_40.svg
+│   ├── speed_130.svg
+│   └── towing_zone.svg
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Config zóna mezoők</h2>
+    <table>
+        <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
+        <tr><td>label</td><td>string</td><td>Megjelenített szöveg a tábla alatt</td></tr>
+        <tr><td>category</td><td>'large'|'info'</td><td>Tábla típusa</td></tr>
+        <tr><td>file</td><td>string</td><td>SVG fájlnév a signs/ mappában</td></tr>
+        <tr><td>center</td><td>vector3</td><td>Zóna középpontja (GTA koordináta)</td></tr>
+        <tr><td>radius</td><td>number</td><td>Zóna sugara méterben</td></tr>
+        <tr><td>duration</td><td>number|nil</td><td>Másodperc amig látszik; nil = folyamatos</td></tr>
+        <tr><td>fadeIn</td><td>number</td><td>Fade-in idő ms-ban</td></tr>
+        <tr><td>fadeOut</td><td>number</td><td>Fade-out idő ms-ban</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>showSign(id, cfg)</td><td>Tábla manuális megjelenítése időkorláttal vagy anélkül</td></tr>
+        <tr><td>hideSign(id)</td><td>Tábla elrejtése</td></tr>
+        <tr><td>registerZone(id, zone)</td><td>Runtime zóna regisztrálása</td></tr>
+        <tr><td>unregisterZone(id)</td><td>Zóna eltávolítása</td></tr>
+        <tr><td>getActiveSign()</td><td>Aktiv táblák listája</td></tr>
+        <tr><td>getZone(id)</td><td>Zóna definíció visszaadása</td></tr>
+        <tr><td>getAllZones()</td><td>Minden zóna visszaadása</td></tr>
+        <tr><td>pinSign(id)</td><td>Tábla rogzítése (duration törlése)</td></tr>
+        <tr><td>unpinSign(id, sec?)</td><td>Rogzítés feloldása, opcionális timeout-al</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-broadcast"></i> Kliensoldali Events</h2>
+    <table>
+        <tr><th>Event</th><th>Adat</th><th>Mikor</th></tr>
+        <tr><td>nxn-signs:shown</td><td>{ id, zone }</td><td>Tábla megjelent</td></tr>
+        <tr><td>nxn-signs:hidden</td><td>{ id }</td><td>Tábla elrejtve</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Manuális megjelenítés</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Runtime zóna</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Saját SVG tábla</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- Manualis megjelenitese egy esemenynel (pl. verseny rajtnal):
+exports['nxn-signs']:showSign('race_start', {
+    file     = 'race_start.svg',
+    category = 'large',
+    label    = 'Verseny kezdodik!',
+    duration = 5,       -- 5 masodpercig latszik
+    fadeIn   = 800,
+    fadeOut  = 600,
+})
+
+-- Elrejtese:
+exports['nxn-signs']:hideSign('race_start')</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Runtime zona regisztralasa (pl. nxn-impound terulete):
+exports['nxn-signs']:registerZone('impound_zone', {
+    label    = 'Lefoglalt terulet',
+    category = 'info',
+    file     = 'towing_zone.svg',
+    center   = vector3(400.0, -1650.0, 29.0),
+    radius   = 80.0,
+    duration = nil,    -- folyamatos
+    fadeIn   = 400,
+    fadeOut  = 300,
+})
+
+-- Eltavolitasa ha a zona megszunik:
+exports['nxn-signs']:unregisterZone('impound_zone')</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- Sajat SVG tabla letrehozasa:
+-- 1. Helyezd el az SVG fajlt: nxn-signs/signs/sajat_tabla.svg
+-- 2. Regisztrald a zona-t a config.lua-ban:
+
+Config.Zones['sajat_zona'] = {
+    label    = 'Sajat Zona',
+    category = 'large',       -- vagy 'info'
+    file     = 'sajat_tabla.svg',
+    center   = vector3(X, Y, Z),
+    radius   = 100.0,
+    duration = 4,             -- 4 mp latszik
+    fadeIn   = 600,
+    fadeOut  = 400,
+}
+
+-- Vagy runtime exporttal:
+exports['nxn-signs']:registerZone('sajat_zona', { ... })</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> eseten minden zóna belépés/kilépés, megjelenítés és eltűnés megjelenik <code>[nxn-signs] [DEBUG]</code> prefixszel, beleértve a távolságot és a duration leállást.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
