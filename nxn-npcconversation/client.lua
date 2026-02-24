@@ -195,7 +195,7 @@ CreateThread(function()
             -- Megjeleniti a hint szoveget
             if nearest.dist < Config.InteractDistance then
                 -- Interakcio eleg kozel
-                local txt = ('[%s] Beszelgetes: %s']:format(
+                local txt = ('[%s] Beszelgetes: %s'):format(
                     Config.InteractKeyLabel,
                     nearest.entry.config.label
                 )
