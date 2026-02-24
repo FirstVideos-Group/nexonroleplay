@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="vhud-root">
+
+    <!-- ── Sebesség + RPM + Gear fő blokk ───────────────────── -->
+    <div class="vhud-cluster" id="cluster-main">
+
+        <!-- Gear -->
+        <div class="vhud-module vhud-gear-wrap" data-module="gear" data-order="3">
+            <div class="vhud-gear" id="val-gear">1</div>
+            <div class="vhud-gear-label" id="val-gear-label">GEAR</div>
+        </div>
+
+        <!-- Speed + RPM csoport -->
+        <div class="vhud-speed-rpm-group">
+
+            <!-- Sebesség -->
+            <div class="vhud-module vhud-speed-wrap" data-module="speed" data-order="1">
+                <span class="vhud-speed-val" id="val-speed">0</span>
+                <span class="vhud-speed-unit" id="val-speed-unit">km/h</span>
+            </div>
+
+            <!-- RPM bar -->
+            <div class="vhud-module vhud-rpm-wrap" data-module="rpm" data-order="2">
+                <div class="vhud-rpm-track">
+                    <div class="vhud-rpm-fill" id="bar-rpm" style="width:0%"></div>
+                    <div class="vhud-rpm-redline"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Státusz ikonok sor ───────────────────────────────── -->
+    <div class="vhud-status-row" id="status-row">
+
+        <!-- Lámpák -->
+        <div class="vhud-module vhud-status-icon" data-module="lights" data-order="4" style="display:none">
+            <div class="vhud-icon-group" id="lights-group">
+                <i class="hgi hgi-stroke hgi-sun-01" id="icon-lights-pos" title="Pozíció"></i>
+                <i class="hgi hgi-stroke hgi-flash" id="icon-lights-high" title="Teli fény" style="display:none"></i>
+                <i class="hgi hgi-stroke hgi-alert-triangle" id="icon-lights-hazard" title="Vészvillogó" style="display:none"></i>
+            </div>
+        </div>
+
+        <!-- Motor státusz -->
+        <div class="vhud-module vhud-status-icon" data-module="engine" data-order="5" style="display:none">
+            <i class="hgi hgi-stroke hgi-engine-01" id="icon-engine"></i>
+            <span class="vhud-status-label" id="label-engine">OK</span>
+        </div>
+
+        <!-- Üzemanyag (opcionális) -->
+        <div class="vhud-module vhud-status-fuel" data-module="fuel" data-order="6" style="display:none">
+            <i class="hgi hgi-stroke hgi-gas-stove" id="icon-fuel"></i>
+            <div class="vhud-fuel-track">
+                <div class="vhud-fuel-fill" id="bar-fuel" style="width:100%"></div>
+            </div>
+            <span class="vhud-fuel-val" id="val-fuel">100</span>
+        </div>
+
+        <!-- Biztonsági öv (opcionális) -->
+        <div class="vhud-module vhud-status-icon vhud-danger-icon" data-module="seatbelt" data-order="7" style="display:none">
+            <i class="hgi hgi-stroke hgi-seatbelt"></i>
+            <span class="vhud-status-label">ÖV</span>
+        </div>
+
+        <!-- Szirena (opcionális) -->
+        <div class="vhud-module vhud-status-icon vhud-siren-icon" data-module="siren" data-order="8" style="display:none">
+            <i class="hgi hgi-stroke hgi-alert-01"></i>
+            <span class="vhud-status-label" id="label-siren">CODE 1</span>
+        </div>
+
+    </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

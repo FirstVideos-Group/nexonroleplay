@@ -1,0 +1,290 @@
+/* ============================================================
+   nxn-vehicle-hud | style.css – Nexon Design System tokenek
+   ============================================================ */
+
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+    --vhud-rpm-color: #5b6af0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: var(--nxn-font);
+    pointer-events: none;
+}
+
+/* ── Root pozíciók ─────────────────────────────────────────── */
+
+#vhud-root {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    z-index: 100;
+    transition: opacity .3s;
+}
+
+#vhud-root.pos-bottom-right { bottom: 24px; right: 24px; align-items: flex-end; }
+#vhud-root.pos-bottom-left  { bottom: 24px; left: 24px;  align-items: flex-start; }
+#vhud-root.pos-top-right    { top: 24px;    right: 24px; align-items: flex-end; }
+#vhud-root.pos-top-left     { top: 24px;    left: 24px;  align-items: flex-start; }
+
+#vhud-root.hidden { opacity: 0; pointer-events: none; }
+
+/* ── Fő cluster (speed + rpm + gear) ───────────────────────── */
+
+.vhud-cluster {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(22, 24, 31, 0.78);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 10px 14px;
+    min-width: 160px;
+}
+
+/* Gear kijelző */
+.vhud-gear-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    min-width: 28px;
+}
+
+.vhud-gear {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--nxn-text);
+    line-height: 1;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    transition: color .15s;
+}
+
+.vhud-gear.reverse { color: var(--nxn-danger); }
+.vhud-gear.neutral  { color: var(--nxn-muted); }
+
+.vhud-gear-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--nxn-muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+/* Divider */
+.vhud-cluster-divider {
+    width: 1px;
+    height: 38px;
+    background: var(--nxn-border);
+    flex-shrink: 0;
+}
+
+/* Speed + RPM group */
+.vhud-speed-rpm-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+/* Sebesség */
+.vhud-speed-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.vhud-speed-val {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--nxn-text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+    min-width: 54px;
+    text-align: right;
+    display: inline-block;
+}
+
+.vhud-speed-unit {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--nxn-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    align-self: flex-end;
+    padding-bottom: 3px;
+}
+
+/* RPM bar */
+.vhud-rpm-wrap { width: 100%; }
+
+.vhud-rpm-track {
+    position: relative;
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.vhud-rpm-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--vhud-rpm-color);
+    transition: width .08s linear;
+}
+
+.vhud-rpm-redline {
+    position: absolute;
+    right: 12%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: rgba(240,91,91,.6);
+}
+
+/* RPM szín váltás >85% */
+.vhud-rpm-fill.redline {
+    background: var(--nxn-danger);
+}
+
+/* ── Státusz sor ────────────────────────────────────────────── */
+
+.vhud-status-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.vhud-status-icon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(22,24,31,0.78);
+    border: 1px solid var(--nxn-border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    animation: nxnVehFadeIn .2s ease forwards;
+}
+
+.vhud-status-icon i {
+    font-size: 14px;
+    color: var(--nxn-muted);
+}
+
+.vhud-status-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--nxn-muted);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+/* Motor szín állapot szerint */
+.engine-ok       { color: var(--nxn-success) !important; }
+.engine-damaged  { color: var(--nxn-warning) !important; }
+.engine-critical { color: var(--nxn-danger)  !important; }
+.engine-off      { color: var(--nxn-muted)   !important; }
+
+/* Veszélyes ikon (öv, szirena) */
+.vhud-danger-icon i,
+.vhud-danger-icon .vhud-status-label {
+    color: var(--nxn-danger);
+}
+
+.vhud-siren-icon i,
+.vhud-siren-icon .vhud-status-label {
+    color: var(--nxn-warning);
+}
+
+/* Lámpa ikonok */
+#icon-lights-pos  { color: #e0e840; }
+#icon-lights-high { color: #5bc4f0; }
+#icon-lights-hazard { color: var(--nxn-warning); }
+
+/* ── Üzemanyag ─────────────────────────────────────────────── */
+
+.vhud-status-fuel {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(22,24,31,0.78);
+    border: 1px solid var(--nxn-border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    animation: nxnVehFadeIn .2s ease forwards;
+}
+
+.vhud-status-fuel i {
+    font-size: 14px;
+    color: var(--nxn-muted);
+}
+
+.vhud-fuel-track {
+    width: 52px;
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.vhud-fuel-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--nxn-success);
+    transition: width .4s ease, background .4s;
+}
+
+.vhud-fuel-fill.low   { background: var(--nxn-warning); }
+.vhud-fuel-fill.empty { background: var(--nxn-danger);  }
+
+.vhud-fuel-val {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    min-width: 20px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Animációk ─────────────────────────────────────────────── */
+
+@keyframes nxnVehFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nxnVehFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(4px); }
+}
+
+.vhud-module--fading-out {
+    animation: nxnVehFadeOut .2s ease forwards;
+}
+
+.vhud-module {
+    animation: nxnVehFadeIn .25s ease forwards;
+}

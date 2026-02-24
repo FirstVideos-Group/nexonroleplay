@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-vehicle-hud – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:920px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+        .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:4px}
+        .b-ok{background:rgba(62,207,142,.2);color:var(--success)}
+        .b-warn{background:rgba(240,181,91,.2);color:var(--warning)}
+        .b-muted{background:rgba(107,111,133,.15);color:var(--muted)}
+        .b-acc{background:rgba(91,106,240,.2);color:var(--accent)}
+
+        /* Preview */
+        .vhud-prev{
+            background:linear-gradient(135deg,#12141a,#1a1d28);
+            border:1px solid var(--border);border-radius:var(--radius);
+            padding:20px;display:flex;flex-direction:column;gap:8px;
+            align-items:flex-end;margin-bottom:16px;
+        }
+        .vpc{display:flex;align-items:center;gap:10px;background:rgba(22,24,31,.78);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;min-width:160px}
+        .vg{font-size:28px;font-weight:800;color:var(--text);line-height:1;min-width:28px;text-align:center}
+        .vgl{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+        .vsrg{display:flex;flex-direction:column;gap:6px;flex:1}
+        .vsw{display:flex;align-items:baseline;gap:4px}
+        .vsv{font-size:30px;font-weight:800;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;min-width:54px;text-align:right}
+        .vsu{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;align-self:flex-end;padding-bottom:3px}
+        .vrpmt{height:4px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;position:relative}
+        .vrpmf{height:100%;border-radius:3px;background:var(--accent)}
+        .vsr{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+        .vsi{display:flex;align-items:center;gap:4px;background:rgba(22,24,31,.78);border:1px solid var(--border);border-radius:6px;padding:4px 8px}
+        .vsi i{font-size:14px;color:var(--muted)}
+        .vsl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+        .vfi{display:flex;align-items:center;gap:5px;background:rgba(22,24,31,.78);border:1px solid var(--border);border-radius:6px;padding:4px 8px}
+        .vft{width:52px;height:4px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+        .vff{height:100%;border-radius:3px;background:var(--success)}
+        .vfv{font-size:11px;color:var(--muted);min-width:20px;text-align:right}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-steering-wheel"></i>
+    <div><h1>nxn-vehicle-hud <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-vehicle-hud</strong> a Nexon szerver moduláris jármű HUD-ja. Automatikusan megjelenik járműbe szállásnál és eltűnik kiszállásnál. Minden modul külön fájlban él, könnyen bővíthető. Az opcionális modulokat (<code>fuel</code>, <code>seatbelt</code>, <code>siren</code>, <code>engine</code>) a dedikált külső resourceok töltik fel.</p>
+
+    <div class="info-box"><strong>Önálló resource</strong> – nincs kötelező függősége, az nxn-notify-jal és nxn-hud-dal párhuzamosan fut.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-eye"></i> Előnézet</h2>
+    <div class="vhud-prev">
+        <div class="vpc">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:28px">
+                <div class="vg">3</div>
+                <div class="vgl">GEAR</div>
+            </div>
+            <div style="width:1px;height:38px;background:var(--border)"></div>
+            <div class="vsrg">
+                <div class="vsw">
+                    <span class="vsv">87</span>
+                    <span class="vsu">km/h</span>
+                </div>
+                <div class="vrpmt"><div class="vrpmf" style="width:62%"></div></div>
+            </div>
+        </div>
+        <div class="vsr">
+            <div class="vsi"><i class="hgi hgi-stroke hgi-sun-01" style="color:#e0e840"></i><span class="vsl">POS</span></div>
+            <div class="vfi">
+                <i class="hgi hgi-stroke hgi-gas-stove" style="font-size:14px;color:var(--muted)"></i>
+                <div class="vft"><div class="vff" style="width:68%"></div></div>
+                <span class="vfv">68</span>
+            </div>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-vehicle-hud/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua           ← jármű detektálás, exportok
+├── modules/
+│   ├── speed.lua        ← sebesség poll (km/h, mph)
+│   ├── rpm.lua          ← fordulat poll (0-100%)
+│   ├── gear.lua         ← fokozat poll
+│   ├── lights.lua       ← lámpa állapot poll + show/hide
+│   ├── engine.lua       ← motor health poll + show/hide
+│   ├── fuel.lua         ← passzív, nxn-fuel tölti
+│   ├── seatbelt.lua     ← passzív, nxn-seatbelt kezeli
+│   └── siren.lua        ← passzív, nxn-sirencontrol kezeli
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.Position</td><td>'bottom-right'</td><td>HUD helye: bottom-right | bottom-left | top-right | top-left</td></tr>
+        <tr><td>Config.SpeedUnit</td><td>'kmh'</td><td>Sebesség egység: 'kmh' | 'mph'</td></tr>
+        <tr><td>Config.PollInterval</td><td>100</td><td>Poll intervallum ms-ban (speed, rpm, gear)</td></tr>
+        <tr><td>Config.Modules.*.enabled</td><td>varies</td><td>Modul engedélyezése</td></tr>
+        <tr><td>Config.Modules.*.alwaysVisible</td><td>varies</td><td>Mindig látszik / csak eseménykor</td></tr>
+        <tr><td>Config.Modules.engine.threshold</td><td>950</td><td>Engine health küszöb (0-1000)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-puzzle-piece-01"></i> Modulok áttekintése</h2>
+    <table>
+        <tr><th>Modul</th><th>Típus</th><th>Láthatóság</th><th>Adat forrása</th></tr>
+        <tr><td>speed</td><td>nagy szám</td><td><span class="badge b-ok">mindig (motor jár)</span></td><td>GTA natív – GetEntitySpeed</td></tr>
+        <tr><td>rpm</td><td>bar</td><td><span class="badge b-ok">mindig (motor jár)</span></td><td>GTA natív – GetVehicleCurrentRpm</td></tr>
+        <tr><td>gear</td><td>nagy szám</td><td><span class="badge b-ok">mindig (motor jár)</span></td><td>GTA natív – GetVehicleCurrentGear</td></tr>
+        <tr><td>lights</td><td>ikon csoport</td><td><span class="badge b-warn">ha lámpa be van kapcsolva</span></td><td>GTA natív – GetVehicleLightsState</td></tr>
+        <tr><td>engine</td><td>ikon + label</td><td><span class="badge b-warn">ha sérült / leáll</span></td><td>GTA natív – GetVehicleEngineHealth</td></tr>
+        <tr><td>fuel</td><td>bar + szám</td><td><span class="badge b-muted">opcionális</span></td><td>nxn-fuel → setFuel()</td></tr>
+        <tr><td>seatbelt</td><td>ikon</td><td><span class="badge b-muted">opcionális, ha nincs bekötve</span></td><td>nxn-seatbelt → setSeatbelt()</td></tr>
+        <tr><td>siren</td><td>ikon + label</td><td><span class="badge b-muted">opcionális, ha aktív</span></td><td>nxn-sirencontrol → setSiren()</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>setVisible(bool)</td><td>HUD manuális elrejtése / mutatása</td></tr>
+        <tr><td>isVisible()</td><td>HUD aktuális láthatósága</td></tr>
+        <tr><td>isInVehicle()</td><td>Játékos járműben van-e</td></tr>
+        <tr><td>setModule(name, bool)</td><td>Modul be-/kikapcsolása</td></tr>
+        <tr><td>getModuleState(name)</td><td>Modul állapota</td></tr>
+        <tr><td>getAllModuleStates()</td><td>Összes modul állapota</td></tr>
+        <tr><td>setPosition(pos)</td><td>Pozíció váltás menet közben</td></tr>
+        <tr><td>setFuel(value)</td><td>Üzemanyag 0-100 (nxn-fuel hívja)</td></tr>
+        <tr><td>setSeatbelt(fastened)</td><td>Öv állapot (nxn-seatbelt hívja)</td></tr>
+        <tr><td>setSiren(active, mode)</td><td>Szirena állapot (nxn-sirencontrol hívja)</td></tr>
+        <tr><td>setEngineState(state)</td><td>Motor állapot: ok/damaged/critical/off (nxn-engine hívhatja)</td></tr>
+        <tr><td>updateModuleData(name, data)</td><td>Általános modul adat push (bővítéshez)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">nxn-fuel integrálás</div>
+        <div class="tab" onclick="switchTab(this,'t2')">nxn-seatbelt</div>
+        <div class="tab" onclick="switchTab(this,'t3')">nxn-sirencontrol</div>
+        <div class="tab" onclick="switchTab(this,'t4')">nxn-engine</div>
+        <div class="tab" onclick="switchTab(this,'t5')">Modul kapcsolás</div>
+        <div class="tab" onclick="switchTab(this,'t6')">Bővítés: új modul</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-fuel / client.lua
+AddEventHandler('nxn-fuel:updated', function(level)
+    -- fuel modul bekapcsolasa ha meg nem lenne
+    exports['nxn-vehicle-hud']:setModule('fuel', true)
+    exports['nxn-vehicle-hud']:setFuel(level)
+end)</code></pre></div>
+
+    <div class="tab-content" id="t2"><pre><code>-- nxn-seatbelt / client.lua
+AddEventHandler('nxn-seatbelt:changed', function(fastened)
+    exports['nxn-vehicle-hud']:setModule('seatbelt', true)
+    exports['nxn-vehicle-hud']:setSeatbelt(fastened)
+end)</code></pre></div>
+
+    <div class="tab-content" id="t3"><pre><code>-- nxn-sirencontrol / client.lua
+AddEventHandler('nxn-sirencontrol:changed', function(active, mode)
+    exports['nxn-vehicle-hud']:setModule('siren', true)
+    exports['nxn-vehicle-hud']:setSiren(active, mode)
+end)
+-- pl. mode = 'Code 2', 'Code 3', 'Wail' stb.</code></pre></div>
+
+    <div class="tab-content" id="t4"><pre><code>-- nxn-engine / client.lua (motor leállítás / beindítás esemény)
+AddEventHandler('nxn-engine:stateChanged', function(state)
+    -- state: 'ok' | 'damaged' | 'critical' | 'off'
+    exports['nxn-vehicle-hud']:setEngineState(state)
+end)</code></pre></div>
+
+    <div class="tab-content" id="t5"><pre><code>-- HUD elrejtése (pl. cutscene)
+exports['nxn-vehicle-hud']:setVisible(false)
+
+-- Üzemanyag modul kikapcsolása
+exports['nxn-vehicle-hud']:setModule('fuel', false)
+
+-- Pozíció váltás
+exports['nxn-vehicle-hud']:setPosition('bottom-left')</code></pre></div>
+
+    <div class="tab-content" id="t6"><pre><code>-- 1. config.lua:
+Config.Modules.nitro = { enabled=true, alwaysVisible=false, order=9 }
+
+-- 2. modules/nitro.lua:
+CreateThread(function()
+    while true do
+        Wait(Config.PollInterval)
+        if not hudVisible or not inVehicle then goto continue end
+        if not moduleStates['nitro'] then goto continue end
+        -- ... lekérdezés ...
+        NXN.VehHUD.Send('updateModule', { module='nitro', value=nitroVal })
+        ::continue::
+    end
+end)
+
+-- 3. html/index.html: új .vhud-module blokk
+-- 4. fxmanifest.lua client_scripts: 'modules/nitro.lua'</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug logok</h2>
+    <p><code>Config.Debug = true</code> esetén minden poll változás, NUI send és export hívás megjelenik a konzolban. Éles szerveren kapcsold ki.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
