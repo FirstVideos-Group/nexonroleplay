@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <style>
+        html, body {
+            margin: 0; padding: 0;
+            background: transparent;
+            overflow: hidden;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<!-- nxn-autoseatbelt: NUI csak hanglejatszasra -->
+<audio id="auto-audio" preload="auto"></audio>
+<script>
+    const audio = document.getElementById('auto-audio');
+
+    window.addEventListener('message', function(e) {
+        const d = e.data;
+        if (!d || !d.action) return;
+
+        if (d.action === 'playSound') {
+            audio.src    = d.file;
+            audio.volume = d.volume !== undefined ? d.volume : 0.6;
+            audio.currentTime = 0;
+            audio.play().catch(function() {});
+        }
+    });
+</script>
+</body>
+</html>

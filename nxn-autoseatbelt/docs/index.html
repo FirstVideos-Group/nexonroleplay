@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-autoseatbelt – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root{
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;--success:#3ecf8e;
+            --danger:#f05b5b;--warning:#f0b55b;--radius:10px;--font:'Inter','Segoe UI',sans-serif;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7;font-size:14px}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:960px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:18px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.65}
+        code{color:var(--success);font-family:'Consolas',monospace}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .info-box{background:#1a1c2a;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted)}
+        .info-box.ok{border-color:var(--success)}
+        .info-box.warn{border-color:var(--warning)}
+        .info-box strong{color:var(--text)}
+
+        /* Prioritas pyramid */
+        .priority-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+        .prio-row{
+            display:flex;align-items:center;gap:12px;
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:8px;padding:10px 14px;
+        }
+        .prio-num{
+            font-size:11px;font-weight:700;color:var(--accent);
+            background:rgba(91,106,240,.15);border-radius:20px;
+            padding:2px 8px;flex-shrink:0;
+        }
+        .prio-label{font-size:13px;color:var(--text);font-weight:500;}
+        .prio-desc{font-size:12px;color:var(--muted);margin-left:auto;}
+        .prio-row.block{border-left:2px solid var(--danger);}
+        .prio-row.allow{border-left:2px solid var(--success);}
+
+        /* Osztaly tabla */
+        .cls-enabled{color:var(--success);font-weight:600;}
+        .cls-disabled{color:var(--danger);}
+        .cls-neutral{color:var(--muted);}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-seatbelt"></i>
+    <div><h1>nxn-autoseatbelt <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-autoseatbelt</strong> az <strong>nxn-seatbelt</strong> kiegészítője: járműtípus- és modell-lista alapján automatikusan beköti a biztonsági övet a járműbe szállás után.</p>
+
+    <div class="info-box ok"><strong>Függőség:</strong> Az <code>nxn-seatbelt</code> resource-nak futnia kell. A script <code>dependencies</code> listaból automatikusan el is indítja.</div>
+
+    <h2><i class="hgi hgi-stroke hgi-workflow-square-01"></i> Döntési prioritás</h2>
+    <p>Amikor a játékos járműbe száll, az alábbi sorrendben dönt a rendszer:</p>
+    <div class="priority-list">
+        <div class="prio-row block">
+            <span class="prio-num">1</span>
+            <span class="prio-label">ExcludedModels / runtimeExcludedModels</span>
+            <span class="prio-desc">Soha nem kötödik be → STOP</span>
+        </div>
+        <div class="prio-row block">
+            <span class="prio-num">2</span>
+            <span class="prio-label">ExcludedClasses</span>
+            <span class="prio-desc">Kizart osztály → STOP</span>
+        </div>
+        <div class="prio-row allow">
+            <span class="prio-num">3</span>
+            <span class="prio-label">AutoModels / runtimeAutoModels</span>
+            <span class="prio-desc">Explicit feherlista → IGEN</span>
+        </div>
+        <div class="prio-row allow">
+            <span class="prio-num">4</span>
+            <span class="prio-label">AutoClasses / runtimeAutoClasses</span>
+            <span class="prio-desc">Osztály match → IGEN</span>
+        </div>
+        <div class="prio-row">
+            <span class="prio-num">5</span>
+            <span class="prio-label">Egyéb</span>
+            <span class="prio-desc">Nem kötődik be automatikusan</span>
+        </div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-autoseatbelt/
+├── fxmanifest.lua
+├── config.lua          ← modellek, osztalyok, kesleltetes, hang
+├── shared.lua          ← NXN.AutoSeatbelt logger
+├── client.lua          ← logika + exportok
+├── html/index.html     ← NUI hanglejatszo (lathatatlan)
+├── sounds/
+│   └── seatbelt_auto.ogg  ← automatikus bekotes hangja
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.AutoFastenDelay</td><td>1.5 mp</td><td>Késleltetes járműbe szállás után</td></tr>
+        <tr><td>Config.Sound.enabled</td><td>true</td><td>Hang lejatszas be/ki</td></tr>
+        <tr><td>Config.Sound.file</td><td>'seatbelt_auto.ogg'</td><td>Hangfajl neve</td></tr>
+        <tr><td>Config.Sound.volume</td><td>0.6</td><td>Hangero (0.0–1.0)</td></tr>
+        <tr><td>Config.NotifyMessage</td><td>'Az automatikus...'</td><td>Notify szoveg (nil = nincs)</td></tr>
+        <tr><td>Config.NotifyType</td><td>'success'</td><td>Notify tipus</td></tr>
+        <tr><td>Config.AutoClasses</td><td>[0,1,2,3...]</td><td>GTA jarmue-osztalyok ahol auto beköt</td></tr>
+        <tr><td>Config.AutoModels</td><td>[]</td><td>Explicit modellek ahol mindig beköt</td></tr>
+        <tr><td>Config.ExcludedModels</td><td>[motorok...]</td><td>Modellek ahol SOHA nem kötödik</td></tr>
+        <tr><td>Config.ExcludedClasses</td><td>[8,13,14...]</td><td>Osztalyok ahol SOHA nem kötödik</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>setEnabled(state)</td><td>–</td><td>Auto rendszer ki/be</td></tr>
+        <tr><td>isEnabled()</td><td>boolean</td><td>Rendszer állapota</td></tr>
+        <tr><td>triggerNow()</td><td>boolean</td><td>Azonnali bekötés (lista ellenorzzessel)</td></tr>
+        <tr><td>forceAutoFasten()</td><td>boolean</td><td>Kenyszer-bekötés lista nélkül</td></tr>
+        <tr><td>addAutoModel(name)</td><td>–</td><td>Runtime modell hozzaadas</td></tr>
+        <tr><td>removeAutoModel(name)</td><td>–</td><td>Runtime modell eltavolitasa</td></tr>
+        <tr><td>addAutoClass(classId)</td><td>–</td><td>Runtime osztaly hozzaadas</td></tr>
+        <tr><td>removeAutoClass(classId)</td><td>–</td><td>Runtime osztaly eltavolitasa</td></tr>
+        <tr><td>excludeModel(name)</td><td>–</td><td>Runtime kizaras hozzaadas</td></tr>
+        <tr><td>unexcludeModel(name)</td><td>–</td><td>Runtime kizaras eltavolitasa</td></tr>
+        <tr><td>isPendingFasten()</td><td>boolean</td><td>Var-e meg a kesleltetes</td></tr>
+        <tr><td>cancelPending()</td><td>–</td><td>Varo bekotes megszakitasa</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-broadcast"></i> Kliensoldali Event</h2>
+    <table>
+        <tr><th>Event neve</th><th>Adat</th><th>Mikor</th></tr>
+        <tr><td>nxn-autoseatbelt:fastened</td><td>{ vehicle, model }</td><td>Auto-bekötés megtörtént</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Tesztvezetés</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Modell runtime hozzaadás</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Event figyalés</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- nxn-testdrive/client.lua
+-- Tesztvezetesnel MINDIG kotodik az ov, fuggettlenul a jarmu tipusatol:
+
+AddEventHandler('nxn-testdrive:started', function(vehicleModel)
+    -- Kenyszer-bekotes (kihagyja a lista ellenorzest)
+    exports['nxn-autoseatbelt']:forceAutoFasten()
+end)
+
+AddEventHandler('nxn-testdrive:ended', function()
+    -- Ha a tesztvezetes vege utan sem kell auto, letiltjuk
+    exports['nxn-autoseatbelt']:setEnabled(false)
+    exports['nxn-seatbelt']:unfasten()
+    -- Tesztvezetes utan visszakapcsoljuk
+    Wait(500)
+    exports['nxn-autoseatbelt']:setEnabled(true)
+end)</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Runtime modell hozzaadas (pl. egy esemeny auto-ja):
+exports['nxn-autoseatbelt']:addAutoModel('entityxf')  -- F1 auto
+exports['nxn-autoseatbelt']:addAutoModel('buzzard2')  -- helikopter (osztalyban kizart, de itt explicit)
+
+-- Ideiglenes kizaras (pl. mentoszolgalatnal nem kotodik):
+exports['nxn-autoseatbelt']:excludeModel('ambulance')
+
+-- Visszavonas:
+exports['nxn-autoseatbelt']:unexcludeModel('ambulance')</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- Auto-bekotes esemeny figyelese (pl. loggolas, statisztika):
+AddEventHandler('nxn-autoseatbelt:fastened', function(data)
+    print(('Auto-bekotes: model=%s entId=%d'):format(
+        data.model, data.vehicle
+    ))
+    -- Pl. szerver-loggolas:
+    TriggerServerEvent('nxn-logs:server:seatbelt', {
+        model    = data.model,
+        autoFast = true,
+    })
+end)</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-table-01"></i> GTA jármű osztályok</h2>
+    <table>
+        <tr><th>ID</th><th>Név</th><th>Alapért. auto</th></tr>
+        <tr><td>0</td><td>Compact</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>1</td><td>Sedan</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>2</td><td>SUV</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>3</td><td>Coupe</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>4</td><td>Muscle</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>5</td><td>Sports Classic</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>6</td><td>Sport</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>7</td><td>Super</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>8</td><td>Motorcycle</td><td class="cls-disabled">✕ Nem</td></tr>
+        <tr><td>9</td><td>Off-road</td><td class="cls-neutral">– Nincs listaban</td></tr>
+        <tr><td>10</td><td>Industrial</td><td class="cls-neutral">– Nincs listaban</td></tr>
+        <tr><td>11</td><td>Utility</td><td class="cls-neutral">– Nincs listaban</td></tr>
+        <tr><td>12</td><td>Van</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>13</td><td>Cycles</td><td class="cls-disabled">✕ Nem</td></tr>
+        <tr><td>14</td><td>Boats</td><td class="cls-disabled">✕ Nem</td></tr>
+        <tr><td>15</td><td>Helicopters</td><td class="cls-disabled">✕ Nem</td></tr>
+        <tr><td>16</td><td>Service</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>17</td><td>Emergency</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>18</td><td>Military</td><td class="cls-disabled">✕ Nem</td></tr>
+        <tr><td>19</td><td>Commercial</td><td class="cls-enabled">✓ Igen</td></tr>
+        <tr><td>20</td><td>Trains</td><td class="cls-disabled">✕ Nem</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
+    <p><code>Config.Debug = true</code> eseten minden járműbe szállás, modell/osztaly eldöntés es bekötés megjelenik <code>[nxn-autoseatbelt] [DEBUG]</code> prefixszel.</p>
+</main>
+<script>
+    function switchTab(el,id){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
