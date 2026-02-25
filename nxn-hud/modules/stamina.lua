@@ -1,13 +1,10 @@
 -- ============================================================
 --  nxn-hud | modules/stamina.lua
---  FIX: stamina megjelenesi logika javitva
---   - GetPlayerSprintStaminaRemaining: 100 = teli, 0 = ures
---   - megjelenik ha stamina < 100 (azaz fut / fogyaszt)
---   - eltunk ha visszatoltodott 100-ra (hideDelay utan)
---   - a bar ertek: stamina (0-100), nem megforditva
+--  FIX: setTimeout/clearTimeout nem letezik Lua-ban
+--       GetGameTimer alapu hide timer hasznalata helyette
 -- ============================================================
 
-local hideTimer = nil
+local hideAt = nil  -- GetGameTimer() ertek amikor el kell tunteni
 
 CreateThread(function()
     local lastStamina = -1
@@ -23,29 +20,26 @@ CreateThread(function()
 
         if stamina ~= lastStamina then
             lastStamina = stamina
-
-            -- A bar egyenesen toltodik: 100% = teli, 0% = ures
             NXN.HUD.Send('updateModule', { module = 'stamina', value = stamina })
-            NXN.HUD.Log(('stamina: %d'):format(stamina))
 
             if not cfg.alwaysVisible then
                 if stamina < 100 then
-                    -- Fogy a stamina: megjelenik
+                    -- Fogy: megjelenik, hide timer torlese
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'stamina' })
-                    if hideTimer then
-                        clearTimeout(hideTimer)
-                        hideTimer = nil
-                    end
+                    hideAt = nil
                 else
-                    -- Teljesen visszatoltodott: hideDelay utan eltuntetes
-                    if not hideTimer then
-                        hideTimer = setTimeout(function()
-                            SendNUIMessage({ action = 'hideModuleTemporary', module = 'stamina' })
-                            hideTimer = nil
-                        end, cfg.hideDelay or 4000)
+                    -- Teljesen visszatoltodott: hide timer beallitasa
+                    if not hideAt then
+                        hideAt = GetGameTimer() + (cfg.hideDelay or 4000)
                     end
                 end
             end
+        end
+
+        -- Hide timer lejar-e?
+        if hideAt and GetGameTimer() >= hideAt then
+            SendNUIMessage({ action = 'hideModuleTemporary', module = 'stamina' })
+            hideAt = nil
         end
 
         ::continue::
