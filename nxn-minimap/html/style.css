@@ -1,5 +1,7 @@
 /* ============================================================
    nxn-minimap | style.css – Nexon Design System
+   FIX: #nmap-root alapertelmezett pozicio beallitva (bottom-left)
+        igy meg init elott is lathato marad az elem
    ============================================================ */
 
 :root {
@@ -16,7 +18,7 @@
     --nxn-radius:   10px;
     --nxn-font:     'Inter','Segoe UI',sans-serif;
 
-    /* Minimap méret – JS felülírja init-kor */
+    /* Minimap meret - JS felulirja init-kor */
     --nmap-w: 200px;
     --nmap-h: 200px;
 
@@ -36,31 +38,35 @@ html, body {
     pointer-events: none;
 }
 
-/* ── Root pozíciók ─────────────────────────────────────────── */
+/* ── Root poziciok ───────────────────────────────────────── */
 
 #nmap-root {
     position: fixed;
     z-index: 200;
     transition: opacity .3s;
+    /* FIX: alapertelmezett pozicio – meg init elott is lathato.
+       Az init() azonnal felulirja a pos-* class-szal. */
+    bottom: 0;
+    left: 0;
 }
 
-#nmap-root.pos-bottom-left  { bottom: 0; left: 0; }
-#nmap-root.pos-bottom-right { bottom: 0; right: 0; }
-#nmap-root.pos-top-left     { top: 0;    left: 0; }
-#nmap-root.pos-top-right    { top: 0;    right: 0; }
+#nmap-root.pos-bottom-left  { bottom: 0; left: 0;  right: auto; top: auto; }
+#nmap-root.pos-bottom-right { bottom: 0; right: 0; left: auto;  top: auto; }
+#nmap-root.pos-top-left     { top: 0;    left: 0;  bottom: auto; right: auto; }
+#nmap-root.pos-top-right    { top: 0;    right: 0; bottom: auto; left: auto; }
 
-#nmap-root.hidden { opacity: 0; }
+#nmap-root.hidden { opacity: 0; pointer-events: none; }
 
-/* ── Keret ─────────────────────────────────────────────────── */
+/* ── Keret ────────────────────────────────────────────────── */
 
 #nmap-frame {
     position: relative;
     width:  var(--nmap-w);
     height: var(--nmap-h);
-    /* Nincs háttér – a GTA natív minimap látszik alatta */
+    /* Nincs hatter – a GTA natív minimap latszik alatta */
 }
 
-/* Sarkok (L-alakú szegélyek) */
+/* Sarkok (L-alaku szegely) */
 .nmap-corner {
     position: absolute;
     width:  var(--corner-size);
@@ -88,7 +94,7 @@ html, body {
     border-right:  var(--corner-thick) solid var(--nxn-border);
 }
 
-/* ── GPS jelzés ────────────────────────────────────────────── */
+/* ── GPS jelzes ──────────────────────────────────────────── */
 
 .nmap-gps {
     position: absolute;
@@ -107,6 +113,7 @@ html, body {
 .nmap-gps i {
     font-size: 10px;
     color: var(--nxn-success);
+    animation: nmapGpsPulse 1.8s ease-in-out infinite;
 }
 
 .nmap-gps span {
@@ -118,17 +125,12 @@ html, body {
     white-space: nowrap;
 }
 
-/* GPS pulzáló pont animáció */
-.nmap-gps i {
-    animation: nmapGpsPulse 1.8s ease-in-out infinite;
-}
-
 @keyframes nmapGpsPulse {
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.35; }
 }
 
-/* ── Kerületi sáv ──────────────────────────────────────────── */
+/* ── Keruleti sav ─────────────────────────────────────────── */
 
 .nmap-district {
     position: absolute;
@@ -174,7 +176,7 @@ html, body {
     letter-spacing: .02em;
 }
 
-/* ── Animációk ─────────────────────────────────────────────── */
+/* ── Animaciok ────────────────────────────────────────────── */
 
 @keyframes nmapFadeIn {
     from { opacity: 0; }

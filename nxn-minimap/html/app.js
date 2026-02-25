@@ -1,5 +1,7 @@
 // ============================================================
 //  nxn-minimap | app.js
+//  FIX: #nmap-root kezdeti pozicio class init-kor beallitva
+//       (korabban class nelkul volt -> elem a viewport-on kivul)
 // ============================================================
 
 const root     = document.getElementById('nmap-root');
@@ -10,24 +12,28 @@ const distEl   = document.getElementById('nmap-district');
 const distNum  = document.getElementById('nmap-district-num');
 const distName = document.getElementById('nmap-district-name');
 
-// ── Init ──────────────────────────────────────────────────────
+// ── Init ────────────────────────────────────────────────────────────
 
 function init(cfg) {
-    // Méret beállítás CSS változón keresztül
+    // Meret CSS valtozon keresztul
     const w = (cfg.width  || 200) + 'px';
     const h = (cfg.height || 200) + 'px';
     document.documentElement.style.setProperty('--nmap-w', w);
     document.documentElement.style.setProperty('--nmap-h', h);
 
+    // FIX: pozicio class AZONNAL beallitva – kulonben az elem
+    // nem kap bottom/left/right/top erteket es a viewport-on kivul marad
     setPosition(cfg.position || 'bottom-left');
+
+    // Lathatosag
     setVisible(cfg.visible !== false);
 
-    // GPS panel alapállapot
+    // GPS panel alapallapot
     if (!cfg.showGPS) {
         gpsEl.style.display = 'none';
     }
 
-    // District panel alapállapot
+    // District panel alapbol rejtve, adatra var
     distEl.style.display = 'none';
 
     if (cfg.gpsActiveLabel) {
@@ -35,19 +41,21 @@ function init(cfg) {
     }
 }
 
-// ── Pozíció ───────────────────────────────────────────────────
+// ── Pozicio ─────────────────────────────────────────────────────────
 
 function setPosition(pos) {
-    root.className = 'pos-' + (pos || 'bottom-left');
+    // Toroljuk az osszes pos-* classt, majd hozzaadjuk a helyeset
+    root.classList.remove('pos-bottom-left', 'pos-bottom-right', 'pos-top-left', 'pos-top-right');
+    root.classList.add('pos-' + (pos || 'bottom-left'));
 }
 
-// ── Láthatóság ────────────────────────────────────────────────
+// ── Lathatosag ──────────────────────────────────────────────────
 
 function setVisible(visible) {
     root.classList.toggle('hidden', !visible);
 }
 
-// ── GPS jelzés ────────────────────────────────────────────────
+// ── GPS jelzes ────────────────────────────────────────────────
 
 function setGPS(data) {
     if (data.active) {
@@ -60,12 +68,10 @@ function setGPS(data) {
 }
 
 function setGPSEnabled(data) {
-    if (!data.enabled) {
-        fadeOut(gpsEl);
-    }
+    if (!data.enabled) fadeOut(gpsEl);
 }
 
-// ── Kerület ───────────────────────────────────────────────────
+// ── Kerulet ───────────────────────────────────────────────────
 
 function setDistrict(data) {
     if (!data.visible) {
@@ -75,7 +81,6 @@ function setDistrict(data) {
     distNum.textContent  = data.number || '';
     distName.textContent = data.name   || '';
 
-    // Szín alkalmazása ha van
     if (data.color && data.color !== '') {
         distNum.style.color = data.color;
     } else {
@@ -86,15 +91,14 @@ function setDistrict(data) {
     distEl.style.display = '';
 }
 
-// ── Blip jelzés (vizuális visszajelzés) ───────────────────────
+// ── Blip jelzes ───────────────────────────────────────────────
 
 function setBlips(data) {
-    // A tényleges blip kezelés Lua oldalon történik,
-    // itt csak egy vizuális indikátort tudunk mutatni ha szükséges
-    // (jelenleg nincs UI elem ehhez, bővíthetőségért van itt)
+    // A blip elrejtese Lua oldalon tortenik (SetRadarAsInteriorThisFrame)
+    // UI jelzes boviteshez fenntartva
 }
 
-// ── Segéd: fade out animáció ──────────────────────────────────
+// ── Segd: fade out ────────────────────────────────────────────
 
 function fadeOut(el) {
     if (el.style.display === 'none') return;
@@ -107,18 +111,18 @@ function fadeOut(el) {
     }, 220);
 }
 
-// ── NUI message feldolgozás ───────────────────────────────────
+// ── NUI message ───────────────────────────────────────────────
 
 window.addEventListener('message', function(e) {
     const d = e.data;
     if (!d || !d.action) return;
     switch (d.action) {
-        case 'init':          init(d);              break;
-        case 'setVisible':    setVisible(d.visible); break;
+        case 'init':          init(d);                break;
+        case 'setVisible':    setVisible(d.visible);  break;
         case 'setPosition':   setPosition(d.position); break;
-        case 'setGPS':        setGPS(d);            break;
-        case 'setGPSEnabled': setGPSEnabled(d);     break;
-        case 'setDistrict':   setDistrict(d);       break;
-        case 'setBlips':      setBlips(d);          break;
+        case 'setGPS':        setGPS(d);              break;
+        case 'setGPSEnabled': setGPSEnabled(d);       break;
+        case 'setDistrict':   setDistrict(d);         break;
+        case 'setBlips':      setBlips(d);            break;
     }
 });

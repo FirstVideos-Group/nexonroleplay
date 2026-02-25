@@ -1,7 +1,7 @@
 -- ============================================================
 --  nxn-minimap | client.lua
---  FIX: SetMinimapInInterior -> SetRadarAsInteriorThisFrame (frame-folytonos)
---  FIX: HUD komponens indexek javitva
+--  FIX: SetMinimapInInterior -> SetRadarAsInteriorThisFrame
+--  FIX: Helyes HUD elrejtesi nativok (DisplayAreaName, stb.)
 --  FIX: playerSpawned + resource start megbizhatosag
 -- ============================================================
 
@@ -23,63 +23,49 @@ local function NUISend(action, data)
     SendNUIMessage(payload)
 end
 
--- ── Natív minimap stilus ─────────────────────────────────────
+-- ── Natív minimap alap ─────────────────────────────────────
 
 local function ApplyMinimapStyle()
-    -- Ne nagyitsuk ki
     SetRadarBigmapEnabled(false, false)
-    -- Minimap lathatosaga
     DisplayRadar(minimapVisible)
 end
 
--- ── HUD elemek elrejtese (frame-folytonos) ───────────────────────
--- GTA HUD komponens indexek (HideHudComponentThisFrame):
--- 1  = WANTED_STARS
--- 2  = WEAPON_ICON
--- 3  = CASH
--- 4  = MP_CASH
--- 5  = MP_MESSAGE
--- 6  = VEHICLE_NAME
--- 7  = AREA_NAME          <- korzetunk mi jelenítjük meg
--- 8  = VEHICLE_CLASS
--- 9  = STREET_NAME        <- utcanevunk mi jelenítjük meg
--- 10 = HELP_TEXT
--- 11 = MINIMAP_BLIPS      <- blip reteg
--- 12 = MINIMAP            <- maga a minimap (NEM rejtjük el)
--- 13 = MINIMAP_MASK
--- 14 = FULL_MAP
--- 15 = RADAR              <- radar korlet
--- 16 = SAVING
--- 17 = GAME_STREAM
--- 18 = WEAPON_WHEEL
--- 19 = MULTIPLAYER_INDICATORS
--- 20 = HUD_COMPONENTS      <- altalanos hud elem (stb. stamina)
--- 21 = MISSION_NAME
--- 22 = GPS_ROUTE
+-- ── Natív HUD elemek elrejtese ──────────────────────────────
+-- A GTA minden frame-ben visszaallitja ezeket, ezert Wait(0) loopban kell hivni.
+-- Hasznalunk ket megkozelitest egyutt:
+--   1. HideHudComponentThisFrame – az adott HUD elemet rejtjuk el
+--   2. DisplayAreaName / DisplayStreetName (ha letezik) – GTA dedikalt nativok
+--
+-- Helyes HUD komponens indexek (FiveM / GTA V):
+--   2  = radar (minimap szoveg overlay)
+--   6  = vehicle name
+--   7  = area name  (LITTLE SEOUL stb.)
+--   9  = street name (San Andreas Ave stb.)
 
 local function HideNativeComponents()
     if not Config.HideNativeHUDComponents then return end
-    -- Kerulet / utca szoveges overlay elrejtese (mi jelenítjük meg)
+
+    -- Terulet es utca szoveg elrejtese – ezeket az nxn-location-hud jeleníti meg
     HideHudComponentThisFrame(7)   -- AREA_NAME
     HideHudComponentThisFrame(9)   -- STREET_NAME
+
+    -- Dedikalt nativok: ezek biztosabban mukodnek mint a komponens index
+    -- DisplayAreaName: ha false, a GTA nem rendereli a korzetkiemelest
+    -- (Csak akkor letezik ha a GTA verzio tamogatja – biztonsagi check-kel)
+    if DisplayAreaName then
+        DisplayAreaName(false)
+    end
 end
 
 -- ── Blip / belsoteres mod (frame-folytonos) ─────────────────────
--- FIX: SetMinimapInInterior NEM letezik FiveM-ben.
--- Helyes natív: SetRadarAsInteriorThisFrame() – csak az adott frame-re ervenyes,
--- ezert MINDEN frame-ben hivni kell a Wait(0) loopban.
--- Belsoteres modban a legtobb kulso blip eltakarodik a minimaprol.
+-- SetRadarAsInteriorThisFrame(): csak az adott frame-re el, ezert
+-- minden frame-ben hivni kell a Wait(0) loopban.
+-- Interior modban a legtobb kulso blip eltakarodik.
 
 local function ApplyBlipVisibility()
-    if showBlips then
-        -- Normál mod: minden blip latszik
-        -- Nem hivjuk SetRadarAsInteriorThisFrame-et -> kulso mod aktiv
-        return
+    if not showBlips then
+        SetRadarAsInteriorThisFrame()
     end
-    -- Blipek elrejtese: belso-teres mod szimulalasa
-    -- Ez a legtobb jatekos/POI blipet eltakarja
-    SetRadarAsInteriorThisFrame()
-    NXN.Minimap.Log('ApplyBlipVisibility: interior mod aktiv (blipek elrejtve)')
 end
 
 -- ── GPS poll ────────────────────────────────────────────────
@@ -89,9 +75,8 @@ CreateThread(function()
         Wait(1000)
         if not minimapVisible then goto gps_skip end
 
-        -- Waypoint blip (type 8)
-        local wp      = GetFirstBlipInfoId(8)
-        local newGps  = DoesBlipExist(wp)
+        local wp     = GetFirstBlipInfoId(8)  -- waypoint blip
+        local newGps = DoesBlipExist(wp)
 
         if newGps ~= gpsActive then
             gpsActive = newGps
@@ -104,15 +89,13 @@ CreateThread(function()
 end)
 
 -- ── Fo HUD loop (Wait(0) – frame-folytonos nativ hivok) ────────────
--- A GTA minden frame-ben visszaallitja a HUD allapotot,
--- ezert ezeket MINDEN frame-ben meg kell hivni.
 
 CreateThread(function()
     while true do
         Wait(0)
         ApplyMinimapStyle()
         HideNativeComponents()
-        ApplyBlipVisibility()  -- SetRadarAsInteriorThisFrame csak ha showBlips=false
+        ApplyBlipVisibility()
     end
 end)
 
@@ -135,7 +118,7 @@ local function Init()
     })
 end
 
--- Resource indulasakor: ha a jatekos mar aktiv (hot-restart)
+-- Resource indulasakor (hot-restart)
 CreateThread(function()
     Wait(500)
     if NetworkIsPlayerActive(PlayerId()) then
@@ -146,7 +129,7 @@ end)
 
 -- Spawn / respawn
 AddEventHandler('playerSpawned', function()
-    NXN.Minimap.Log('playerSpawned – minimap init / ujrainit')
+    NXN.Minimap.Log('playerSpawned – minimap init')
     initialized = false
     Wait(500)
     Init()
@@ -174,7 +157,6 @@ end)
 exports('setBlips', function(state)
     showBlips = state
     NXN.Minimap.Log(('setBlips: %s'):format(tostring(state)))
-    -- A loop automatikusan alkalmazza a kovetkezo frame-ben
     NUISend('setBlips', { visible = state })
 end)
 
@@ -185,13 +167,10 @@ end)
 
 exports('setGPSEnabled', function(state)
     NXN.Minimap.Log(('setGPSEnabled: %s'):format(tostring(state)))
-    if not state then
-        SetWaypointOff()
-    end
+    if not state then SetWaypointOff() end
     NUISend('setGPSEnabled', { enabled = state })
 end)
 
---- Kerület szám és név megadása (nxn-districts hívja)
 exports('setDistrict', function(number, name, color)
     if not Config.ShowDistrict then return end
     districtData = { number = number, name = name, color = color }
