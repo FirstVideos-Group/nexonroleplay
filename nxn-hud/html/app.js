@@ -1,75 +1,61 @@
 // ============================================================
 //  nxn-hud | app.js
+//  FIX: uj panel struktura – temp bar-ok row-* ID-vel,
+//       panel-temp lathatosaga kozosen kezelve
 // ============================================================
 
-const root = document.getElementById('hud-root');
+const root      = document.getElementById('hud-root');
+const panelTemp = document.getElementById('panel-temp');
 
-// Modul cache { name: { element, enabled, alwaysVisible, order } }
-const modules = {};
+// Aktiv temp bar-ok nyilvantartasa
+const activeTempBars = new Set();
 
-// ── Inizializalas ───────────────────────────────────────────────
+// ── Inicializalas ─────────────────────────────────────────────────
 
 function init(cfg) {
-    // Pozicio beallitasa
     setPosition(cfg.position || 'bottom-left');
 
-    // Modulok bejegyezese
-    document.querySelectorAll('.hud-module').forEach(el => {
-        const name = el.dataset.module;
-        const modCfg = cfg.modules && cfg.modules[name];
-        modules[name] = {
-            el,
-            enabled:       modCfg ? modCfg.enabled       : true,
-            alwaysVisible: modCfg ? modCfg.alwaysVisible : true,
-            order:         modCfg ? modCfg.order         : 99,
-            tempVisible:   false,
-        };
-
-        // Rendezesi sorrend
-        el.style.order = modules[name].order;
-
-        // Kezdeti lathatosag
-        if (modCfg && modCfg.enabled && modCfg.alwaysVisible) {
-            el.style.display = '';
-        } else {
-            el.style.display = 'none';
+    // Badge modulok lathatosaga config alapjan
+    const badgeModules = ['money', 'job', 'playerid', 'datetime'];
+    badgeModules.forEach(name => {
+        const el  = document.querySelector('[data-module="' + name + '"]');
+        const mod = cfg.modules && cfg.modules[name];
+        if (el) {
+            el.style.display = (mod && mod.enabled) ? '' : 'none';
         }
     });
+
+    // Datetime init
+    if (cfg.modules && cfg.modules.datetime && cfg.modules.datetime.enabled) {
+        tickDatetime();
+    }
 }
 
-// ── Pozicio ───────────────────────────────────────────────────
+// ── Pozicio ──────────────────────────────────────────────────
 
 function setPosition(pos) {
-    root.className = '';
+    root.classList.remove('pos-bottom-left','pos-bottom-right','pos-top-left','pos-top-right');
     root.classList.add('pos-' + (pos || 'bottom-left'));
 }
 
 // ── HUD lathatosag ────────────────────────────────────────────
 
 function setHudVisible(visible) {
-    if (visible) {
-        root.classList.remove('hidden');
-    } else {
-        root.classList.add('hidden');
-    }
+    root.classList.toggle('hidden', !visible);
 }
 
-// ── Modul be/kikapcsolas ───────────────────────────────────────
+// ── Bar frissites ─────────────────────────────────────────────
 
-function setModule(name, enabled) {
-    const m = modules[name];
-    if (!m) return;
-    m.enabled = enabled;
-    if (!enabled) {
-        m.el.style.display = 'none';
-    } else if (m.alwaysVisible) {
-        m.el.style.display = '';
-    }
+const BAR_MODULES  = ['health','armor','hunger','thirst','stamina','oxygen','stress'];
+const TEMP_MODULES = ['stamina','oxygen','stress'];
+
+function setBar(name, value) {
+    if (value === null || value === undefined) return;
+    const bar = document.getElementById('bar-' + name);
+    const val = document.getElementById('val-' + name);
+    if (bar) bar.style.width = Math.max(0, Math.min(100, value)) + '%';
+    if (val) val.textContent  = Math.round(value);
 }
-
-// ── Bar / badge frissites ───────────────────────────────────────
-
-const BAR_MODULES = ['health','armor','hunger','thirst','stamina','oxygen','stress'];
 
 function updateModule(data) {
     const name  = data.module;
@@ -77,7 +63,7 @@ function updateModule(data) {
 
     if (name === 'health') {
         setBar('health', data.value);
-        setBar('armor',  data.armor !== undefined ? data.armor : null);
+        if (data.armor !== undefined) setBar('armor', data.armor);
         return;
     }
 
@@ -86,19 +72,12 @@ function updateModule(data) {
         return;
     }
 
-    // Badge modulok
-    updateModuleData(data);
+    updateBadge(data);
 }
 
-function setBar(name, value) {
-    if (value === null) return;
-    const bar = document.getElementById('bar-' + name);
-    const val = document.getElementById('val-' + name);
-    if (bar) bar.style.width = Math.max(0, Math.min(100, value)) + '%';
-    if (val) val.textContent  = Math.round(value);
-}
+// ── Badge frissites ────────────────────────────────────────────
 
-function updateModuleData(data) {
+function updateBadge(data) {
     const name = data.module;
     if (name === 'money') {
         const el = document.getElementById('val-money');
@@ -110,65 +89,99 @@ function updateModuleData(data) {
         const el = document.getElementById('val-playerid');
         if (el) el.textContent = '#' + (data.id || 0);
     } else if (name === 'datetime') {
-        // JS oldali idofrissites
         tickDatetime();
     }
 }
 
-// ── Idopont frissites ────────────────────────────────────────────
+// ── Idopont ──────────────────────────────────────────────────
 
 function tickDatetime() {
     const el = document.getElementById('val-datetime');
     if (!el) return;
-    const now  = new Date();
-    const hh   = String(now.getHours()).padStart(2, '0');
-    const mm   = String(now.getMinutes()).padStart(2, '0');
-    const dd   = String(now.getDate()).padStart(2, '0');
-    const mo   = String(now.getMonth() + 1).padStart(2, '0');
+    const now = new Date();
+    const hh  = String(now.getHours()).padStart(2, '0');
+    const mm  = String(now.getMinutes()).padStart(2, '0');
+    const dd  = String(now.getDate()).padStart(2, '0');
+    const mo  = String(now.getMonth() + 1).padStart(2, '0');
     el.textContent = `${hh}:${mm}  ${dd}.${mo}.`;
 }
 
-// 1 perces JS-oldali auto-frissites
 setInterval(tickDatetime, 60000);
 
-// ── Ideiglenes modul show/hide ───────────────────────────────────
+// ── Temp panel lathatosag ────────────────────────────────────────
+-- Ha legalabb egy temp bar aktiv, a panel latszik.
+-- Ha az osszes temp bar el lett rejtve, a panel is eltnik.
+
+function updateTempPanel() {
+    if (activeTempBars.size > 0) {
+        panelTemp.classList.remove('hud-module--fading-out');
+        panelTemp.style.display = '';
+    } else {
+        panelTemp.classList.add('hud-module--fading-out');
+        setTimeout(() => {
+            if (activeTempBars.size === 0) {
+                panelTemp.style.display = 'none';
+                panelTemp.classList.remove('hud-module--fading-out');
+            }
+        }, 260);
+    }
+}
+
+// ── Ideiglenes bar show/hide ───────────────────────────────────
 
 function showModuleTemporary(name) {
-    const m = modules[name];
-    if (!m || !m.enabled) return;
-    m.el.classList.remove('hud-module--fading-out');
-    m.el.style.display = '';
-    m.tempVisible = true;
+    if (!TEMP_MODULES.includes(name)) return;
+    const row = document.getElementById('row-' + name);
+    if (!row) return;
+    row.classList.remove('hud-module--fading-out');
+    row.style.display = '';
+    activeTempBars.add(name);
+    updateTempPanel();
 }
 
 function hideModuleTemporary(name) {
-    const m = modules[name];
-    if (!m) return;
-    m.el.classList.add('hud-module--fading-out');
+    if (!TEMP_MODULES.includes(name)) return;
+    const row = document.getElementById('row-' + name);
+    if (!row) return;
+    row.classList.add('hud-module--fading-out');
+    activeTempBars.delete(name);
     setTimeout(() => {
-        if (m.el.classList.contains('hud-module--fading-out')) {
-            m.el.style.display = 'none';
-            m.el.classList.remove('hud-module--fading-out');
-            m.tempVisible = false;
+        if (row.classList.contains('hud-module--fading-out')) {
+            row.style.display = 'none';
+            row.classList.remove('hud-module--fading-out');
         }
+        updateTempPanel();
     }, 260);
 }
 
-// ── NUI message feldolgozas ────────────────────────────────────
+// ── Modul be/kikapcsolas ────────────────────────────────────────
+
+function setModule(name, enabled) {
+    // Badge modulok
+    const badgeEl = document.querySelector('[data-module="' + name + '"]');
+    if (badgeEl && !TEMP_MODULES.includes(name)) {
+        badgeEl.style.display = enabled ? '' : 'none';
+    }
+    // Temp bar-ok
+    if (TEMP_MODULES.includes(name) && !enabled) {
+        hideModuleTemporary(name);
+    }
+}
+
+// ── NUI message ─────────────────────────────────────────────────
 
 window.addEventListener('message', function(e) {
     const d = e.data;
     if (!d || !d.action) return;
-
     switch (d.action) {
-        case 'init':               init(d);                          break;
-        case 'setVisible':         setHudVisible(d.visible);         break;
-        case 'setModule':          setModule(d.module, d.enabled);   break;
-        case 'setPosition':        setPosition(d.position);          break;
-        case 'updateModule':       updateModule(d);                   break;
-        case 'updateModuleData':   updateModuleData(d);              break;
-        case 'showModuleTemporary': showModuleTemporary(d.module);   break;
-        case 'hideModuleTemporary': hideModuleTemporary(d.module);   break;
-        case 'tickDatetime':       tickDatetime();                    break;
+        case 'init':                init(d);                        break;
+        case 'setVisible':          setHudVisible(d.visible);       break;
+        case 'setModule':           setModule(d.module, d.enabled); break;
+        case 'setPosition':         setPosition(d.position);        break;
+        case 'updateModule':        updateModule(d);                 break;
+        case 'updateModuleData':    updateBadge(d);                  break;
+        case 'showModuleTemporary': showModuleTemporary(d.module);  break;
+        case 'hideModuleTemporary': hideModuleTemporary(d.module);  break;
+        case 'tickDatetime':        tickDatetime();                  break;
     }
 });
