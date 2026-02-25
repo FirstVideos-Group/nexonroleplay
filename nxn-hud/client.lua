@@ -1,21 +1,21 @@
 -- ============================================================
 --  nxn-hud | client.lua
---  Kozponti HUD manager – modulok koordinalasa, export API
+--  Kozponti HUD manager
+--  FIX: moduleStates es hudVisible GLOBAL (nem local),
+--       hogy a modules/*.lua fajlok is elerhessek oket
 -- ============================================================
 
--- ── Allapot ───────────────────────────────────────────────
-
-local hudVisible   = true    -- globalis HUD lathatosag
-local moduleStates = {}      -- { [moduleName] = bool } – egyedi modul on/off
+-- FIX: 'local' helyett global, hogy a modulok lathassak
+hudVisible   = true
+moduleStates = {}
 
 -- Modulallapotok inicializalasa a Config alapjan
 for name, cfg in pairs(Config.Modules) do
     moduleStates[name] = cfg.enabled
 end
 
--- ── NUI kommunikacio ───────────────────────────────────────
+-- ── NUI kommunikacio ─────────────────────────────────────────────
 
---- Adat kuldese a NUI fele
 ---@param action string
 ---@param data table
 function NXN.HUD.Send(action, data)
@@ -26,7 +26,6 @@ function NXN.HUD.Send(action, data)
     SendNUIMessage(payload)
 end
 
---- HUD konfig kuldese inicializalaskor
 local function SendConfig()
     local modulesCfg = {}
     for name, cfg in pairs(Config.Modules) do
@@ -44,7 +43,7 @@ local function SendConfig()
     NXN.HUD.Log(('HUD init kuldve, pozicio=%s'):format(Config.Position))
 end
 
--- ── Lathatosag kezeles ──────────────────────────────────────
+-- ── Lathatosag ────────────────────────────────────────────────
 
 local function SetHudVisible(state)
     hudVisible = state
@@ -52,7 +51,7 @@ local function SetHudVisible(state)
     NXN.HUD.Log(('HUD lathatosag: %s'):format(tostring(state)))
 end
 
--- ── Modul kezeles ──────────────────────────────────────────
+-- ── Modul kezeles ─────────────────────────────────────────────
 
 local function SetModuleEnabled(name, state)
     if moduleStates[name] == nil then
@@ -65,19 +64,17 @@ local function SetModuleEnabled(name, state)
     return true
 end
 
--- ── Spawn inicializalas ──────────────────────────────────────
+-- ── Spawn ───────────────────────────────────────────────────
 
 AddEventHandler('playerSpawned', function()
     NXN.HUD.Log('playerSpawned – HUD inicializalas')
-    Wait(500)  -- varunk, amig a needs is betolt
+    Wait(500)
     SendConfig()
 end)
 
--- ── nxn-needs frissules figyelese ────────────────────────────
+-- ── nxn-needs frissites ────────────────────────────────────────
 
 AddEventHandler('nxn-needs:client:updated', function(needs)
-    NXN.HUD.Log(('needs updated event fogadva'))
-    -- Needs modulok frissitese
     if moduleStates['hunger'] then
         NXN.HUD.Send('updateModule', { module = 'hunger', value = needs.hunger or 0 })
     end
@@ -91,56 +88,35 @@ end)
 
 -- ── Exportok ─────────────────────────────────────────────────
 
---- HUD elrejtese / mutatasa
----@param state boolean
 exports('setVisible', function(state)
     SetHudVisible(state)
 end)
 
---- Visszaadja a HUD aktualis lathatosagat
----@return boolean
 exports('isVisible', function()
     return hudVisible
 end)
 
---- Egy modul be- vagy kikapcsolasa
----@param name string  pl. 'health', 'stress', 'money'
----@param state boolean
----@return boolean  siker
 exports('setModule', function(name, state)
     return SetModuleEnabled(name, state)
 end)
 
---- Egy modul aktualis allapota
----@param name string
----@return boolean|nil
 exports('getModuleState', function(name)
     return moduleStates[name]
 end)
 
---- Az osszes modul allapota
----@return table
 exports('getAllModuleStates', function()
     return moduleStates
 end)
 
---- Pozicio valtoztatasa menet kozben
----@param pos string  'bottom-left'|'bottom-right'|'top-left'|'top-right'
 exports('setPosition', function(pos)
     SendNUIMessage({ action = 'setPosition', position = pos })
     NXN.HUD.Log(('Pozicio valtoztatva: %s'):format(pos))
 end)
 
---- Egy modul ertekenek frissitese kulso resource-bol
----@param moduleName string
----@param value any
 exports('updateModule', function(moduleName, value)
     NXN.HUD.Send('updateModule', { module = moduleName, value = value })
 end)
 
---- Egyedi modul adat kuldese (pl. munka/penz adatok)
----@param moduleName string
----@param data table
 exports('updateModuleData', function(moduleName, data)
     local payload = data
     payload.action = 'updateModuleData'

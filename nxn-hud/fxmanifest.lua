@@ -15,6 +15,9 @@ shared_scripts {
 }
 
 client_scripts {
+    -- FIX: client.lua ELOBB toltodik mint a modulok,
+    -- igy moduleStates es hudVisible mar leteznek amikor
+    -- a modul fajlok futni kezdenek
     'client.lua',
     'modules/health.lua',
     'modules/needs.lua',
@@ -30,13 +33,10 @@ client_scripts {
 files {
     'html/index.html',
     'html/style.css',
-    'html/app.js'
+    'html/app.js',
+    'docs/index.html'
 }
 
 ui_page 'html/index.html'
-
-files {
-    'docs/index.html'
-}
 
 lua54 'yes'
