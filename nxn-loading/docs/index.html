@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-loading – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --surface2:#1e2030;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+            --warning: #f0b55b;
+            --radius:  10px;
+            --font:    'Inter', 'Segoe UI', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.7; }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 22px 48px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 20px; font-weight: 700; }
+        header .badge { background: var(--accent); color: #fff; font-size: 11px; padding: 2px 10px; border-radius: 20px; font-weight: 600; }
+        header .subtitle { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+        .layout { display: flex; min-height: calc(100vh - 73px); }
+
+        nav.sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 28px 0;
+            position: sticky;
+            top: 73px;
+            height: calc(100vh - 73px);
+            overflow-y: auto;
+        }
+        .nav-section-title { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 14px 24px 6px; }
+        nav.sidebar a { display: flex; align-items: center; gap: 10px; padding: 9px 24px; color: var(--muted); text-decoration: none; font-size: 13px; transition: color .15s, background .15s; border-left: 3px solid transparent; }
+        nav.sidebar a:hover { color: var(--text); background: var(--surface2); }
+        nav.sidebar a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(91,106,240,.08); }
+        nav.sidebar a i { font-size: 16px; }
+
+        main { flex: 1; padding: 48px 56px; max-width: 960px; }
+        .section { margin-bottom: 64px; scroll-margin-top: 90px; }
+        .section-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; }
+        .section-header i { font-size: 22px; color: var(--accent); }
+        .section-header h2 { font-size: 20px; font-weight: 700; }
+        .section-header .tag { font-size: 11px; padding: 2px 10px; border-radius: 20px; background: rgba(91,106,240,.18); color: var(--accent); font-weight: 600; }
+        h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 28px 0 12px; text-transform: uppercase; letter-spacing: .05em; }
+        p { color: var(--muted); margin-bottom: 14px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; font-size: 13px; }
+        tr:last-child td { border-bottom: none; }
+
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; font-size: 12.5px; margin-bottom: 16px; line-height: 1.65; }
+        code { color: var(--success); font-family: 'Cascadia Code', 'Fira Code', monospace; }
+        .cc { color: var(--muted); }
+        .ck { color: #c792ea; }
+        .cs { color: #f5a97f; }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; font-family: var(--font); }
+        .tab.active { color: var(--text); background: var(--surface2); }
+        .tab-content { display: none; background: var(--surface2); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; margin-bottom: 16px; }
+        .tab-content.active { display: block; }
+        .tab-content pre { margin-bottom: 0; background: transparent; border: none; padding: 0; }
+
+        .badge-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+        .nxn-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+        .nxn-badge.accent  { background: rgba(91,106,240,.2);  color: var(--accent); }
+        .nxn-badge.success { background: rgba(62,207,142,.2);  color: var(--success); }
+        .nxn-badge.warning { background: rgba(240,181,91,.2);  color: var(--warning); }
+        .nxn-badge.neutral { background: rgba(107,111,133,.15); color: var(--muted); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        @keyframes nxnFadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="hgi hgi-stroke hgi-loading-01"></i>
+    <div><h1>nxn-loading</h1></div>
+    <span class="badge">v1.0.0</span>
+    <span class="subtitle">Loading screen, várólista &amp; modul-betöltés kezelés</span>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+    <div class="nav-section-title">Dokumentáció</div>
+    <a href="#intro" class="active" onclick="sa(this)"><i class="hgi hgi-stroke hgi-information-circle"></i> Bevezető</a>
+    <a href="#files" onclick="sa(this)"><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</a>
+    <a href="#config" onclick="sa(this)"><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</a>
+    <a href="#exports" onclick="sa(this)"><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</a>
+    <a href="#events" onclick="sa(this)"><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</a>
+    <a href="#examples" onclick="sa(this)"><i class="hgi hgi-stroke hgi-code-circle"></i> Kód példák</a>
+    <a href="#flow" onclick="sa(this)"><i class="hgi hgi-stroke hgi-workflow-circle-01"></i> Folyamatábra</a>
+</nav>
+
+<main>
+
+<!-- INTRO -->
+<section class="section" id="intro">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-information-circle"></i>
+        <h2>Bevezető</h2>
+        <span class="tag">Overview</span>
+    </div>
+    <p>Az <strong>nxn-loading</strong> felelős a szerver betöltési képernyőjének megjelenítéséért, a játékosok várólistájának kezeléséért, a modulok vizuális betöltési folyamatáért és a háttérzene lejátszásáért.</p>
+    <p>A script a Nexon Design System egységes dizájnnyelvét használja. Teljesen konfigurálható a <code>config.lua</code>-ból – szerver neve, leírás, szabályok, billentyűparancsok, zenefájl, modulok.</p>
+    <div class="badge-row">
+        <span class="nxn-badge accent">Kliens</span>
+        <span class="nxn-badge accent">Szerver</span>
+        <span class="nxn-badge success">Exportok</span>
+        <span class="nxn-badge warning">loadscreen_manual_shutdown</span>
+        <span class="nxn-badge neutral">Lua 5.4</span>
+    </div>
+</section>
+
+<!-- FILES -->
+<section class="section" id="files">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-folder-02"></i>
+        <h2>Fájlstruktúra</h2>
+        <span class="tag">Structure</span>
+    </div>
+    <pre><code>nxn-loading/
+├── fxmanifest.lua          <span class="cc"># Resource manifest</span>
+├── config.lua              <span class="cc"># Konfiguráció (szerver infó, modulok, zene…)</span>
+├── shared.lua              <span class="cc"># Közös segédfüggvények + NXN.Loading tábla</span>
+├── client.lua              <span class="cc"># Kliens oldali logika + NUI callbacks</span>
+├── server.lua              <span class="cc"># Szerver logika + várólista kezelés</span>
+├── music/
+│   └── loading.mp3         <span class="cc"># Betöltési zene (ide kell elhelyezni)</span>
+├── html/
+│   ├── index.html          <span class="cc"># Loading screen UI</span>
+│   ├── style.css           <span class="cc"># Nexon Design System stílusok</span>
+│   └── app.js              <span class="cc"># UI logika (modulok, tabs, zene, enter gomb)</span>
+└── docs/
+    └── index.html          <span class="cc"># Ez a dokumentáció</span></code></pre>
+</section>
+
+<!-- CONFIG -->
+<section class="section" id="config">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-settings-01"></i>
+        <h2>Konfiguráció</h2>
+        <span class="tag">config.lua</span>
+    </div>
+
+    <h3>Szerver infó</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.ServerName</td><td>'Nexon Roleplay'</td><td>Szerver neve (loading screen tetején)</td></tr>
+        <tr><td>Config.ServerDescription</td><td>…</td><td>Rövid leírás a szerverről</td></tr>
+        <tr><td>Config.ServerLogo</td><td>''</td><td>Logo URL (üres = szöveges logo)</td></tr>
+    </table>
+
+    <h3>Szabályok (Config.Rules)</h3>
+    <p>Tömb, minden elem: <code>{ icon = 'hgi-xxx', title = '…', text = '…' }</code>. Az icon a HugeIcons osztálynév (hgi- prefix nélkül is elfogadott).</p>
+
+    <h3>Billentyűparancsok (Config.Keybinds)</h3>
+    <p>Tömb, minden elem: <code>{ key = 'F1', desc = 'Leírás' }</code>.</p>
+
+    <h3>Zene</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Music.enabled</td><td>true</td><td>Zene engedélyezése</td></tr>
+        <tr><td>Config.Music.volume</td><td>0.35</td><td>Hangerő (0.0 – 1.0)</td></tr>
+        <tr><td>Config.Music.file</td><td>'music/loading.mp3'</td><td>Zenefájl elérési útja</td></tr>
+        <tr><td>Config.Music.fadeOutDuration</td><td>2000</td><td>Lehalkulás ideje ms-ban</td></tr>
+    </table>
+
+    <h3>Várólista</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Queue.enabled</td><td>true</td><td>Várólista engedélyezése</td></tr>
+        <tr><td>Config.Queue.maxPlayers</td><td>64</td><td>Max. szimultán játékos</td></tr>
+        <tr><td>Config.Queue.updateInterval</td><td>5000</td><td>Pozíció frissítési időköz (ms)</td></tr>
+    </table>
+
+    <h3>Loading screen</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Loading.modules</td><td>10 modul</td><td>Betöltési modulok listája (<code>{ name, weight }</code>)</td></tr>
+        <tr><td>Config.Loading.enterButtonText</td><td>'Irány a város!'</td><td>Enter gomb szövege</td></tr>
+        <tr><td>Config.Loading.minLoadTime</td><td>3000</td><td>Minimum betöltési idő ms-ban (vizuális)</td></tr>
+    </table>
+</section>
+
+<!-- EXPORTS -->
+<section class="section" id="exports">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-export-01"></i>
+        <h2>Exportok</h2>
+        <span class="tag">Exports</span>
+    </div>
+
+    <h3>Kliens oldali exportok</h3>
+    <table>
+        <tr><th>Export neve</th><th>Visszatérési érték</th><th>Leírás</th></tr>
+        <tr><td>isLoadingDone()</td><td>boolean</td><td>Visszaadja, hogy minden modul betöltött-e</td></tr>
+        <tr><td>forceEnter()</td><td>–</td><td>Kényszerített belépés a játékba (pl. admin eszköz)</td></tr>
+        <tr><td>updateModuleProgress(name, pct)</td><td>–</td><td>Külső resource jelezhet betöltési folyamatot</td></tr>
+        <tr><td>setStatusText(text)</td><td>–</td><td>Állapot szöveg frissítése a loading screenre</td></tr>
+    </table>
+
+    <h3>Szerver oldali exportok</h3>
+    <table>
+        <tr><th>Export neve</th><th>Visszatérési érték</th><th>Leírás</th></tr>
+        <tr><td>getQueue()</td><td>table</td><td>Visszaadja a várakozók src listáját</td></tr>
+        <tr><td>getQueueLength()</td><td>integer</td><td>Várakozók száma</td></tr>
+        <tr><td>isPlayerConnected(src)</td><td>boolean</td><td>Megadott src belépett-e már</td></tr>
+        <tr><td>forceEnter(src)</td><td>–</td><td>Manuálisan küldi be a játékost</td></tr>
+    </table>
+</section>
+
+<!-- NET EVENTS -->
+<section class="section" id="events">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-chat-01"></i>
+        <h2>Net Events</h2>
+        <span class="tag">Events</span>
+    </div>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-loading:server:playerReady</td><td>Kliens → Szerver</td><td>Kliens jelzi, hogy betöltési képernyőn van, kéri a szerver adatokat</td></tr>
+        <tr><td>nxn-loading:server:enterGame</td><td>Kliens → Szerver</td><td>Játékos megnyomta az Enter gombot, kéri a belépést</td></tr>
+        <tr><td>nxn-loading:client:serverData</td><td>Szerver → Kliens</td><td>Szerver elküldi a szerver adatokat (név, szabályok, billentyűk stb.)</td></tr>
+        <tr><td>nxn-loading:client:queueUpdate</td><td>Szerver → Kliens</td><td>Várólista pozíció frissítés</td></tr>
+        <tr><td>nxn-loading:client:doEnter</td><td>Szerver → Kliens</td><td>Szerver engedélyezi a belépést, kliens shutdown-olja a loadscreent</td></tr>
+    </table>
+</section>
+
+<!-- EXAMPLES -->
+<section class="section" id="examples">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-code-circle"></i>
+        <h2>Kód példák</h2>
+        <span class="tag">Examples</span>
+    </div>
+
+    <h3>Export használat más resource-ból</h3>
+    <div class="tabs">
+        <div class="tab active" onclick="st(this,'ex-client')">Kliens</div>
+        <div class="tab" onclick="st(this,'ex-server')">Szerver</div>
+        <div class="tab" onclick="st(this,'ex-module')">Modul progress</div>
+    </div>
+    <div class="tab-content active" id="ex-client">
+<pre><code><span class="cc">-- Más resource kliens oldaláról</span>
+
+<span class="cc">-- Betöltés kész-e?</span>
+<span class="ck">local</span> done = exports[<span class="cs">'nxn-loading'</span>]:isLoadingDone()
+<span class="ck">if</span> done <span class="ck">then</span>
+    <span class="cc">-- a játékos már bent van</span>
+<span class="ck">end</span>
+
+<span class="cc">-- Állapot szöveg beállítása</span>
+exports[<span class="cs">'nxn-loading'</span>]:setStatusText(<span class="cs">'Karakteradatok betöltése…'</span>)
+
+<span class="cc">-- Kényszer belépés (pl. admin)</span>
+exports[<span class="cs">'nxn-loading'</span>]:forceEnter()</code></pre>
+    </div>
+    <div class="tab-content" id="ex-server">
+<pre><code><span class="cc">-- Más resource szerver oldaláról</span>
+
+<span class="cc">-- Várakozók száma</span>
+<span class="ck">local</span> qLen = exports[<span class="cs">'nxn-loading'</span>]:getQueueLength()
+print(<span class="cs">'Várakozók: '</span> .. qLen)
+
+<span class="cc">-- Játékos belépett-e már?</span>
+<span class="ck">local</span> src = source
+<span class="ck">if</span> exports[<span class="cs">'nxn-loading'</span>]:isPlayerConnected(src) <span class="ck">then</span>
+    <span class="cc">-- logika</span>
+<span class="ck">end</span>
+
+<span class="cc">-- Kényszerített belépés</span>
+exports[<span class="cs">'nxn-loading'</span>]:forceEnter(src)</code></pre>
+    </div>
+    <div class="tab-content" id="ex-module">
+<pre><code><span class="cc">-- Külső resource saját betöltési folyamatát jelzi</span>
+<span class="cc">-- a loading screen modul listájában megjelenik</span>
+
+<span class="cc">-- Kliens oldalon, pl. nxn-inventory resource-ból:</span>
+exports[<span class="cs">'nxn-loading'</span>]:updateModuleProgress(
+    <span class="cs">'Inventory adatok'</span>,  <span class="cc">-- modul neve</span>
+    50                      <span class="cc">-- százalék (0-100)</span>
+)
+
+<span class="cc">-- Amikor kész:</span>
+exports[<span class="cs">'nxn-loading'</span>]:updateModuleProgress(<span class="cs">'Inventory adatok'</span>, 100)</code></pre>
+    </div>
+
+    <h3>Zene csere futásidőben</h3>
+    <pre><code><span class="cc">-- A music/ mappába helyezd el az mp3 fájlokat,
+-- majd a config.lua-ban add meg a fájlnevet:
+Config.Music.file = 'music/loading.mp3'</span></code></pre>
+</section>
+
+<!-- FLOW -->
+<section class="section" id="flow">
+    <div class="section-header">
+        <i class="hgi hgi-stroke hgi-workflow-circle-01"></i>
+        <h2>Folyamatábra</h2>
+        <span class="tag">Flow</span>
+    </div>
+    <p>A loading screen életciklusa a csatlakozástól a belépésig:</p>
+    <pre><code>Játékos csatlakozik
+    │
+    ▼
+[Szerver] playerConnecting event
+    │
+    ├── Ha server tele → Várólista (pozíció frissítés 5s-ként)
+    │
+    └── Ha van hely → deferrals.done()
+           │
+           ▼
+[Kliens] onClientResourceStart → playerReady event küldése
+           │
+           ▼
+[Szerver] serverData event → visszaküldi szerver infót
+           │
+           ▼
+[HTML/JS] Modul animáció lejátszása (szimulált betöltés)
+    + Zene lejátszás
+    + Szabályok / Billentyűk / Infó tab
+           │
+           ▼
+[100% elért] → 'Irány a város!' gomb megjelenik
+           │
+    Játékos megnyomja a gombot
+           │
+           ▼
+[JS] Zene fade out → Screen fade out → enterGame NUI callback
+           │
+           ▼
+[Kliens] enterGame server event
+           │
+           ▼
+[Szerver] doEnter client event
+           │
+           ▼
+[Kliens] ShutdownLoadingScreen() → Játékos bent van!</code></pre>
+</section>
+
+</main>
+</div>
+
+<script>
+function sa(link) {
+    document.querySelectorAll('nav.sidebar a').forEach(a => a.classList.remove('active'));
+    link.classList.add('active');
+}
+function st(btn, id) {
+    btn.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('nav.sidebar a');
+window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (s.getBoundingClientRect().top <= 110) current = s.id; });
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+});
+</script>
+</body>
+</html>

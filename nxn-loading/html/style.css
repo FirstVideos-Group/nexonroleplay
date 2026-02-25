@@ -1,0 +1,455 @@
+/* ============================================================
+   nxn-loading | style.css
+   Nexon Design System – Loading Screen
+   ============================================================ */
+
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--nxn-bg);
+    color: var(--nxn-text);
+    font-family: var(--nxn-font);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* ─── Loading screen wrapper ─── */
+#loading-screen {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* ─── Háttér overlay ─── */
+.ls-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(14,15,20,0.97) 0%, rgba(22,24,31,0.93) 60%, rgba(30,32,48,0.85) 100%);
+    z-index: 0;
+}
+
+/* ─── Bal panel ─── */
+.ls-left {
+    position: relative;
+    z-index: 1;
+    width: 420px;
+    flex-shrink: 0;
+    background: var(--nxn-surface);
+    border-right: 1px solid var(--nxn-border);
+    display: flex;
+    flex-direction: column;
+    padding: 32px 28px 28px;
+    gap: 20px;
+    overflow: hidden;
+    animation: nxnFadeIn .4s ease;
+}
+
+/* Logo area */
+.ls-logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--nxn-border);
+}
+.ls-logo-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(91,106,240,0.18);
+    border: 1px solid rgba(91,106,240,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.ls-logo-icon i {
+    font-size: 26px;
+    color: var(--nxn-accent);
+}
+.ls-server-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--nxn-text);
+}
+.ls-server-desc {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    margin-top: 2px;
+    max-width: 300px;
+}
+
+/* Tabs */
+.ls-tabs {
+    display: flex;
+    gap: 4px;
+}
+.ls-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    color: var(--nxn-muted);
+    font-size: 12px;
+    font-family: var(--nxn-font);
+    cursor: pointer;
+    transition: color .15s, background .15s, border-color .15s;
+}
+.ls-tab i { font-size: 14px; }
+.ls-tab.active {
+    color: var(--nxn-accent);
+    background: rgba(91,106,240,0.12);
+    border-color: rgba(91,106,240,0.4);
+}
+.ls-tab:hover:not(.active) { color: var(--nxn-text); }
+
+/* Tab contents */
+.ls-tab-content {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    animation: nxnFadeIn .2s ease;
+}
+.ls-tab-content.active { display: block; }
+
+/* Scrollbar */
+.ls-tab-content::-webkit-scrollbar { width: 4px; }
+.ls-tab-content::-webkit-scrollbar-track { background: transparent; }
+.ls-tab-content::-webkit-scrollbar-thumb { background: var(--nxn-border); border-radius: 2px; }
+
+/* Rules grid */
+.ls-rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-top: 4px;
+}
+.ls-rule-card {
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 12px;
+    animation: nxnFadeIn .2s ease;
+}
+.ls-rule-card .rule-icon {
+    font-size: 20px;
+    color: var(--nxn-accent);
+    margin-bottom: 6px;
+}
+.ls-rule-card h4 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--nxn-text);
+    margin-bottom: 3px;
+}
+.ls-rule-card p {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    line-height: 1.5;
+}
+
+/* Keybinds */
+.ls-keybinds {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 4px;
+}
+.ls-keybind-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    animation: nxnFadeIn .2s ease;
+}
+.ls-key-badge {
+    background: var(--nxn-bg);
+    border: 1px solid var(--nxn-border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--nxn-accent);
+    min-width: 44px;
+    text-align: center;
+    font-family: monospace;
+    flex-shrink: 0;
+}
+.ls-key-desc {
+    font-size: 12px;
+    color: var(--nxn-muted);
+}
+
+/* Info box */
+.ls-info-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 4px;
+}
+.ls-info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+}
+.ls-info-row i {
+    font-size: 16px;
+    color: var(--nxn-accent);
+    flex-shrink: 0;
+}
+.ls-info-row span {
+    flex: 1;
+    font-size: 13px;
+    color: var(--nxn-muted);
+}
+.ls-info-row strong {
+    font-size: 13px;
+    color: var(--nxn-text);
+}
+
+/* ─── Jobb panel ─── */
+.ls-right {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 40px 48px;
+    gap: 16px;
+    animation: nxnFadeIn .5s ease;
+}
+
+/* Queue */
+.ls-queue {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-left: 3px solid var(--nxn-warning);
+    border-radius: var(--nxn-radius);
+    min-width: 280px;
+    animation: nxnFadeIn .2s ease;
+}
+.ls-queue-icon i {
+    font-size: 22px;
+    color: var(--nxn-warning);
+}
+.ls-queue-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--nxn-text);
+}
+.ls-queue-pos {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    margin-top: 2px;
+}
+
+/* Modules section */
+.ls-modules {
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ls-modules-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nxn-text);
+}
+.ls-modules-title i {
+    font-size: 16px;
+    color: var(--nxn-accent);
+    animation: ls-spin 1.4s linear infinite;
+    display: inline-block;
+}
+@keyframes ls-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Progress bar */
+.ls-progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ls-progress-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.ls-progress-fill {
+    height: 100%;
+    background: var(--nxn-accent);
+    border-radius: 3px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+.ls-progress-pct {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    min-width: 34px;
+    text-align: right;
+    font-family: monospace;
+}
+
+/* Module list */
+.ls-module-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+.ls-module-list::-webkit-scrollbar { width: 3px; }
+.ls-module-list::-webkit-scrollbar-track { background: transparent; }
+.ls-module-list::-webkit-scrollbar-thumb { background: var(--nxn-border); border-radius: 2px; }
+
+.ls-module-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 12px;
+    color: var(--nxn-muted);
+    border-bottom: 1px solid rgba(42,45,58,0.5);
+    transition: color .2s;
+}
+.ls-module-row.done { color: var(--nxn-success); }
+.ls-module-row.active { color: var(--nxn-text); }
+.ls-module-row i { font-size: 13px; flex-shrink: 0; }
+.ls-module-row .mod-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.ls-module-row .mod-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--nxn-muted);
+    transition: width .3s;
+}
+.ls-module-row.done .mod-bar-fill { background: var(--nxn-success); width: 100% !important; }
+.ls-module-row.active .mod-bar-fill { background: var(--nxn-accent); }
+.ls-module-pct {
+    font-size: 11px;
+    min-width: 28px;
+    text-align: right;
+    font-family: monospace;
+    color: var(--nxn-muted);
+}
+.ls-module-row.done .ls-module-pct { color: var(--nxn-success); }
+
+/* Status */
+.ls-status {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    text-align: right;
+    min-height: 18px;
+    transition: opacity .3s;
+}
+
+/* Enter gomb */
+.ls-enter-btn {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: var(--nxn-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--nxn-radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s, transform .15s;
+    font-family: var(--nxn-font);
+    animation: nxnFadeIn .3s ease;
+    box-shadow: 0 4px 24px rgba(91,106,240,0.35);
+}
+.ls-enter-btn i { font-size: 18px; }
+.ls-enter-btn:hover { opacity: .88; transform: translateY(-1px); }
+.ls-enter-btn:active { opacity: 1; transform: translateY(0); }
+
+/* Zene gomb */
+.ls-music-btn {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--nxn-muted);
+    font-size: 16px;
+    transition: color .15s, border-color .15s;
+    z-index: 10;
+}
+.ls-music-btn:hover { color: var(--nxn-text); border-color: var(--nxn-accent); }
+
+/* ─── Animációk ─── */
+@keyframes nxnFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade out overlay az enter után */
+#loading-screen.fade-out {
+    transition: opacity .6s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Loading spin done → stop */
+.ls-modules-title i.done {
+    animation: none;
+    color: var(--nxn-success);
+}

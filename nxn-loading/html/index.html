@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nexon Roleplay – Loading</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ══════════ LOADING SCREEN ══════════ -->
+<div id="loading-screen">
+
+    <!-- Háttér overlay -->
+    <div class="ls-bg-overlay"></div>
+
+    <!-- Bal panel: szerver infó, szabályok, billentyűk -->
+    <div class="ls-left" id="ls-left">
+        <div class="ls-logo-area">
+            <div class="ls-logo-icon"><i class="hgi hgi-stroke hgi-city-01"></i></div>
+            <div>
+                <div class="ls-server-name" id="ls-server-name">Nexon Roleplay</div>
+                <div class="ls-server-desc" id="ls-server-desc">Betöltés folyamatban…</div>
+            </div>
+        </div>
+
+        <!-- Tab navigáció -->
+        <div class="ls-tabs">
+            <button class="ls-tab active" data-tab="rules" onclick="switchTab('rules', this)">
+                <i class="hgi hgi-stroke hgi-book-01"></i> Szabályok
+            </button>
+            <button class="ls-tab" data-tab="keys" onclick="switchTab('keys', this)">
+                <i class="hgi hgi-stroke hgi-keyboard"></i> Billentyűk
+            </button>
+            <button class="ls-tab" data-tab="info" onclick="switchTab('info', this)">
+                <i class="hgi hgi-stroke hgi-information-circle"></i> Infó
+            </button>
+        </div>
+
+        <!-- Tab tartalom: Szabályok -->
+        <div class="ls-tab-content active" id="tab-rules">
+            <div class="ls-rules-grid" id="rules-list">
+                <!-- JS tölti fel -->
+            </div>
+        </div>
+
+        <!-- Tab tartalom: Billentyűk -->
+        <div class="ls-tab-content" id="tab-keys">
+            <div class="ls-keybinds" id="keybinds-list">
+                <!-- JS tölti fel -->
+            </div>
+        </div>
+
+        <!-- Tab tartalom: Infó -->
+        <div class="ls-tab-content" id="tab-info">
+            <div class="ls-info-box">
+                <div class="ls-info-row">
+                    <i class="hgi hgi-stroke hgi-users-01"></i>
+                    <span>Online játékosok:</span>
+                    <strong id="info-online">–</strong>
+                </div>
+                <div class="ls-info-row">
+                    <i class="hgi hgi-stroke hgi-server-01"></i>
+                    <span>Max. játékosok:</span>
+                    <strong id="info-max">–</strong>
+                </div>
+                <div class="ls-info-row">
+                    <i class="hgi hgi-stroke hgi-time-01"></i>
+                    <span>Verzió:</span>
+                    <strong>1.0.0</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobb panel: loading progress -->
+    <div class="ls-right">
+
+        <!-- Várólista szekció -->
+        <div class="ls-queue" id="ls-queue" style="display:none">
+            <div class="ls-queue-icon"><i class="hgi hgi-stroke hgi-time-quarter"></i></div>
+            <div class="ls-queue-text">
+                <div class="ls-queue-title">Várólista</div>
+                <div class="ls-queue-pos" id="queue-pos">Pozíció: –</div>
+            </div>
+        </div>
+
+        <!-- Modul betöltések -->
+        <div class="ls-modules" id="ls-modules">
+            <div class="ls-modules-title">
+                <i class="hgi hgi-stroke hgi-loading-01"></i>
+                <span id="current-module-name">Inicializálás…</span>
+            </div>
+            <div class="ls-progress-bar-wrap">
+                <div class="ls-progress-bar">
+                    <div class="ls-progress-fill" id="progress-fill" style="width:0%"></div>
+                </div>
+                <span class="ls-progress-pct" id="progress-pct">0%</span>
+            </div>
+            <div class="ls-module-list" id="module-list">
+                <!-- JS tölti -->
+            </div>
+        </div>
+
+        <!-- Status szöveg -->
+        <div class="ls-status" id="ls-status">Szerver adatok betöltése…</div>
+
+        <!-- Enter gomb – csak 100%-on jelenik meg -->
+        <button class="ls-enter-btn" id="ls-enter-btn" onclick="enterGame()" style="display:none">
+            <i class="hgi hgi-stroke hgi-arrow-right-02"></i>
+            <span id="enter-btn-text">Irány a város!</span>
+        </button>
+
+        <!-- Zene gomb -->
+        <button class="ls-music-btn" id="ls-music-btn" onclick="toggleMusic()" title="Zene be/ki">
+            <i class="hgi hgi-stroke hgi-volume-high" id="music-icon"></i>
+        </button>
+    </div>
+
+</div>
+
+<!-- Hanglejátszó -->
+<audio id="bg-music" loop preload="auto"></audio>
+
+<script src="app.js"></script>
+</body>
+</html>
