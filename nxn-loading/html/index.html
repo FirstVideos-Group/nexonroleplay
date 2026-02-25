@@ -9,13 +9,11 @@
 </head>
 <body>
 
-<!-- ══════════ LOADING SCREEN ══════════ -->
 <div id="loading-screen">
 
-    <!-- Háttér overlay -->
     <div class="ls-bg-overlay"></div>
 
-    <!-- Bal panel: szerver infó, szabályok, billentyűk -->
+    <!-- BAL PANEL -->
     <div class="ls-left" id="ls-left">
         <div class="ls-logo-area">
             <div class="ls-logo-icon"><i class="hgi hgi-stroke hgi-city-01"></i></div>
@@ -25,34 +23,30 @@
             </div>
         </div>
 
-        <!-- Tab navigáció -->
         <div class="ls-tabs">
-            <button class="ls-tab active" data-tab="rules" onclick="switchTab('rules', this)">
+            <button class="ls-tab active" onclick="switchTab('rules', this)">
                 <i class="hgi hgi-stroke hgi-book-01"></i> Szabályok
             </button>
-            <button class="ls-tab" data-tab="keys" onclick="switchTab('keys', this)">
+            <button class="ls-tab" onclick="switchTab('keys', this)">
                 <i class="hgi hgi-stroke hgi-keyboard"></i> Billentyűk
             </button>
-            <button class="ls-tab" data-tab="info" onclick="switchTab('info', this)">
+            <button class="ls-tab" onclick="switchTab('info', this)">
                 <i class="hgi hgi-stroke hgi-information-circle"></i> Infó
             </button>
         </div>
 
-        <!-- Tab tartalom: Szabályok -->
         <div class="ls-tab-content active" id="tab-rules">
             <div class="ls-rules-grid" id="rules-list">
-                <!-- JS tölti fel -->
+                <div class="ls-placeholder"><i class="hgi hgi-stroke hgi-loading-01 spin"></i> Adatok betöltése…</div>
             </div>
         </div>
 
-        <!-- Tab tartalom: Billentyűk -->
         <div class="ls-tab-content" id="tab-keys">
             <div class="ls-keybinds" id="keybinds-list">
-                <!-- JS tölti fel -->
+                <div class="ls-placeholder"><i class="hgi hgi-stroke hgi-loading-01 spin"></i> Adatok betöltése…</div>
             </div>
         </div>
 
-        <!-- Tab tartalom: Infó -->
         <div class="ls-tab-content" id="tab-info">
             <div class="ls-info-box">
                 <div class="ls-info-row">
@@ -74,10 +68,9 @@
         </div>
     </div>
 
-    <!-- Jobb panel: loading progress -->
+    <!-- JOBB PANEL -->
     <div class="ls-right">
 
-        <!-- Várólista szekció -->
         <div class="ls-queue" id="ls-queue" style="display:none">
             <div class="ls-queue-icon"><i class="hgi hgi-stroke hgi-time-quarter"></i></div>
             <div class="ls-queue-text">
@@ -86,10 +79,9 @@
             </div>
         </div>
 
-        <!-- Modul betöltések -->
         <div class="ls-modules" id="ls-modules">
             <div class="ls-modules-title">
-                <i class="hgi hgi-stroke hgi-loading-01"></i>
+                <i class="hgi hgi-stroke hgi-loading-01 spin" id="global-spin-icon"></i>
                 <span id="current-module-name">Inicializálás…</span>
             </div>
             <div class="ls-progress-bar-wrap">
@@ -98,29 +90,23 @@
                 </div>
                 <span class="ls-progress-pct" id="progress-pct">0%</span>
             </div>
-            <div class="ls-module-list" id="module-list">
-                <!-- JS tölti -->
-            </div>
+            <div class="ls-module-list" id="module-list"></div>
         </div>
 
-        <!-- Status szöveg -->
-        <div class="ls-status" id="ls-status">Szerver adatok betöltése…</div>
+        <div class="ls-status" id="ls-status">Kapcsolódás a szerverhez…</div>
 
-        <!-- Enter gomb – csak 100%-on jelenik meg -->
         <button class="ls-enter-btn" id="ls-enter-btn" onclick="enterGame()" style="display:none">
             <i class="hgi hgi-stroke hgi-arrow-right-02"></i>
             <span id="enter-btn-text">Irány a város!</span>
         </button>
 
-        <!-- Zene gomb -->
         <button class="ls-music-btn" id="ls-music-btn" onclick="toggleMusic()" title="Zene be/ki">
-            <i class="hgi hgi-stroke hgi-volume-high" id="music-icon"></i>
+            <i class="hgi hgi-stroke hgi-volume-off" id="music-icon"></i>
         </button>
     </div>
 
 </div>
 
-<!-- Hanglejátszó -->
 <audio id="bg-music" loop preload="auto"></audio>
 
 <script src="app.js"></script>

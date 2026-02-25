@@ -4,6 +4,7 @@
 
 local loadingDone    = false
 local enterTriggered = false
+local serverDataSent = false
 
 -- ── Helpers ──────────────────────────────────────────────────
 
@@ -12,19 +13,58 @@ local function SendUI(data)
 end
 
 -- ── Loading screen init ──────────────────────────────────────
+--
+-- A loadscreen resource már fut mielőtt a session inicializálódna.
+-- Ezért Citizen.CreateThread-del folyamatosan próbálkozunk,
+-- amíg a NetworkIsSessionStarted() igaz nem lesz.
 
--- Jelezzük a szervernek, hogy a kliens betöltési képernyőn van
-AddEventHandler('onClientResourceStart', function(resourceName)
-    if resourceName == GetCurrentResourceName() then
-        NXN.Loading.Log('Resource started, sending playerReady to server')
+Citizen.CreateThread(function()
+    NXN.Loading.Log('Waiting for session to be active...')
+
+    -- Várunk amíg a session életbe lép
+    local timeout = 0
+    while not NetworkIsSessionStarted() do
+        Citizen.Wait(500)
+        timeout = timeout + 500
+        if timeout >= 30000 then
+            NXN.Loading.Log('Session timeout after 30s, proceeding anyway')
+            break
+        end
+    end
+
+    NXN.Loading.Log('Session active, sending playerReady')
+
+    if not serverDataSent then
+        serverDataSent = true
         TriggerServerEvent('nxn-loading:server:playerReady')
     end
+end)
+
+-- Fallback: ha a thread mégsem fut le (pl. resource restart közben)
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    NXN.Loading.Log('onClientResourceStart fired')
+
+    Citizen.SetTimeout(1000, function()
+        if not serverDataSent then
+            serverDataSent = true
+            NXN.Loading.Log('Fallback: sending playerReady from onClientResourceStart')
+            TriggerServerEvent('nxn-loading:server:playerReady')
+        end
+    end)
 end)
 
 -- ── Net events ───────────────────────────────────────────────
 
 RegisterNetEvent('nxn-loading:client:serverData', function(data)
     NXN.Loading.Log('Received serverData from server')
+    -- A konfigurációs adatokat is továbbítjuk
+    data.modules        = Config.Loading.modules
+    data.enterButtonText = Config.Loading.enterButtonText
+    data.musicVolume    = Config.Music.volume
+    data.musicFadeOut   = Config.Music.fadeOutDuration
+    data.minLoadTime    = Config.Loading.minLoadTime
+    data.musicFile      = Config.Music.file
     SendUI({ action = 'serverData', data = data })
 end)
 
@@ -35,15 +75,13 @@ end)
 
 RegisterNetEvent('nxn-loading:client:doEnter', function()
     NXN.Loading.Log('doEnter received – shutting down loading screen')
-    -- Fade + zene lehalkulás az NUI-ban már megtörtént, most shutdown
-    Citizen.Wait(500)
+    Citizen.Wait(800)
     ShutdownLoadingScreen()
     ShutdownLoadingScreenNui()
 end)
 
 -- ── NUI callbacks ────────────────────────────────────────────
 
--- Játékos megnyomta az 'Irány a város!' gombot
 RegisterNUICallback('enterGame', function(_, cb)
     if enterTriggered then cb('ok') return end
     enterTriggered = true
@@ -52,7 +90,6 @@ RegisterNUICallback('enterGame', function(_, cb)
     cb('ok')
 end)
 
--- Modul betöltési progress frissítés (NUI -> Lua szükség esetén)
 RegisterNUICallback('loadingComplete', function(_, cb)
     loadingDone = true
     NXN.Loading.Log('Loading modules completed (NUI reported)')
@@ -61,13 +98,10 @@ end)
 
 -- ── Exports ──────────────────────────────────────────────────
 
---- Visszaadja, hogy a betöltés kész-e
----@return boolean
 exports('isLoadingDone', function()
     return loadingDone
 end)
 
---- Más resource kényszerítheti a belépést (pl. admin tool)
 exports('forceEnter', function()
     if not enterTriggered then
         enterTriggered = true
@@ -75,16 +109,11 @@ exports('forceEnter', function()
     end
 end)
 
---- Frissít egy modul progress-t kívülről (más resource hívhatja)
----@param moduleName string
----@param percent number  0-100
 exports('updateModuleProgress', function(moduleName, percent)
     NXN.Loading.Log(('External module progress: %s = %d%%'):format(moduleName, percent))
     SendUI({ action = 'externalModule', name = moduleName, percent = percent })
 end)
 
---- Szöveges üzenetet jelenít meg a loading screenre
----@param text string
 exports('setStatusText', function(text)
     SendUI({ action = 'setStatus', text = text })
 end)

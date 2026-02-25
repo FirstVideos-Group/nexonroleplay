@@ -1,104 +1,167 @@
 /* ============================================================
    nxn-loading | app.js
+   Fix: kurzor, motor-init sync, autoplay zene, modulok/adatok
    ============================================================ */
 
 'use strict';
 
-// ── Config átvéve a Lua-tól (alapértékek) ────────────────────
+// ── Állapot ──────────────────────────────────────────────────
 const LS = {
-    modules: [],
-    currentModuleIndex: 0,
-    totalWeight: 0,
-    completedWeight: 0,
-    loadingDone: false,
-    musicEnabled: true,
-    musicVolume: 0.35,
-    musicFadeOut: 2000,
-    enterBtnText: 'Irány a város!',
-    minLoadTime: 3000,
-    startTime: Date.now()
+    modules:          [],
+    totalWeight:      0,
+    completedWeight:  0,
+    loadingDone:      false,
+    enterTriggered:   false,
+    musicEnabled:     false,   // alapértelmezetten kikapcsolt, autoplay policy miatt
+    musicVolume:      0.35,
+    musicFadeOut:     2000,
+    minLoadTime:      3000,
+    startTime:        Date.now(),
+    // Motor-init követés (FiveM loadProgress)
+    engineProgress:   0,
+    engineDone:       false,
+    serverDataReceived: false
 };
 
-// ── DOM referenciák ──────────────────────────────────────────
 const $id = id => document.getElementById(id);
 
-// ── NUI üzenet fogadása ──────────────────────────────────────
-window.addEventListener('message', function(event) {
-    const data = event.data;
-    if (!data || !data.action) return;
+// ── FiveM motor-init eventi ─────────────────────────────────
+//
+// A FiveM loadscreen kontextusban a motor a következő üzeneteket küldi:
+//   { type: 'loadProgress', loadFraction: 0.0 – 1.0 }
+//   { type: 'startInitFunction', type: 'InitFunctionType', name: '...' }
+//   { type: 'gameLoadComplete' }
+//
+window.addEventListener('message', function (event) {
+    const d = event.data;
+    if (!d) return;
 
-    switch (data.action) {
+    // — Motor init üzenet (a FiveM küldi automatikusan) —
+    if (d.type === 'loadProgress') {
+        handleEngineProgress(d.loadFraction || 0);
+        return;
+    }
+    if (d.type === 'startInitFunction') {
+        setStatus(d.name ? ('Betöltés: ' + d.name) : 'Motor inicializálás…');
+        return;
+    }
+    if (d.type === 'gameLoadComplete') {
+        onEngineLoadComplete();
+        return;
+    }
 
-        case 'serverData':
-            handleServerData(data.data);
-            break;
-
-        case 'queueUpdate':
-            handleQueueUpdate(data.position, data.total);
-            break;
-
-        case 'externalModule':
-            handleExternalModule(data.name, data.percent);
-            break;
-
-        case 'setStatus':
-            setStatus(data.text);
-            break;
+    // — Lua NUI üzenetek —
+    if (!d.action) return;
+    switch (d.action) {
+        case 'serverData':    handleServerData(d.data);                      break;
+        case 'queueUpdate':   handleQueueUpdate(d.position, d.total);        break;
+        case 'externalModule':handleExternalModule(d.name, d.percent);       break;
+        case 'setStatus':     setStatus(d.text);                             break;
     }
 });
 
+// ── Motor progress ───────────────────────────────────────────
+// A valós FiveM motor betöltési progress-t tükrözi vissza
+function handleEngineProgress(fraction) {
+    LS.engineProgress = fraction;
+    // Az első 50%-ot a motor tölti (loadProgress), a második 50%-ot a mi moduljaink
+    const enginePct = fraction * 50;
+    // Ha még nem kezdtük a modulokat, érintsük meg a bar-t
+    if (!LS.engineDone) {
+        $id('progress-fill').style.width = enginePct.toFixed(1) + '%';
+        $id('progress-pct').textContent  = Math.round(enginePct) + '%';
+    }
+}
+
+function onEngineLoadComplete() {
+    if (LS.engineDone) return;
+    LS.engineDone = true;
+    setStatus('Motor betöltve. Modulok inicializálása…');
+
+    // Ha a szerver adatok már megérkeztek, induljon a modul animáció
+    // Ha nem, a handleServerData majd elindítja
+    if (LS.serverDataReceived) {
+        startModuleAnimation();
+    }
+}
+
 // ── Szerver adat feldolgozás ─────────────────────────────────
 function handleServerData(d) {
+    if (!d) return;
+    LS.serverDataReceived = true;
+
     $id('ls-server-name').textContent = d.serverName  || 'Nexon Roleplay';
     $id('ls-server-desc').textContent = d.description || '';
     $id('info-online').textContent    = d.online      || '–';
     $id('info-max').textContent       = d.maxPlayers  || '–';
 
-    // Szabályok
-    if (d.rules && d.rules.length) buildRules(d.rules);
-    // Billentyűk
-    if (d.keybinds && d.keybinds.length) buildKeybinds(d.keybinds);
+    if (Array.isArray(d.rules)    && d.rules.length)    buildRules(d.rules);
+    if (Array.isArray(d.keybinds) && d.keybinds.length) buildKeybinds(d.keybinds);
+    if (Array.isArray(d.modules)  && d.modules.length)  buildModuleList(d.modules);
+
+    if (d.enterButtonText) $id('enter-btn-text').textContent = d.enterButtonText;
+    if (typeof d.musicVolume   !== 'undefined') LS.musicVolume   = d.musicVolume;
+    if (typeof d.musicFadeOut  !== 'undefined') LS.musicFadeOut  = d.musicFadeOut;
+    if (typeof d.minLoadTime   !== 'undefined') LS.minLoadTime   = d.minLoadTime;
+    if (typeof d.musicFile     !== 'undefined') updateMusicSrc(d.musicFile);
 
     setStatus('Modulok betöltése…');
+
+    // Ha a motor már betöltött (pl. gyors szerver), indítsuk a modulokat
+    if (LS.engineDone) {
+        startModuleAnimation();
+    }
 }
 
-// ── Szabályok felépítése ─────────────────────────────────────
+// ── Szabályok ─────────────────────────────────────────────────
 function buildRules(rules) {
     const grid = $id('rules-list');
     grid.innerHTML = '';
+    // Ha nincs adat, placeholder
+    if (!rules || rules.length === 0) {
+        grid.innerHTML = '<div class="ls-placeholder">Nincsenek megadott szabályok.</div>';
+        return;
+    }
     rules.forEach(r => {
         const card = document.createElement('div');
         card.className = 'ls-rule-card';
+        // icon: vagy hgi- prefix már rajta van, vagy hozzáadjuk
+        const iconClass = (r.icon || 'hgi-information-circle').startsWith('hgi-')
+            ? r.icon
+            : 'hgi-' + r.icon;
         card.innerHTML = `
-            <div class="rule-icon"><i class="hgi hgi-stroke ${r.icon || 'hgi-information-circle'}"></i></div>
-            <h4>${escHtml(r.title)}</h4>
-            <p>${escHtml(r.text)}</p>
+            <div class="rule-icon"><i class="hgi hgi-stroke ${escHtml(iconClass)}"></i></div>
+            <h4>${escHtml(r.title || '')}</h4>
+            <p>${escHtml(r.text || '')}</p>
         `;
         grid.appendChild(card);
     });
 }
 
-// ── Billentyűk felépítése ────────────────────────────────────
+// ── Billentyűk ────────────────────────────────────────────────
 function buildKeybinds(keys) {
     const wrap = $id('keybinds-list');
     wrap.innerHTML = '';
+    if (!keys || keys.length === 0) {
+        wrap.innerHTML = '<div class="ls-placeholder">Nincsenek megadott billentyűk.</div>';
+        return;
+    }
     keys.forEach(k => {
         const row = document.createElement('div');
         row.className = 'ls-keybind-row';
         row.innerHTML = `
-            <span class="ls-key-badge">${escHtml(k.key)}</span>
-            <span class="ls-key-desc">${escHtml(k.desc)}</span>
+            <span class="ls-key-badge">${escHtml(k.key || '')}</span>
+            <span class="ls-key-desc">${escHtml(k.desc || '')}</span>
         `;
         wrap.appendChild(row);
     });
 }
 
-// ── Modul lista felépítése ───────────────────────────────────
+// ── Modul lista felépítése ──────────────────────────────────
 function buildModuleList(modules) {
-    LS.modules = modules;
-    LS.totalWeight = modules.reduce((s, m) => s + (m.weight || 10), 0);
+    LS.modules         = modules;
+    LS.totalWeight     = modules.reduce((s, m) => s + (m.weight || 10), 0);
     LS.completedWeight = 0;
-    LS.currentModuleIndex = 0;
 
     const list = $id('module-list');
     list.innerHTML = '';
@@ -108,20 +171,26 @@ function buildModuleList(modules) {
         row.id = 'mod-row-' + i;
         row.innerHTML = `
             <i class="hgi hgi-stroke hgi-circle" id="mod-icon-${i}"></i>
-            <span style="flex:1;font-size:11px">${escHtml(m.name)}</span>
+            <span style="flex:1;font-size:11px">${escHtml(m.name || 'Modul ' + i)}</span>
             <div class="mod-bar-wrap"><div class="mod-bar-fill" id="mod-bar-${i}" style="width:0%"></div></div>
             <span class="ls-module-pct" id="mod-pct-${i}">0%</span>
         `;
         list.appendChild(row);
     });
-
-    // Animált betöltés indítása
-    simulateModuleLoading();
 }
 
-// ── Szimulált modul-betöltés ─────────────────────────────────
-function simulateModuleLoading() {
-    if (LS.modules.length === 0) return;
+// ── Modul animáció indítása (motor + szerver adat után) ─────────
+let moduleAnimStarted = false;
+function startModuleAnimation() {
+    if (moduleAnimStarted) return;
+    moduleAnimStarted = true;
+
+    LS.startTime = Date.now();
+
+    if (!LS.modules || LS.modules.length === 0) {
+        finishLoading();
+        return;
+    }
     loadNextModule(0);
 }
 
@@ -140,41 +209,35 @@ function loadNextModule(idx) {
     if (!row) { loadNextModule(idx + 1); return; }
 
     row.classList.add('active');
-    icon.className = 'hgi hgi-stroke hgi-loading-01';
-    $id('current-module-name').textContent = mod.name;
-
-    // Gördítjük le a listát az aktív sorra
+    if (icon) { icon.className = 'hgi hgi-stroke hgi-loading-01 spin'; }
+    $id('current-module-name').textContent = mod.name || 'Modul ' + idx;
     row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    // Modul betöltési idő: weight * ~80ms
-    const duration = (mod.weight || 10) * 80 + Math.random() * 200;
-    const start    = performance.now();
+    const duration      = (mod.weight || 10) * 80 + Math.random() * 200;
+    const start         = performance.now();
     const prevCompleted = LS.completedWeight;
-    const modWeight = mod.weight || 10;
+    const modWeight     = mod.weight || 10;
 
     function animate(now) {
-        const elapsed  = now - start;
-        const progress = Math.min(elapsed / duration, 1);
+        const progress = Math.min((now - start) / duration, 1);
         const eased    = easeInOutCubic(progress);
 
-        // Modul saját bar
-        bar.style.width = (eased * 100).toFixed(1) + '%';
-        pct.textContent = Math.round(eased * 100) + '%';
+        if (bar) bar.style.width = (eased * 100).toFixed(1) + '%';
+        if (pct) pct.textContent  = Math.round(eased * 100) + '%';
 
-        // Globális progress
-        const globalPct = ((prevCompleted + eased * modWeight) / LS.totalWeight) * 100;
+        // Globális progress: motor 50% + modulok 50%
+        const modPct    = (prevCompleted + eased * modWeight) / LS.totalWeight * 50;
+        const globalPct = 50 + modPct;
         updateGlobalProgress(globalPct);
 
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
-            // Modul kész
             row.classList.remove('active');
             row.classList.add('done');
-            icon.className = 'hgi hgi-stroke hgi-checkmark-circle-01';
-            bar.style.width = '100%';
-            pct.textContent = '100%';
-
+            if (icon) icon.className = 'hgi hgi-stroke hgi-checkmark-circle-01';
+            if (bar)  bar.style.width = '100%';
+            if (pct)  pct.textContent = '100%';
             LS.completedWeight = prevCompleted + modWeight;
             loadNextModule(idx + 1);
         }
@@ -183,13 +246,13 @@ function loadNextModule(idx) {
 }
 
 function updateGlobalProgress(pct) {
-    const clamped = Math.min(Math.max(pct, 0), 100);
-    $id('progress-fill').style.width = clamped.toFixed(1) + '%';
-    $id('progress-pct').textContent  = Math.round(clamped) + '%';
+    const c = Math.min(Math.max(pct, 0), 100);
+    $id('progress-fill').style.width = c.toFixed(1) + '%';
+    $id('progress-pct').textContent  = Math.round(c) + '%';
 }
 
 function finishLoading() {
-    const elapsed = Date.now() - LS.startTime;
+    const elapsed   = Date.now() - LS.startTime;
     const remaining = Math.max(0, LS.minLoadTime - elapsed);
 
     setTimeout(() => {
@@ -197,19 +260,20 @@ function finishLoading() {
         $id('progress-pct').textContent = '100%';
         $id('current-module-name').textContent = 'Betöltés kész!';
 
-        // Spinner leállítása
-        const spinIcon = document.querySelector('.ls-modules-title i');
-        if (spinIcon) spinIcon.classList.add('done');
+        const spinIcon = $id('global-spin-icon');
+        if (spinIcon) {
+            spinIcon.classList.remove('spin');
+            spinIcon.classList.add('done');
+            spinIcon.className = 'hgi hgi-stroke hgi-checkmark-circle-01 done';
+        }
 
-        setStatus('Minden modul betöltve.');
+        setStatus('Minden modul betöltve. Kész a belépésre!');
         LS.loadingDone = true;
 
-        // Enter gomb megjelenítése
         const btn = $id('ls-enter-btn');
-        btn.style.display = 'flex';
-        btn.style.animation = 'nxnFadeIn .3s ease';
+        btn.style.display    = 'flex';
+        btn.style.animation  = 'nxnFadeIn .3s ease';
 
-        // Értesítés a Lua felé
         fetch('https://nxn-loading/loadingComplete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -218,10 +282,10 @@ function finishLoading() {
     }, remaining);
 }
 
-// ── Várólista frissítés ──────────────────────────────────────
+// ── Várólista ──────────────────────────────────────────────────
 function handleQueueUpdate(pos, total) {
     const qEl = $id('ls-queue');
-    if (pos > 0) {
+    if (pos && pos > 0) {
         qEl.style.display = 'flex';
         $id('queue-pos').textContent = `Pozíció: ${pos}. / ${total} várakozó`;
     } else {
@@ -229,9 +293,8 @@ function handleQueueUpdate(pos, total) {
     }
 }
 
-// ── Külső modul progress ─────────────────────────────────────
+// ── Külső modul progress ──────────────────────────────────────
 function handleExternalModule(name, percent) {
-    // Hozzáadunk egy sort, ha még nincs
     let row = document.querySelector('[data-extmod="' + name + '"]');
     if (!row) {
         row = document.createElement('div');
@@ -245,10 +308,8 @@ function handleExternalModule(name, percent) {
         `;
         $id('module-list').appendChild(row);
     }
-    const bar = row.querySelector('.ext-bar');
-    const pct = row.querySelector('.ext-pct');
-    bar.style.width = percent + '%';
-    pct.textContent = percent + '%';
+    row.querySelector('.ext-bar').style.width = percent + '%';
+    row.querySelector('.ext-pct').textContent  = percent + '%';
     if (percent >= 100) {
         row.classList.remove('active');
         row.classList.add('done');
@@ -266,19 +327,16 @@ function switchTab(tabId, btn) {
 
 // ── Enter gomb ───────────────────────────────────────────────
 function enterGame() {
-    if (!LS.loadingDone) return;
+    if (!LS.loadingDone || LS.enterTriggered) return;
+    LS.enterTriggered = true;
 
     const btn = $id('ls-enter-btn');
     btn.disabled = true;
     btn.style.opacity = '0.6';
-
     setStatus('Belépés a városba…');
 
-    // Zene lehalkulása
     fadeOutMusic(LS.musicFadeOut, () => {
-        // Screen fade out
         document.getElementById('loading-screen').classList.add('fade-out');
-        // NUI callback
         fetch('https://nxn-loading/enterGame', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -287,19 +345,29 @@ function enterGame() {
     });
 }
 
-// ── Zene kezelés ─────────────────────────────────────────────
-function initMusic(file, volume, fadeOutMs) {
-    LS.musicVolume  = volume;
-    LS.musicFadeOut = fadeOutMs;
+// ── Zene kezelés ───────────────────────────────────────────────
+// A CEF loadscreen AUTOPLAY POLICY-t alkalmaz:
+// Az audio.play() csak user interaction után működik megbízhatóan.
+// Megoldás: az oldal első kattintására (bármely elem) elindítjuk a zenét,
+// és egy tick delay után is próbáljuk (loop fallback).
 
+let musicSrc = 'music/loading.mp3';
+
+function updateMusicSrc(src) {
+    musicSrc = src;
     const audio = $id('bg-music');
-    audio.src    = file;
-    audio.volume = volume;
-    audio.play().catch(() => {
-        // Autoplay blokkolva – gomb megjelenítése
-        LS.musicEnabled = false;
-        updateMusicIcon();
-    });
+    if (audio.src !== src) {
+        audio.src = src;
+    }
+}
+
+function tryPlayMusic() {
+    if (!LS.musicEnabled) return;
+    const audio = $id('bg-music');
+    if (audio.paused) {
+        audio.volume = LS.musicVolume;
+        audio.play().catch(() => { /* autoplay policy */ });
+    }
 }
 
 function toggleMusic() {
@@ -316,6 +384,7 @@ function toggleMusic() {
 
 function updateMusicIcon() {
     const icon = $id('music-icon');
+    if (!icon) return;
     icon.className = LS.musicEnabled
         ? 'hgi hgi-stroke hgi-volume-high'
         : 'hgi hgi-stroke hgi-volume-off';
@@ -327,12 +396,10 @@ function fadeOutMusic(durationMs, callback) {
         if (callback) callback();
         return;
     }
-
     const startVol = audio.volume;
     const steps    = 40;
     const interval = durationMs / steps;
     let   step     = 0;
-
     const fade = setInterval(() => {
         step++;
         audio.volume = Math.max(0, startVol * (1 - step / steps));
@@ -344,7 +411,7 @@ function fadeOutMusic(durationMs, callback) {
     }, interval);
 }
 
-// ── Segédfüggvények ──────────────────────────────────────────
+// ── Segédfüggvények ───────────────────────────────────────────
 function setStatus(text) {
     const el = $id('ls-status');
     if (el) el.textContent = text;
@@ -352,55 +419,88 @@ function setStatus(text) {
 
 function escHtml(str) {
     return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;');
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 function easeInOutCubic(t) {
     return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
 }
 
-// ── Init ─────────────────────────────────────────────────────
-(function init() {
-    // Beolvassuk a config értékeket a meta tagekből
-    // (Lua nem tud közvetlenül adatot adni a loadscreen HTML-nek,
-    //  ezért a config-ot a Lua kliens NUI üzenettel küldi el)
-    // Az alapmodulokat a config-ból kapjuk serverData-val, de
-    // egy default-ot itt is felépítünk amíg megérkezik:
-    const defaultModules = [
-        { name: 'Core rendszer',           weight: 10 },
-        { name: 'Játékoskezelés',          weight: 10 },
-        { name: 'Térkép betöltése',        weight: 15 },
-        { name: 'Járművek inicializálása', weight: 10 },
-        { name: 'Inventory rendszer',      weight: 10 },
-        { name: 'UI komponensek',          weight: 10 },
-        { name: 'Gazdasági adatok',        weight: 10 },
-        { name: 'Job rendszer',            weight: 8  },
-        { name: 'Karakteradatok',          weight: 7  },
-        { name: 'Világ szinkronizáció',    weight: 10 },
-    ];
-    buildModuleList(defaultModules);
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
 
-    // Zene indítása
-    initMusic('music/loading.mp3', 0.35, 2000);
+    // 1. Zene bekészítése (előre betöltés)
+    const audio = $id('bg-music');
+    audio.src    = musicSrc;
+    audio.volume = LS.musicVolume;
+    audio.loop   = true;
+    // Az icon alapból "off" állapótban van (autoplay policy miatt)
+    updateMusicIcon();
 
-    // Ha az NUI üzenetek már korán megérkeznek:
-    window.addEventListener('message', function(ev) {
-        if (ev.data && ev.data.action === 'serverData' && ev.data.data) {
-            const d = ev.data.data;
-            // Ha van modul lista a configból, újraépítjük
-            if (d.modules && d.modules.length) {
-                buildModuleList(d.modules);
-            }
-            if (d.enterButtonText) {
-                $id('enter-btn-text').textContent = d.enterButtonText;
-                LS.enterBtnText = d.enterButtonText;
-            }
-            if (typeof d.musicVolume !== 'undefined') LS.musicVolume = d.musicVolume;
-            if (typeof d.musicFadeOut !== 'undefined') LS.musicFadeOut = d.musicFadeOut;
-            if (typeof d.minLoadTime !== 'undefined') LS.minLoadTime = d.minLoadTime;
+    // 2. Első felhasználói interakcióra indítjuk a zenét
+    //    A CEF-ben a loadscreen már egérrel kezelheta, ezért a
+    //    mousedown eseményre is reagálunk
+    function onFirstInteraction() {
+        document.removeEventListener('mousedown', onFirstInteraction);
+        document.removeEventListener('keydown',   onFirstInteraction);
+        LS.musicEnabled = true;
+        updateMusicIcon();
+        tryPlayMusic();
+    }
+    document.addEventListener('mousedown', onFirstInteraction);
+    document.addEventListener('keydown',   onFirstInteraction);
+
+    // 3. Fallback: ha a FiveM CEF nem blokkolja (pl. dev mód),
+    //    0.5s után is próbálkozunk
+    setTimeout(() => {
+        const a = $id('bg-music');
+        if (a.paused) {
+            a.volume = LS.musicVolume;
+            a.play()
+                .then(() => {
+                    LS.musicEnabled = true;
+                    updateMusicIcon();
+                })
+                .catch(() => {
+                    // Autoplay tiltva – várjuk az interakciót (már feliratkoztunk rá)
+                });
         }
-    });
-})();
+    }, 500);
+
+    // 4. Ha a FiveM nem küld loadProgress üzenetet (pl. fejlesztői környezet),
+    //    3s után fallback-ként automatikusan "engineDone"-nak tekintjük
+    setTimeout(() => {
+        if (!LS.engineDone) {
+            LS.engineDone = true;
+            updateGlobalProgress(50);
+            if (LS.serverDataReceived) startModuleAnimation();
+        }
+    }, 3000);
+
+    // 5. Ha a szerver adatok sem érkeznek meg 8s-on belül,
+    //    építsünk default modullistát és indítsuk el
+    setTimeout(() => {
+        if (!LS.serverDataReceived) {
+            const defaultModules = [
+                { name: 'Core rendszer',           weight: 10 },
+                { name: 'Játékoskezelés',          weight: 10 },
+                { name: 'Térkép betöltése',        weight: 15 },
+                { name: 'Járművek inicializálása', weight: 10 },
+                { name: 'Inventory rendszer',      weight: 10 },
+                { name: 'UI komponensek',          weight: 10 },
+                { name: 'Gazdasági adatok',        weight: 10 },
+                { name: 'Job rendszer',            weight: 8  },
+                { name: 'Karakteradatok',          weight: 7  },
+                { name: 'Világ szinkronizáció',    weight: 10 },
+            ];
+            buildModuleList(defaultModules);
+            buildRules([]);
+            buildKeybinds([]);
+            LS.serverDataReceived = true;
+            if (LS.engineDone) startModuleAnimation();
+        }
+    }, 8000);
+});
