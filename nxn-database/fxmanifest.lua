@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 author      'Nexon Dev Team <nexondev@firstvideosgroup.eu>'
-description 'nxn-database – Nexon központi adatbázis-kezelő resource'
+description 'nxn-database – Nexon kozponti adatbazis-kezelo resource'
 version     '1.0.0'
 
 dependencies {
@@ -15,6 +15,9 @@ shared_scripts {
 }
 
 server_scripts {
+    -- FIX: az oxmysql MySQL globalisa csak akkor erheto el, ha
+    -- ezt a lib fajlt betoltjuk. Enelkul MySQL = nil -> crash.
+    '@oxmysql/lib/MySQL.lua',
     'server.lua'
 }
 
