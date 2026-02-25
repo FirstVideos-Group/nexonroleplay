@@ -1,28 +1,26 @@
 -- ============================================================
 --  nxn-database | server.lua
---  FIX: GetIdent(src) playerDropped-ban nem mukodik (jatekos mar
---       lecsatlakozott, FiveM torli az identifiereket) ->
---       identCache-ben taroljuk a belepteskor lekert identifiert
+--  FIX: playerActivated nem megbizhatoan tuzodik minden FiveM
+--       verzioban, es a source net ID != slot ID problemat okoz.
+--       Megoldas: playerJoining esemeny hasznalata, ahol a source
+--       mar a helyes szerver oldali slot ID.
 -- ============================================================
 
 -- ── Belso cache-ek ───────────────────────────────────────────
---- Memoraban tarolt jatekosadatok { [src] = playerData }
+--- { [src] = playerData }  (slot ID alapu)
 local playerCache = {}
---- Belepteskor lekert identifierek { [src] = 'license:xxxx' }
---- FONTOS: playerDropped-ban GetIdent(src) mar nil-t ad vissza,
---- mert a FiveM torolja az identifier listot disconnect-kor.
---- Ezert az identifiert playerActivated-ban mentjuk el ide.
+--- { [src] = 'license:xxx' }  -- elmentve playerJoining-ban,
+--- mert playerDropped-ban GetPlayerIdentifier mar nil-t ad
 local identCache  = {}
---- Beleptesi idopontok { [src] = os.time() }
+--- { [src] = os.time() }
 local joinTimes   = {}
---- Folyamatban levo DB betoltesek jelzese { [src] = true/false }
+--- { [src] = true }  -- DB betoltes folyamatban
 local pendingLoad = {}
 
 -- ── Segdfüggvenyek ──────────────────────────────────────────
 
---- Visszaadja a jatekos azonositojat
---- CSAK playerConnecting / playerActivated-ban hivd,
---- playerDropped-ban mar nem mukodik!
+--- Azonosito lekerese -- CSAK playerConnecting / playerJoining-ban
+--- hasznald! playerDropped-ban mar nem mukodik.
 ---@param src number
 ---@return string|nil
 local function GetIdent(src)
@@ -112,26 +110,25 @@ local function LoadPlayer(src, identifier, playerName)
     TriggerEvent('nxn-database:server:playerLoaded', src, playerCache[src])
 end
 
--- ── Jatekos mentese disconnect-kor ────────────────────────────
+-- ── Jatekos mentese ──────────────────────────────────────────────
 
 ---@param src number
 ---@param joinTime number
 local function SavePlayer(src, joinTime)
-    -- Varakozas ha a betoltes meg folyamatban (max 10 masodperc)
+    -- Varakozas ha a betoltes meg folyamatban (max 10 mp)
     local waited = 0
     while pendingLoad[src] == true and waited < 10000 do
         Wait(100)
         waited = waited + 100
     end
     if waited > 0 then
-        NXN.DB.Log(('SavePlayer: %dms varakozas (src=%d)'):format(waited, src))
+        NXN.DB.Log(('SavePlayer: %dms varakozas src=%d'):format(waited, src))
     end
 
     local data = playerCache[src]
     local now  = NowTimestamp()
 
     if data then
-        -- Normalis ut: cache-bol mentunk
         local sessionSeconds = math.max(0, os.time() - (joinTime or os.time()))
         MySQL.update.await(
             'UPDATE `' .. Config.PlayersTable .. '` SET `last_online` = ?, `total_playtime` = `total_playtime` + ? WHERE `identifier` = ?',
@@ -139,21 +136,19 @@ local function SavePlayer(src, joinTime)
         )
         NXN.DB.Log(('Elmentve: %s | session=%ds'):format(data.identifier, sessionSeconds))
     else
-        -- Fallback: cache nincs, de identCache-bol meg van az identifier
-        -- (playerDropped-ban GetIdent(src) mar nem mukodik!)
+        -- Fallback: identCache-bol (GetIdent playerDropped-ban mar nem mukodik)
         local identifier = identCache[src]
         if identifier then
             MySQL.update.await(
                 'UPDATE `' .. Config.PlayersTable .. '` SET `last_online` = ? WHERE `identifier` = ?',
                 { now, identifier }
             )
-            NXN.DB.Warn(('SavePlayer fallback: last_online frissitve, ident=%s'):format(identifier))
+            NXN.DB.Warn(('SavePlayer fallback: last_online frissitve ident=%s'):format(identifier))
         else
-            NXN.DB.Warn(('SavePlayer: nincs cache es nincs identCache, src=%d, kihagyva'):format(src))
+            NXN.DB.Warn(('SavePlayer: nincs cache, nincs identCache src=%d'):format(src))
         end
     end
 
-    -- Cleanup
     playerCache[src] = nil
     pendingLoad[src] = nil
     identCache[src]  = nil
@@ -161,7 +156,8 @@ end
 
 -- ── Esemenykezelok ─────────────────────────────────────────────
 
--- playerConnecting: identifier ellenorzes, kapu
+-- playerConnecting: csak kapuellenorzes (deferrals)
+-- A source itt net ID, NEM slot ID -> ne mentsunk cache-be!
 AddEventHandler('playerConnecting', function(name, _, deferrals)
     local src = source
     deferrals.defer()
@@ -174,19 +170,22 @@ AddEventHandler('playerConnecting', function(name, _, deferrals)
     deferrals.done()
 end)
 
--- playerActivated: jatekos teljesen aktiv, DB betoltes
--- FIX: az identifiert ITT mentjuk el identCache-be,
--- mert playerDropped-ban GetIdent(src) mar nil-t ad vissza!
-AddEventHandler('playerActivated', function()
+-- playerJoining: a jatekos net handshake utan tuzodik,
+-- a source itt mar a helyes szerver oldali SLOT ID.
+-- Ez az esemeny megbizhatoan tuzodik minden FiveM verzioban.
+-- A oldId parameter az elozo session source-ja (ha volt).
+AddEventHandler('playerJoining', function(oldId)
     local src        = source
-    local identifier = GetIdent(src)   -- meg mukodik, jatekos aktiv
+    local identifier = GetIdent(src)
     if not identifier then
-        NXN.DB.Warn(('playerActivated: nincs identifier, src=%d'):format(src))
+        NXN.DB.Warn(('playerJoining: nincs identifier src=%d'):format(src))
         return
     end
-    local playerName  = GetPlayerName(src) or 'Unknown'
-    identCache[src]   = identifier   -- elmentjuk disconnect-re
-    joinTimes[src]    = os.time()
+    local playerName = GetPlayerName(src) or 'Unknown'
+    -- Azonosito elmentese: playerDropped-ban GetIdent mar nem mukodik!
+    identCache[src]  = identifier
+    joinTimes[src]   = os.time()
+    NXN.DB.Log(('playerJoining: src=%d ident=%s name=%s'):format(src, identifier, playerName))
     CreateThread(function()
         LoadPlayer(src, identifier, playerName)
     end)
@@ -195,8 +194,6 @@ end)
 AddEventHandler('playerDropped', function(reason)
     local src = source
     NXN.DB.Log(('playerDropped: src=%d reason=%s'):format(src, tostring(reason)))
-    -- joinTimes-t itt mentjuk el lokalis valtozoba, mert a tabla
-    -- torlese elott kell a session szamitashoz
     local jt = joinTimes[src]
     joinTimes[src] = nil
     CreateThread(function()
@@ -242,7 +239,6 @@ exports('getPlayer', function(src)
 end)
 
 exports('getIdentifier', function(src)
-    -- identCache-bol adjuk vissza, mukodik disconnect utan is
     return identCache[src] or (playerCache[src] and playerCache[src].identifier) or nil
 end)
 
