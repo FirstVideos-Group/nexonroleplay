@@ -10,14 +10,14 @@ Config.Position = 'bottom-right'
 -- Sebesseg megjelenitesi egyseg: 'kmh' | 'mph'
 Config.SpeedUnit = 'kmh'
 
--- Fordulat animacio simitas (ms)
+-- Poll intervallum (ms) - modul loopok Wait erteke
 Config.PollInterval = 100
 
 -- Modul beallitasok
 Config.Modules = {
     speed = {
         enabled       = true,
-        alwaysVisible = true,   -- motor jar -> mindig latszik
+        alwaysVisible = true,
         order         = 1,
     },
     rpm = {
@@ -37,24 +37,25 @@ Config.Modules = {
     },
     engine = {
         enabled       = true,
-        alwaysVisible = false,  -- csak ha a motor kihalt / tulhevult
+        alwaysVisible = false,  -- csak ha motor meghibasodott / leall
         threshold     = 950,    -- engine health, ez alatt figyelmeztet
         order         = 5,
     },
-    -- Opcionalis, kulső resource toltiheti (nxn-fuel, nxn-seatbelt stb.)
+    -- nxn-fuel toltiheti, ha az fut
     fuel = {
         enabled       = false,
         alwaysVisible = true,
         order         = 6,
     },
+    -- nxn-seatbelt toltiheti: alapbol engedelyezve, de csak kicsatolva latszik
     seatbelt = {
-        enabled       = false,
-        alwaysVisible = false,  -- csak ha nincs bekotve
+        enabled       = true,   -- FIX: true, hogy a setSeatbelt export mukodjon
+        alwaysVisible = false,  -- csak ha NINCS bekotve
         order         = 7,
     },
     siren = {
         enabled       = false,
-        alwaysVisible = false,  -- csak ha szirena be van kapcsolva
+        alwaysVisible = false,
         order         = 8,
     },
 }

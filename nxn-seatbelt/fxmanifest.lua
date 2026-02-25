@@ -15,8 +15,12 @@ client_scripts {
 }
 
 files {
+    'html/index.html',
+    'html/app.js',
     'sounds/seatbelt_warning.ogg',
     'docs/index.html'
 }
+
+ui_page 'html/index.html'
 
 lua54 'yes'

@@ -2,41 +2,10 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8"/>
-    <style>
-        html, body {
-            margin: 0; padding: 0;
-            background: transparent;
-            overflow: hidden;
-            pointer-events: none;
-        }
-    </style>
 </head>
 <body>
-<!-- nxn-seatbelt: NUI csak hanglejatszasra hasznalt, nincs vizualis elem -->
-<audio id="warn-audio" preload="auto"></audio>
-<script>
-    const audio = document.getElementById('warn-audio');
-
-    window.addEventListener('message', function(e) {
-        const d = e.data;
-        if (!d || !d.action) return;
-
-        if (d.action === 'playWarning') {
-            // Beallitjuk a forrast es lejatszuk
-            audio.src    = d.file;
-            audio.volume = d.volume !== undefined ? d.volume : 0.5;
-            audio.currentTime = 0;
-            audio.play().catch(function() {});
-
-            audio.onended = function() {
-                fetch('https://' + GetParentResourceName() + '/soundEnded', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
-                });
-            };
-        }
-    });
-</script>
+<!-- nxn-seatbelt NUI layer: csak hanglejatszasra szolgal, nincs vizualis elem -->
+<audio id="seatbelt-warning" loop></audio>
+<script src="app.js"></script>
 </body>
 </html>
