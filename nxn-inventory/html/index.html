@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-inventory</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="inv-root" class="hidden">
+
+    <!-- ═════ INVENTORY PANEL ═════ -->
+    <div id="inv-panel">
+
+        <!-- FEJLÉC -->
+        <div class="inv-header">
+            <div class="inv-title">
+                <i class="hgi hgi-stroke hgi-backpack-01"></i>
+                <span>Inventory</span>
+            </div>
+            <div class="inv-weight" id="inv-weight">
+                <i class="hgi hgi-stroke hgi-weight-scale"></i>
+                <span id="weight-val">0.0</span> / <span id="weight-max">30.0</span> kg
+            </div>
+            <button class="inv-close" id="inv-close" title="Bezárás">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i>
+            </button>
+        </div>
+
+        <!-- KERESOW -->
+        <div class="inv-search-wrap">
+            <i class="hgi hgi-stroke hgi-search-01"></i>
+            <input type="text" id="inv-search" placeholder="Keresés..." autocomplete="off"/>
+        </div>
+
+        <!-- KATEGÓRIA FILTEREK -->
+        <div class="inv-filters" id="inv-filters">
+            <button class="inv-filter active" data-cat="all">Minden</button>
+            <button class="inv-filter" data-cat="food">
+                <i class="hgi hgi-stroke hgi-bread-01"></i> Étel/Ital
+            </button>
+            <button class="inv-filter" data-cat="medical">
+                <i class="hgi hgi-stroke hgi-first-aid-kit"></i> Gyógy
+            </button>
+            <button class="inv-filter" data-cat="misc">
+                <i class="hgi hgi-stroke hgi-box-01"></i> Egyeb
+            </button>
+        </div>
+
+        <!-- ITEM LISTA -->
+        <div class="inv-items" id="inv-items">
+            <div class="inv-empty" id="inv-empty">
+                <i class="hgi hgi-stroke hgi-inbox-01"></i>
+                <span>Az inventory üres</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═════ JOBB KLIKKES KONTEXTMENd ═════ -->
+    <div id="ctx-menu" class="ctx-menu hidden">
+        <div class="ctx-item-header" id="ctx-item-header"></div>
+        <div id="ctx-actions"></div>
+    </div>
+
+</div>
+
+<!-- ═════ HOTBAR (mindig látható) ═════ -->
+<div id="hotbar" class="hotbar">
+    <!-- JS tölti fel -->
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
