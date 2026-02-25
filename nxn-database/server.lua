@@ -1,19 +1,28 @@
 -- ============================================================
 --  nxn-database | server.lua
---  FIX: race condition – playerDropped hamarabb fut mint LoadPlayer
---       befejez – pendingLoad flag + SavePlayer DB fallback
+--  FIX: GetIdent(src) playerDropped-ban nem mukodik (jatekos mar
+--       lecsatlakozott, FiveM torli az identifiereket) ->
+--       identCache-ben taroljuk a belepteskor lekert identifiert
 -- ============================================================
 
--- ── Belso cache ─────────────────────────────────────────────
+-- ── Belso cache-ek ───────────────────────────────────────────
 --- Memoraban tarolt jatekosadatok { [src] = playerData }
-local playerCache  = {}
-local joinTimes    = {}
---- pendingLoad: igaz amig a LoadPlayer DB-lekerdezese folyamatban van
---- Ha playerDropped erkezik kozben, megvarja a betoltest majd ment.
-local pendingLoad  = {}
+local playerCache = {}
+--- Belepteskor lekert identifierek { [src] = 'license:xxxx' }
+--- FONTOS: playerDropped-ban GetIdent(src) mar nil-t ad vissza,
+--- mert a FiveM torolja az identifier listot disconnect-kor.
+--- Ezert az identifiert playerActivated-ban mentjuk el ide.
+local identCache  = {}
+--- Beleptesi idopontok { [src] = os.time() }
+local joinTimes   = {}
+--- Folyamatban levo DB betoltesek jelzese { [src] = true/false }
+local pendingLoad = {}
 
 -- ── Segdfüggvenyek ──────────────────────────────────────────
 
+--- Visszaadja a jatekos azonositojat
+--- CSAK playerConnecting / playerActivated-ban hivd,
+--- playerDropped-ban mar nem mukodik!
 ---@param src number
 ---@return string|nil
 local function GetIdent(src)
@@ -65,7 +74,7 @@ end
 ---@param playerName string
 local function LoadPlayer(src, identifier, playerName)
     NXN.DB.Log(('LoadPlayer: src=%d ident=%s name=%s'):format(src, identifier, playerName))
-    pendingLoad[src] = true   -- jelzi hogy DB muvelet folyamatban
+    pendingLoad[src] = true
 
     local row = MySQL.single.await(
         'SELECT * FROM `' .. Config.PlayersTable .. '` WHERE identifier = ?',
@@ -99,27 +108,23 @@ local function LoadPlayer(src, identifier, playerName)
         NXN.DB.Info(('Uj jatekos: %s (DB id=%d)'):format(identifier, insertId))
     end
 
-    pendingLoad[src] = false   -- DB muvelet kesz
+    pendingLoad[src] = false
     TriggerEvent('nxn-database:server:playerLoaded', src, playerCache[src])
 end
 
 -- ── Jatekos mentese disconnect-kor ────────────────────────────
--- FIX: Race condition - ha LoadPlayer meg fut (pendingLoad=true),
--- megvarjuk amig befejezi, azutan mentunk.
--- Ha valami miatt a cache meg mindig nil (pl. DB hiba a betoltesnel),
--- DB fallback: csak last_online-t frissitjuk identifier alapjan.
 
 ---@param src number
 ---@param joinTime number
 local function SavePlayer(src, joinTime)
-    -- Varakozas ha a betoltes meg folyamatban van (max 10 masodperc)
+    -- Varakozas ha a betoltes meg folyamatban (max 10 masodperc)
     local waited = 0
     while pendingLoad[src] == true and waited < 10000 do
         Wait(100)
         waited = waited + 100
     end
     if waited > 0 then
-        NXN.DB.Log(('SavePlayer: %dms varakozas a betoltesre (src=%d)'):format(waited, src))
+        NXN.DB.Log(('SavePlayer: %dms varakozas (src=%d)'):format(waited, src))
     end
 
     local data = playerCache[src]
@@ -127,33 +132,36 @@ local function SavePlayer(src, joinTime)
 
     if data then
         -- Normalis ut: cache-bol mentunk
-        local sessionSeconds = os.time() - (joinTime or os.time())
+        local sessionSeconds = math.max(0, os.time() - (joinTime or os.time()))
         MySQL.update.await(
             'UPDATE `' .. Config.PlayersTable .. '` SET `last_online` = ?, `total_playtime` = `total_playtime` + ? WHERE `identifier` = ?',
             { now, sessionSeconds, data.identifier }
         )
         NXN.DB.Log(('Elmentve: %s | session=%ds'):format(data.identifier, sessionSeconds))
     else
-        -- Fallback: cache nincs (pl. DB hiba betoltesnel vagy 10mp timeout)
-        -- Legalabb last_online-t frissitjuk identifier alapjan ha van
-        local identifier = GetIdent(src)
+        -- Fallback: cache nincs, de identCache-bol meg van az identifier
+        -- (playerDropped-ban GetIdent(src) mar nem mukodik!)
+        local identifier = identCache[src]
         if identifier then
             MySQL.update.await(
                 'UPDATE `' .. Config.PlayersTable .. '` SET `last_online` = ? WHERE `identifier` = ?',
                 { now, identifier }
             )
-            NXN.DB.Warn(('SavePlayer fallback (nincs cache): last_online frissitve, identifier=%s'):format(identifier))
+            NXN.DB.Warn(('SavePlayer fallback: last_online frissitve, ident=%s'):format(identifier))
         else
-            NXN.DB.Warn(('SavePlayer: nincs cache ES nincs identifier, src=%d, kihagyva'):format(src))
+            NXN.DB.Warn(('SavePlayer: nincs cache es nincs identCache, src=%d, kihagyva'):format(src))
         end
     end
 
+    -- Cleanup
     playerCache[src] = nil
     pendingLoad[src] = nil
+    identCache[src]  = nil
 end
 
 -- ── Esemenykezelok ─────────────────────────────────────────────
 
+-- playerConnecting: identifier ellenorzes, kapu
 AddEventHandler('playerConnecting', function(name, _, deferrals)
     local src = source
     deferrals.defer()
@@ -166,15 +174,19 @@ AddEventHandler('playerConnecting', function(name, _, deferrals)
     deferrals.done()
 end)
 
+-- playerActivated: jatekos teljesen aktiv, DB betoltes
+-- FIX: az identifiert ITT mentjuk el identCache-be,
+-- mert playerDropped-ban GetIdent(src) mar nil-t ad vissza!
 AddEventHandler('playerActivated', function()
     local src        = source
-    local identifier = GetIdent(src)
+    local identifier = GetIdent(src)   -- meg mukodik, jatekos aktiv
     if not identifier then
         NXN.DB.Warn(('playerActivated: nincs identifier, src=%d'):format(src))
         return
     end
-    local playerName = GetPlayerName(src) or 'Unknown'
-    joinTimes[src]   = os.time()
+    local playerName  = GetPlayerName(src) or 'Unknown'
+    identCache[src]   = identifier   -- elmentjuk disconnect-re
+    joinTimes[src]    = os.time()
     CreateThread(function()
         LoadPlayer(src, identifier, playerName)
     end)
@@ -183,6 +195,8 @@ end)
 AddEventHandler('playerDropped', function(reason)
     local src = source
     NXN.DB.Log(('playerDropped: src=%d reason=%s'):format(src, tostring(reason)))
+    -- joinTimes-t itt mentjuk el lokalis valtozoba, mert a tabla
+    -- torlese elott kell a session szamitashoz
     local jt = joinTimes[src]
     joinTimes[src] = nil
     CreateThread(function()
@@ -228,8 +242,8 @@ exports('getPlayer', function(src)
 end)
 
 exports('getIdentifier', function(src)
-    local data = playerCache[src]
-    return data and data.identifier or nil
+    -- identCache-bol adjuk vissza, mukodik disconnect utan is
+    return identCache[src] or (playerCache[src] and playerCache[src].identifier) or nil
 end)
 
 exports('getAllPlayers', function()
