@@ -1,54 +1,69 @@
 -- ============================================================
 --  nxn-vehicle-hud | modules/lights.lua
---  Lampa allapot: position lights, full beam, hazard
---  Csak akkor jelenik meg, ha valamelyik lampa be van kapcsolva.
+--  Lampa allapot: position lights, full beam, veszviloglo
+--  FIX: helyes GTA API, Lua SetTimeout (nem JS setTimeout)
 -- ============================================================
 
-local hideTimer = nil
+local hideTimer  = nil
+local HIDE_DELAY = 1500  -- ms, ennyi utan tunteti el a lamp ikont
 
 CreateThread(function()
     local lastState = ''
 
     while true do
-        Wait(Config.PollInterval * 2)  -- lampak ritkabban valtoznak
-        if not hudVisible or not inVehicle then goto continue end
+        -- Lampak ritkabban valtoznak, 200ms eleg
+        Wait(200)
+
+        if not inVehicle then goto continue end
         if not moduleStates['lights'] then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
         if veh == 0 then goto continue end
 
-        local lightState = GetVehicleLightsState(veh)  -- [1]=position [2]=fullbeam
-        local hasPosition, hasHighbeam = lightState, false
-        -- GTA API: GetVehicleLightsState returns int bitmask
-        -- bit 0 = position lights, bit 1 = full beam
-        local pos   = (lightState & 1) ~= 0
-        local high  = (lightState & 2) ~= 0
-        local hazard = IsVehicleExtraLightOn(veh, 0) -- hazard lights approx
+        -- GetVehicleLightsState(vehicle) -> lightsOn (bool), highbeamsOn (bool)
+        -- FiveM native: a ket return erteke a ket outparam
+        local _, lightsOn, highbeamsOn = GetVehicleLightsState(veh)
+        -- Veszviloglo: IsVehicleExtraLightOn nem letezik; a hazard
+        -- GetVehicleIndicatorLights(veh) -> 0=off,1=left,2=right,3=hazard
+        local indicatorState = GetVehicleIndicatorLights(veh)
+        local hazard = (indicatorState == 3)
 
-        local stateStr = tostring(pos) .. tostring(high) .. tostring(hazard)
+        local stateStr = tostring(lightsOn) .. tostring(highbeamsOn) .. tostring(hazard)
 
         if stateStr ~= lastState then
             lastState = stateStr
-            NXN.VehHUD.Log(('lights: pos=%s high=%s hazard=%s'):format(tostring(pos), tostring(high), tostring(hazard)))
-            NXN.VehHUD.Send('updateModule', {
-                module  = 'lights',
-                pos     = pos,
-                high    = high,
-                hazard  = hazard,
+            NXN.VehHUD.Log(('lights: pos=%s high=%s hazard=%s'):format(
+                tostring(lightsOn), tostring(highbeamsOn), tostring(hazard)
+            ))
+
+            SendNUIMessage({
+                action = 'updateModule',
+                module = 'lights',
+                pos    = lightsOn,
+                high   = highbeamsOn,
+                hazard = hazard,
             })
 
-            -- Show/hide logika
+            -- Show/hide logika lampak be/kikapcsolas alapjan
             if not Config.Modules.lights.alwaysVisible then
-                if pos or high or hazard then
+                if lightsOn or highbeamsOn or hazard then
+                    -- Megszakitjuk az esetleges fuggobe elo eltunetest
+                    if hideTimer then
+                        hideTimer = nil
+                    end
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'lights' })
-                    if hideTimer then clearTimeout(hideTimer); hideTimer = nil end
                 else
+                    -- Rovid delay utan eltunjuk (ne ugorjon el azonnal)
                     if not hideTimer then
-                        hideTimer = setTimeout(function()
-                            SendNUIMessage({ action = 'hideModuleTemporary', module = 'lights' })
+                        hideTimer = true  -- flag, hogy ne inditsunk tobbszor
+                        SetTimeout(HIDE_DELAY, function()
+                            -- Csak akkor rejtjuk el ha meg mindig "off" az allapot
+                            if lastState == 'falsefalsefalse' then
+                                SendNUIMessage({ action = 'hideModuleTemporary', module = 'lights' })
+                            end
                             hideTimer = nil
-                        end, 1500)
+                        end)
                     end
                 end
             end

@@ -8,7 +8,8 @@ CreateThread(function()
 
     while true do
         Wait(Config.PollInterval)
-        if not hudVisible or not inVehicle then goto continue end
+
+        if not inVehicle then goto continue end
         if not moduleStates['rpm'] then goto continue end
 
         local ped = PlayerPedId()
@@ -21,9 +22,10 @@ CreateThread(function()
         if rpm ~= lastRpm then
             lastRpm = rpm
             NXN.VehHUD.Log(('rpm: %d%%'):format(rpm))
-            NXN.VehHUD.Send('updateModule', {
+            SendNUIMessage({
+                action = 'updateModule',
                 module = 'rpm',
-                value  = rpm,   -- 0-100 szazalek
+                value  = rpm,
             })
         end
 

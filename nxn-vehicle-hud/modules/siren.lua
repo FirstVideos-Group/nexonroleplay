@@ -1,13 +1,9 @@
 -- ============================================================
 --  nxn-vehicle-hud | modules/siren.lua
---  Szirena statusz – az nxn-sirencontrol resource kezeli
---  Export: exports['nxn-vehicle-hud']:setSiren(active, mode)
---  Modul csak akkor latszik, ha a szirena aktiv.
+--  A szirena allapotot az nxn-sirencontrol resource kuldi
+--  exports['nxn-vehicle-hud']:setSiren(active, mode) hivason keresztul.
+--  Ez a modul csak a beiratkozasi pontot jeloli - nincs sajat loop.
 -- ============================================================
 
-NXN.VehHUD.Log('siren modul betoltve (passziv, nxn-sirencontrol kezeli)')
-
--- Peldakod az nxn-sirencontrol resource-ban:
--- AddEventHandler('nxn-sirencontrol:changed', function(active, mode)
---     exports['nxn-vehicle-hud']:setSiren(active, mode)
--- end)
+-- Nincs loop: az nxn-sirencontrol export-on keresztul frissit
+-- Lasd: client.lua setSiren export

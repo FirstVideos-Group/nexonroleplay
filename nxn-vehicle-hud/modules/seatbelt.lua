@@ -1,13 +1,9 @@
 -- ============================================================
 --  nxn-vehicle-hud | modules/seatbelt.lua
---  Biztonsagi ov – az nxn-seatbelt resource kezeli
---  Export: exports['nxn-vehicle-hud']:setSeatbelt(fastened)
---  Modul csak akkor latszik, ha nincs bekotve a ov.
+--  Az ov allapotot az nxn-seatbelt resource kuldi
+--  exports['nxn-vehicle-hud']:setSeatbelt(fastened) hivason keresztul.
+--  Ez a modul csak a beiratkozasi pontot jeloli - nincs sajat loop.
 -- ============================================================
 
-NXN.VehHUD.Log('seatbelt modul betoltve (passziv, nxn-seatbelt kezeli)')
-
--- Peldakod az nxn-seatbelt resource-ban:
--- AddEventHandler('nxn-seatbelt:changed', function(fastened)
---     exports['nxn-vehicle-hud']:setSeatbelt(fastened)
--- end)
+-- Nincs loop: az nxn-seatbelt export-on keresztul frissit
+-- Lasd: client.lua setSeatbelt export
