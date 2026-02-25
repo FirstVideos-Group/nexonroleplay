@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-licenses – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:   #5b6af0;
+            --bg:       #0e0f14;
+            --surface:  #16181f;
+            --surface2: #1e2030;
+            --border:   #2a2d3a;
+            --text:     #e4e6f0;
+            --muted:    #6b6f85;
+            --success:  #3ecf8e;
+            --danger:   #f05b5b;
+            --warning:  #f0b55b;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; line-height:1.7; }
+        header { background:var(--surface); border-bottom:1px solid var(--border); padding:24px 40px; display:flex; align-items:center; gap:14px; }
+        header i { font-size:30px; color:var(--accent); }
+        header h1 { font-size:22px; font-weight:700; }
+        header .ver { color:var(--muted); font-size:13px; margin-left:10px; }
+        header .deps { margin-left:auto; display:flex; gap:8px; }
+        .dep-badge { font-size:11px; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--muted); display:flex; align-items:center; gap:5px; }
+        .dep-badge i { font-size:12px; color:var(--accent); }
+        nav { background:var(--surface); border-bottom:1px solid var(--border); padding:0 40px; display:flex; gap:2px; }
+        nav a { display:flex; align-items:center; gap:6px; padding:12px 16px; font-size:13px; color:var(--muted); text-decoration:none; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; }
+        nav a:hover { color:var(--text); }
+        nav a.active { color:var(--accent); border-color:var(--accent); }
+        nav i { font-size:14px; }
+        main { max-width:940px; margin:36px auto; padding:0 24px 60px; }
+        section { margin-bottom:52px; }
+        h2 { font-size:17px; color:var(--accent); margin-bottom:14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+        h3 { font-size:14px; color:var(--text); margin:20px 0 8px; }
+        p { color:var(--muted); font-size:14px; margin-bottom:12px; }
+        pre { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; overflow-x:auto; font-size:13px; margin-bottom:16px; line-height:1.6; }
+        code { color:var(--success); }
+        .cm { color:var(--muted); }
+        table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; }
+        th { background:var(--surface); color:var(--accent); text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); }
+        td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--muted); vertical-align:top; }
+        td:first-child { color:var(--text); font-family:monospace; }
+        tr:last-child td { border-bottom:none; }
+        .badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:2px 8px; border-radius:4px; font-weight:600; }
+        .bs { background:rgba(91,106,240,.15); color:var(--accent);  border:1px solid rgba(91,106,240,.3); }
+        .bc { background:rgba(62,207,142,.12); color:var(--success); border:1px solid rgba(62,207,142,.3); }
+        .be { background:rgba(240,181,91,.12); color:var(--warning); border:1px solid rgba(240,181,91,.3); }
+        .tabs { display:flex; gap:4px; margin-bottom:0; }
+        .tab { padding:7px 16px; background:var(--surface); border:1px solid var(--border); border-bottom:none; border-radius:8px 8px 0 0; cursor:pointer; font-size:12px; color:var(--muted); transition:color .15s; }
+        .tab.active { color:var(--text); background:var(--surface2); }
+        .tab-content { display:none; background:var(--surface2); border:1px solid var(--border); border-radius:0 8px 8px 8px; padding:16px; margin-bottom:16px; }
+        .tab-content.active { display:block; }
+        .tab-content pre { margin-bottom:0; background:var(--surface); }
+        .info-box { display:flex; gap:12px; padding:14px 16px; border-radius:8px; margin-bottom:16px; font-size:13px; }
+        .tip  { background:rgba(91,106,240,.08);  border:1px solid rgba(91,106,240,.25);  color:#a0a8f8; }
+        .warn { background:rgba(240,181,91,.08);  border:1px solid rgba(240,181,91,.25);  color:var(--warning); }
+        .info-box i { font-size:16px; margin-top:1px; flex-shrink:0; }
+        .flow { display:flex; align-items:center; gap:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; margin-bottom:16px; overflow-x:auto; }
+        .fn { text-align:center; padding:10px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:12px; white-space:nowrap; }
+        .fn i { display:block; font-size:20px; color:var(--accent); margin-bottom:4px; }
+        .fa { flex:1; text-align:center; font-size:11px; color:var(--muted); padding:0 8px; min-width:60px; }
+        .fa .arr { font-size:16px; color:var(--border); display:block; }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="hgi hgi-stroke hgi-id-verified"></i>
+    <div>
+        <h1>nxn-licenses <span class="ver">v1.0.0</span></h1>
+    </div>
+    <div class="deps">
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-database-01"></i> nxn-database</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-user-01"></i> nxn-identity</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-notification-01"></i> nxn-notify</span>
+    </div>
+</header>
+
+<nav>
+    <a href="#about"    class="active" onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</a>
+    <a href="#flow"     onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-workflow-square-07"></i> Folyamat</a>
+    <a href="#config"   onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</a>
+    <a href="#exports"  onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</a>
+    <a href="#events"   onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</a>
+    <a href="#types"    onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-id-verified"></i> Típusok</a>
+    <a href="#examples" onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</a>
+</nav>
+
+<main>
+
+<!-- ÁTTEKINTÉS -->
+<section id="about">
+    <h2><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</h2>
+    <p>
+        Az <strong>nxn-licenses</strong> a Nexon RP szerver igazolvány- és engedélykezelő rendszere.
+        Karakterenként tárolja adatbázisban az igazolványokat (két külön tábla:
+        <code>nxn_licenses</code> és <code>nxn_license_requests</code>). Az igénylés kiváltáskor nem
+        azonnal kerül a játékoshoz, hanem konfigurálható idő múlva („feldolgozási idő”).
+        Minden igazolványnak lejárati ideje van, amitól újra igényelhető.
+        A játékos <code>/idcard</code> parancsal nyár meg a UI-t, ahol megtekintheti, igényelheti
+        és felmutathatja igazolványait. Az adatok az <code>nxn-identity</code> exportáiból származnak.
+    </p>
+    <h3>Főbb jellemzők</h3>
+    <table>
+        <tr><th>Funkció</th><th>Leírás</th></tr>
+        <tr><td>Feldolgozási idő</td><td>Igénylés után konfigurált másodperccel később kerül a játékoshoz</td></tr>
+        <tr><td>Lejárat</td><td>Minden típushoz konfigurálható érvényességi idő (nap)</td></tr>
+        <tr><td>Felmutatás</td><td>Játékos megmutathatja másik játékosnak (közelség alapún)</td></tr>
+        <tr><td>Visszavonás</td><td><code>revokeLicense</code> export – rendőrségi scriptek használható</td></tr>
+        <tr><td>Közvetlen kiadás</td><td><code>grantLicense</code> export – admin / cégrendszer használható</td></tr>
+        <tr><td>Kor-ellenőrzés</td><td>Igényléskor nxn-identity kor adatból ellenőrzött</td></tr>
+        <tr><td>DB persistálás</td><td>nxn-database <code>registerTable</code> exportán keresztül</td></tr>
+    </table>
+</section>
+
+<!-- FOLYAMAT -->
+<section id="flow">
+    <h2><i class="hgi hgi-stroke hgi-workflow-square-07"></i> Igénylés folyamata</h2>
+    <div class="flow">
+        <div class="fn"><i class="hgi hgi-stroke hgi-user-01"></i>/idcard</div>
+        <div class="fa"><span class="arr">→</span><span>igénylés</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-database-01"></i>nxn_license_requests</div>
+        <div class="fa"><span class="arr">→</span><span>processSec múlva</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-settings-01"></i>feldolgozó tick</div>
+        <div class="fa"><span class="arr">→</span><span>INSERT</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-id-verified"></i>nxn_licenses</div>
+        <div class="fa"><span class="arr">→</span><span>notify + sync</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-notification-01"></i>Játékos</div>
+    </div>
+    <p>
+        A feldolgozó tick <strong>minden <code>Config.ProcessInterval</code> másodpercben</strong> fut.
+        Az igénylés <code>ready_at</code> mezőjét hasonlítja az aktuális UTC időhöz.
+        Ha a játékos online, azonnal szinkronizál és nxn-notify ertesítést küld.
+        Ha offline volt az igazolvány kiadásakor, a következő bejelentkezéskor töltődik be.
+    </p>
+    <h3>Felmutatás folyamata</h3>
+    <div class="flow">
+        <div class="fn"><i class="hgi hgi-stroke hgi-user-01"></i>Játékos A</div>
+        <div class="fa"><span class="arr">→</span><span>showTo (net event)</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-server-01"></i>Szerver</div>
+        <div class="fa"><span class="arr">→</span><span>nxn-identity adatok</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-user-02"></i>Játékos B (client event)</div>
+        <div class="fa"><span class="arr">→</span><span>NUI kártya megjelenik</span></div>
+    </div>
+</section>
+
+<!-- KONFIGURÁCIÓ -->
+<section id="config">
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <h3>Alap beállítások</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.Command</td><td>'idcard'</td><td>UI megnyitó chat parancs</td></tr>
+        <tr><td>Config.ProcessInterval</td><td>30</td><td>Igénylés feldolgozó tick intervalluma (mp)</td></tr>
+        <tr><td>Config.IdPrefix</td><td>'NXN'</td><td>Igazolvány szám prefix</td></tr>
+    </table>
+    <h3>Igazolvány típus mezők (Config.LicenseTypes)</h3>
+    <table>
+        <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
+        <tr><td>id</td><td>string</td><td>Egyedi azonosító (pl. <code>drivers_license</code>)</td></tr>
+        <tr><td>label</td><td>string</td><td>Megjelenitési név</td></tr>
+        <tr><td>icon</td><td>string</td><td>HugeIcons CSS osztály (pl. <code>hgi-steering-wheel</code>)</td></tr>
+        <tr><td>processSec</td><td>number</td><td>Kiváltás után hány mp múlva kerül a játékoshoz</td></tr>
+        <tr><td>validDays</td><td>number</td><td>Érvényesség napokban (0 = sosem jár le)</td></tr>
+        <tr><td>cost</td><td>number</td><td>Kiváltás költsége (pénzrendszer integrációra előkészítve)</td></tr>
+        <tr><td>requiredAge</td><td>number</td><td>Minimum életkor az igényléshez (0 = nincs korlát)</td></tr>
+        <tr><td>showFields</td><td>table</td><td>Megjelenő mezők a kártyán: <code>name</code>, <code>birthdate</code>, <code>gender</code>, <code>id_number</code>, <code>issued</code>, <code>expires</code></td></tr>
+    </table>
+    <h3>Példa – új igazolvány típus hozzáadása</h3>
+    <pre><code>table.insert(Config.LicenseTypes, {
+    id          = 'taxi_license',
+    label       = 'Taxi Engedély',
+    icon        = 'hgi-taxi',
+    processSec  = 1200,     <span class="cm">-- 20 perc</span>
+    validDays   = 365,      <span class="cm">-- 1 év</span>
+    cost        = 800,
+    requiredAge = 21,
+    showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+})</code></pre>
+</section>
+
+<!-- EXPORTOK -->
+<section id="exports">
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <h3>Szerver oldal</h3>
+    <table>
+        <tr><th>Export</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>hasLicense(src, type)</td><td>integer, string</td><td>boolean</td><td>Van-e érvényes igazolványa</td></tr>
+        <tr><td>getLicense(src, type)</td><td>integer, string</td><td>table|nil</td><td>Igazolvány DB sor visszaadása</td></tr>
+        <tr><td>getAllLicenses(src)</td><td>integer</td><td>table</td><td>Összes igazolvány (típus→sor map)</td></tr>
+        <tr><td>revokeLicense(src, type)</td><td>integer, string</td><td>boolean</td><td>Visszavonás, notify, DB frissítés</td></tr>
+        <tr><td>grantLicense(src, type)</td><td>integer, string</td><td>boolean</td><td>Közvetlen kiadás (azonnali)</td></tr>
+        <tr><td>getExpiry(src, type)</td><td>integer, string</td><td>string|nil</td><td>Lejárat időpontja (DATETIME string)</td></tr>
+        <tr><td>hasPending(src, type)</td><td>integer, string</td><td>boolean</td><td>Függőben van-e még az igénylés</td></tr>
+    </table>
+    <h3>Kliens oldal</h3>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>openLicenses()</td><td>UI megnyitása</td></tr>
+        <tr><td>closeLicenses()</td><td>UI bezárása</td></tr>
+        <tr><td>isOpen()</td><td>Nyitva van-e a panel</td></tr>
+        <tr><td>getLocalLicenses()</td><td>Helyi kliens cache visszaadása</td></tr>
+    </table>
+</section>
+
+<!-- NET EVENTS -->
+<section id="events">
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-licenses:server:apply</td><td><span class="badge be">Client → Szerver</span></td><td>Igénylés beadása (licenseType)</td></tr>
+        <tr><td>nxn-licenses:server:showTo</td><td><span class="badge be">Client → Szerver</span></td><td>Felmutatás (licenseType, targetSrc)</td></tr>
+        <tr><td>nxn-licenses:server:requestSync</td><td><span class="badge be">Client → Szerver</span></td><td>Szinkron kérése</td></tr>
+        <tr><td>nxn-licenses:client:sync</td><td><span class="badge bs">Szerver → Client</span></td><td>Teljes szinkronizáció (data, pending)</td></tr>
+        <tr><td>nxn-licenses:client:viewShown</td><td><span class="badge bs">Szerver → Client</span></td><td>Más játékos igazolványát kapjuk meg</td></tr>
+        <tr><td>nxn-licenses:server:loaded</td><td><span class="badge bs">Server event</span></td><td>Játékos igazolványai betöltöttek (src)</td></tr>
+    </table>
+</section>
+
+<!-- TÍPUSOK -->
+<section id="types">
+    <h2><i class="hgi hgi-stroke hgi-id-verified"></i> Alapértelmezett típusok</h2>
+    <table>
+        <tr><th>id</th><th>Név</th><th>Feldolgozás</th><th>Érvényesség</th><th>Min. kor</th></tr>
+        <tr><td>id_card</td><td>Személyi igazolvány</td><td>5 perc</td><td>10 év</td><td>14</td></tr>
+        <tr><td>drivers_license</td><td>Jogosítvány</td><td>10 perc</td><td>5 év</td><td>17</td></tr>
+        <tr><td>weapon_license</td><td>Fegyverengedély</td><td>30 perc</td><td>2 év</td><td>21</td></tr>
+        <tr><td>pilot_license</td><td>Repülő engedély</td><td>60 perc</td><td>3 év</td><td>18</td></tr>
+        <tr><td>medical_card</td><td>Mentős Szolgálati Kártya</td><td>1 perc</td><td>1 év</td><td>18</td></tr>
+        <tr><td>police_badge</td><td>Rendőrségi Szolgálati Kártya</td><td>1 perc</td><td>1 év</td><td>21</td></tr>
+        <tr><td>boat_license</td><td>Hajó Engedély</td><td>15 perc</td><td>5 év</td><td>16</td></tr>
+    </table>
+</section>
+
+<!-- PÉLDÁK -->
+<section id="examples">
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="sw(this,'ex1')">Jogosítvány ellenőrzés</div>
+        <div class="tab" onclick="sw(this,'ex2')">Visszavonás (Rendőr)</div>
+        <div class="tab" onclick="sw(this,'ex3')">Közvetlen kiadás (Admin)</div>
+        <div class="tab" onclick="sw(this,'ex4')">Kliens export</div>
+    </div>
+
+    <div class="tab-content active" id="ex1">
+<pre><code><span class="cm">-- Jarmű használatkor: van-e érvényes jogosítvány?
+-- nxn-vehicle script szerver oldal</span>
+AddEventHandler('nxn-vehicle:server:entered', function(src, class)
+    if class == 'car' then
+        local ok = exports['nxn-licenses']:hasLicense(src, 'drivers_license')
+        if not ok then
+            exports['nxn-notify']:notifyPlayer(src,
+                'Nincs érvényes jogosítványod!', 'warning'
+            )
+        end
+    end
+end)</code></pre>
+    </div>
+
+    <div class="tab-content" id="ex2">
+<pre><code><span class="cm">-- Rendőr visszavonja a jogosítványt (nxn-police script)
+-- targetSrc: a megallított játékos source-a</span>
+exports['nxn-licenses']:revokeLicense(targetSrc, 'drivers_license')
+<span class="cm">-- Automatikusan notify-t küld a céljátékosnak, DB-ben is revoked=1</span></code></pre>
+    </div>
+
+    <div class="tab-content" id="ex3">
+<pre><code><span class="cm">-- Admin / cégrendszer közvetlenül ad ki igazolványt (azonnali):</span>
+local ok = exports['nxn-licenses']:grantLicense(src, 'police_badge')
+if ok then
+    exports['nxn-notify']:notifyPlayer(src,
+        'Rendőrségi kártya kiallitva.', 'success'
+    )
+end</code></pre>
+    </div>
+
+    <div class="tab-content" id="ex4">
+<pre><code><span class="cm">-- Kliens oldal: megnyitás más scriptből</span>
+exports['nxn-licenses']:openLicenses()
+
+<span class="cm">-- Helyi cache (kliens)</span>
+local lics = exports['nxn-licenses']:getLocalLicenses()
+if lics['drivers_license'] then
+    print('Van jogosítvány (kliens cache)')
+end</code></pre>
+    </div>
+
+    <div class="info-box warn">
+        <i class="hgi hgi-stroke hgi-alert-circle"></i>
+        <span><code>nxn-licenses</code>-t az <code>ensure</code> listában az <code>nxn-database</code>, <code>nxn-identity</code> és <code>nxn-notify</code> <strong>után</strong> kell elindítani.</span>
+    </div>
+    <div class="info-box tip">
+        <i class="hgi hgi-stroke hgi-information-circle"></i>
+        <span>Az <code>nxn-licenses:server:loaded</code> szerver eventet figyelheted más scriptekben is, hogy automatikusan ellenőrizéseket végezz a játékos belépésekor.</span>
+    </div>
+</section>
+
+</main>
+
+<script>
+function nc(e, el) {
+    e.preventDefault();
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+    const t = document.querySelector(el.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth' });
+}
+function sw(el, id) {
+    const p = el.closest('section');
+    p.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    p.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
