@@ -4,11 +4,12 @@
 -- ============================================================
 
 CreateThread(function()
-    local lastStreet  = ''
-    local lastCross   = ''
+    local lastStreet = ''
+    local lastCross  = ''
 
     while true do
         Wait(Config.PollInterval)
+
         if not hudVisible then goto continue end
         if not moduleStates['street'] then goto continue end
 
@@ -16,17 +17,16 @@ CreateThread(function()
         local x, y, z = table.unpack(GetEntityCoords(ped))
 
         local streetHash, crossHash = GetStreetNameAtCoord(x, y, z)
-        local streetName = GetStreetNameFromHashKey(streetHash)
-        local crossName  = GetStreetNameFromHashKey(crossHash)
-
-        if streetName == nil then streetName = '' end
-        if crossName  == nil then crossName  = '' end
+        local streetName = GetStreetNameFromHashKey(streetHash) or ''
+        local crossName  = GetStreetNameFromHashKey(crossHash)  or ''
 
         if streetName ~= lastStreet or crossName ~= lastCross then
             lastStreet = streetName
             lastCross  = crossName
             NXN.LocHUD.Log(('street: %s / %s'):format(streetName, crossName))
-            NXN.LocHUD.Send('updateModule', {
+            -- Kozvetlenul kuldi, nem NXN.LocHUD.Send-en at
+            SendNUIMessage({
+                action = 'updateModule',
                 module = 'street',
                 name   = streetName,
                 cross  = crossName,

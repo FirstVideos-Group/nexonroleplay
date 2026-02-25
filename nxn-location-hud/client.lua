@@ -3,22 +3,23 @@
 --  Kozponti manager: init, NUI kommunikacio, export API
 -- ============================================================
 
--- ── Allapot ──────────────────────────────────────────────────
+-- ── Allapot ─────────────────────────────────────────────────
 
-local hudVisible   = true
-local moduleStates = {}
+hudVisible   = false   -- global: modul loopok olvassak
+moduleStates = {}      -- global: modul loopok olvassak
 
 for name, cfg in pairs(Config.Modules) do
     moduleStates[name] = cfg.enabled
 end
 
--- ── NUI kommunikacio ─────────────────────────────────────────
+-- ── NUI kommunikacio ──────────────────────────────────────────
 
---- NUI uzenet kuldese
+--- Kozvetlen NUI kuldese (nem blokkolja hudVisible)
+--- A modul loopok KOZVETLENUL SendNUIMessage-t hasznalnak!
+--- Ez csak kulso export-hivoknak van megtartva (setZone, setDanger, stb.)
 ---@param action string
 ---@param data table
 function NXN.LocHUD.Send(action, data)
-    if not hudVisible then return end
     local payload = data or {}
     payload.action = action
     NXN.LocHUD.Log(('NUI send: action=%s'):format(action))
@@ -36,24 +37,56 @@ local function SendConfig()
         }
     end
     SendNUIMessage({
-        action     = 'init',
-        position   = Config.Position,
+        action      = 'init',
+        position    = Config.Position,
         showMinimap = Config.ShowMinimap,
-        modules    = modulesCfg,
+        modules     = modulesCfg,
     })
     NXN.LocHUD.Log(('LocHUD init kuldve, pos=%s'):format(Config.Position))
 end
 
--- ── Spawn inicializalas ──────────────────────────────────────
-
-AddEventHandler('playerSpawned', function()
-    NXN.LocHUD.Log('playerSpawned – LocHUD inicializalas')
-    Wait(300)
-    SendConfig()
+local function ShowHUD()
+    hudVisible = true
     SendNUIMessage({ action = 'setVisible', visible = true })
+    NXN.LocHUD.Log('HUD megjelenik')
+end
+
+-- ── Inicializalas ────────────────────────────────────────────
+-- Megbizhatobb mint csak playerSpawned: azonnal indul resource start-kor,
+-- es playerSpawned-ra is figyel (pl. respawn utan)
+
+local initialized = false
+
+local function Init()
+    if initialized then return end
+    initialized = true
+    NXN.LocHUD.Log('LocHUD inicializalas')
+    SendConfig()
+    ShowHUD()
+end
+
+-- Resource indulasakor: a jatekos mar a vilagban van (pl. hot-restart)
+CreateThread(function()
+    -- Rovid varakozas hogy a NUI betoltodjek
+    Wait(500)
+    -- Ellenorizzuk hogy a jatekos mar spawned-e
+    if NetworkIsPlayerActive(PlayerId()) then
+        NXN.LocHUD.Log('Resource start: jatekos aktiv, init')
+        Init()
+    end
 end)
 
--- ── Lathatosag kezeles ───────────────────────────────────────
+-- Spawn esemeny: uj csatlakozas vagy respawn
+AddEventHandler('playerSpawned', function()
+    NXN.LocHUD.Log('playerSpawned – LocHUD init / ujrainit')
+    -- Reset hogy ujraindul (pl. respawn utan)
+    initialized = false
+    -- Varakozas hogy a ped hozzarendelodjon
+    Wait(500)
+    Init()
+end)
+
+-- ── Lathatosag kezeles ─────────────────────────────────────────
 
 local function SetHudVisible(state)
     hudVisible = state
@@ -70,61 +103,45 @@ local function SetModuleEnabled(name, state)
     end
     moduleStates[name] = state
     SendNUIMessage({ action = 'setModule', module = name, enabled = state })
-    NXN.LocHUD.Log(('Modul allapot: %s = %s'):format(name, tostring(state)))
+    NXN.LocHUD.Log(('Modul: %s = %s'):format(name, tostring(state)))
     return true
 end
 
 -- ── Exportok ─────────────────────────────────────────────────
 
---- HUD elrejtese / mutatasa
----@param state boolean
 exports('setVisible', function(state)
     SetHudVisible(state)
 end)
 
---- HUD aktualis lathatosaga
----@return boolean
 exports('isVisible', function()
     return hudVisible
 end)
 
---- Modul be- vagy kikapcsolasa
----@param name string
----@param state boolean
----@return boolean
 exports('setModule', function(name, state)
     return SetModuleEnabled(name, state)
 end)
 
---- Egy modul allapota
----@param name string
----@return boolean|nil
 exports('getModuleState', function(name)
     return moduleStates[name]
 end)
 
---- Osszes modul allapota
----@return table
 exports('getAllModuleStates', function()
     return moduleStates
 end)
 
---- Pozicio valtoztatasa menet kozben
----@param pos string  'bottom-left'|'bottom-right'|'top-left'|'top-right'
 exports('setPosition', function(pos)
     SendNUIMessage({ action = 'setPosition', position = pos })
     NXN.LocHUD.Log(('Pozicio: %s'):format(pos))
 end)
 
---- Zona es banda adat beallitasa (nxn-gang hivja)
----@param zoneName string       zona neve
----@param gangName string|nil   banda neve (nil ha nincs)
----@param gangColor string|nil  hex szin pl. '#f05b5b'
+--- Zona es banda adat (nxn-gang hivja)
 exports('setZone', function(zoneName, gangName, gangColor)
     if not moduleStates['zone'] then return end
     NXN.LocHUD.Log(('setZone: zone=%s gang=%s'):format(tostring(zoneName), tostring(gangName)))
     local show = (zoneName ~= nil and zoneName ~= '')
-    NXN.LocHUD.Send('updateModule', {
+    -- Kozvetlenul kuldi (NXN.LocHUD.Send mar nem blokkolja hudVisible)
+    SendNUIMessage({
+        action    = 'updateModule',
         module    = 'zone',
         zoneName  = zoneName  or '',
         gangName  = gangName  or '',
@@ -137,21 +154,19 @@ exports('setZone', function(zoneName, gangName, gangColor)
     end
 end)
 
---- Zona adatok torlese (jatekos elhagyta a zonat) (nxn-gang hivja)
 exports('clearZone', function()
     if not moduleStates['zone'] then return end
     NXN.LocHUD.Log('clearZone')
     SendNUIMessage({ action = 'hideModuleTemporary', module = 'zone' })
 end)
 
---- Veszelyesseg szint frissitese (nxn-dispatch hivja)
----@param level number  0-5 (0 = nincs veszely)
----@param label string|nil  pl. 'AKTIV LOVOLDOZES'
+--- Veszelyesseg (nxn-dispatch hivja)
 exports('setDanger', function(level, label)
     if not moduleStates['danger'] then return end
     local lvl = tonumber(level) or 0
     NXN.LocHUD.Log(('setDanger: level=%d label=%s'):format(lvl, tostring(label)))
-    NXN.LocHUD.Send('updateModule', {
+    SendNUIMessage({
+        action = 'updateModule',
         module = 'danger',
         level  = lvl,
         label  = label or '',
@@ -167,18 +182,16 @@ exports('setDanger', function(level, label)
     end
 end)
 
---- Korozesi informacio frissitese (nxn-wantedstatus hivja)
----@param wanted boolean
----@param level number|nil   1-5 csillag
----@param label string|nil   pl. '3 csillag - BVNB'
+--- Korozési info (nxn-wantedstatus hivja)
 exports('setWanted', function(wanted, level, label)
     if not moduleStates['wanted'] then return end
     NXN.LocHUD.Log(('setWanted: wanted=%s level=%s'):format(tostring(wanted), tostring(level)))
-    NXN.LocHUD.Send('updateModule', {
-        module  = 'wanted',
-        wanted  = wanted,
-        level   = level or 0,
-        label   = label or '',
+    SendNUIMessage({
+        action = 'updateModule',
+        module = 'wanted',
+        wanted = wanted,
+        level  = level or 0,
+        label  = label or '',
     })
     if wanted then
         SendNUIMessage({ action = 'showModuleTemporary', module = 'wanted' })
@@ -187,17 +200,14 @@ exports('setWanted', function(wanted, level, label)
     end
 end)
 
---- Jatekos statusz frissitese (kulső resource is hivhatja)
----@param status string  'on_foot'|'in_vehicle'|'running'|'swimming'|'parachuting'
+--- Jatekos statusz (kulso resource is hivhatja)
 exports('setPlayerStatus', function(status)
     if not moduleStates['playerstatus'] then return end
     NXN.LocHUD.Log(('setPlayerStatus: %s'):format(tostring(status)))
-    NXN.LocHUD.Send('updateModule', { module = 'playerstatus', status = status })
+    SendNUIMessage({ action = 'updateModule', module = 'playerstatus', status = status })
 end)
 
---- Altalanos modul adat push (boviteshez)
----@param moduleName string
----@param data table
+--- Altalanos modul adat push
 exports('updateModuleData', function(moduleName, data)
     local payload = data
     payload.action = 'updateModuleData'

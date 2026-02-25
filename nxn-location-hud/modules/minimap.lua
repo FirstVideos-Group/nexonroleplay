@@ -1,8 +1,6 @@
 -- ============================================================
 --  nxn-location-hud | modules/minimap.lua
---  Minimap keretdisz es koordinata kijelzo
---  A ket GTA minimap kozvetlenul a jatekban latszik,
---  ez a modul a minimap fole rajzolt NUI overlay keret.
+--  Koordinata kijelzo a minimap panel ala
 -- ============================================================
 
 if not Config.ShowMinimap then
@@ -14,18 +12,20 @@ CreateThread(function()
     local lastCoordStr = ''
 
     while true do
-        Wait(Config.PollInterval * 2)  -- ritkabb frissites
+        Wait(Config.PollInterval * 2)
+
         if not hudVisible then goto continue end
         if not moduleStates['minimap'] then goto continue end
 
-        local ped = PlayerPedId()
+        local ped    = PlayerPedId()
         local coords = GetEntityCoords(ped)
         local coordStr = ('%d / %d'):format(math.floor(coords.x), math.floor(coords.y))
 
         if coordStr ~= lastCoordStr then
             lastCoordStr = coordStr
             NXN.LocHUD.Log(('minimap coords: %s'):format(coordStr))
-            NXN.LocHUD.Send('updateModule', {
+            SendNUIMessage({
+                action = 'updateModule',
                 module = 'minimap',
                 coords = coordStr,
             })

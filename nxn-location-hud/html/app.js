@@ -1,5 +1,7 @@
 // ============================================================
 //  nxn-location-hud | app.js
+//  FIX: alwaysVisible init logika javitva (nem hard-coded lista)
+//       modul loopok kozvetlenul SendNUIMessage-t hasznalnak
 // ============================================================
 
 const root = document.getElementById('lhud-root');
@@ -7,22 +9,22 @@ const root = document.getElementById('lhud-root');
 // Modul cache
 const modules = {};
 
-// Játékos státusz szöveg + ikon térkép
+// Jatekos statusz szoveg + ikon terkep
 const STATUS_MAP = {
-    on_foot:      { label: 'GYALOG',      icon: 'hgi-walking-helmet'   },
-    walking:      { label: 'GYALOG',      icon: 'hgi-walking-helmet'   },
-    running:      { label: 'FUT',         icon: 'hgi-running-shoes-01' },
-    in_vehicle:   { label: 'AUTÓBAN',    icon: 'hgi-car-01'           },
-    on_bike:      { label: 'MOTOR',       icon: 'hgi-motorbike-01'     },
-    on_boat:      { label: 'HAJÓN',      icon: 'hgi-sailboat'         },
-    in_helicopter:{ label: 'HELIKOPTER', icon: 'hgi-helicopter'       },
-    in_plane:     { label: 'REPÜLŐ',    icon: 'hgi-airplane-01'       },
-    swimming:     { label: 'ÚSZIK',       icon: 'hgi-swimming'         },
-    diving:       { label: 'MERÜL',      icon: 'hgi-scuba-diving'     },
-    parachuting:  { label: 'UGRIK',       icon: 'hgi-parachute'        },
+    on_foot:       { label: 'GYALOG',      icon: 'hgi-walking-helmet'   },
+    walking:       { label: 'GYALOG',      icon: 'hgi-walking-helmet'   },
+    running:       { label: 'FUT',         icon: 'hgi-running-shoes-01' },
+    in_vehicle:    { label: 'AUTÓBAN',    icon: 'hgi-car-01'           },
+    on_bike:       { label: 'MOTOR',       icon: 'hgi-motorbike-01'     },
+    on_boat:       { label: 'HAJÓN',      icon: 'hgi-sailboat'         },
+    in_helicopter: { label: 'HELIKOPTER', icon: 'hgi-helicopter'       },
+    in_plane:      { label: 'REPÜLŐ',    icon: 'hgi-airplane-01'      },
+    swimming:      { label: 'ÚSZIK',       icon: 'hgi-swimming'         },
+    diving:        { label: 'MERÜL',      icon: 'hgi-scuba-diving'     },
+    parachuting:   { label: 'UGRIK',       icon: 'hgi-parachute'        },
 };
 
-// ── Init ──────────────────────────────────────────────────────
+// ── Init ────────────────────────────────────────────────────────────
 
 function init(cfg) {
     setPosition(cfg.position || 'bottom-left');
@@ -31,39 +33,37 @@ function init(cfg) {
         const name   = el.dataset.module;
         if (!name) return;
         const modCfg = cfg.modules && cfg.modules[name];
-        modules[name] = {
-            el,
-            enabled:       modCfg ? modCfg.enabled       : false,
-            alwaysVisible: modCfg ? modCfg.alwaysVisible : false,
-            order:         modCfg ? modCfg.order         : 99,
-            tempVisible:   false,
-        };
-        el.style.order = modules[name].order;
+        const enabled       = modCfg ? modCfg.enabled       : false;
+        const alwaysVisible = modCfg ? modCfg.alwaysVisible : false;
+        const order         = modCfg ? modCfg.order         : 99;
 
-        // Allandoan lathato modulok: megjelenes
-        const alwaysOn = ['district','street','minimap'];
-        if (modCfg && modCfg.enabled && modCfg.alwaysVisible) {
+        modules[name] = { el, enabled, alwaysVisible, order, tempVisible: false };
+        el.style.order = order;
+
+        // FIX: lathatosag a config alwaysVisible mezo alapjan dontodik
+        // nem hard-coded nev lista alapjan
+        if (enabled && alwaysVisible) {
             el.style.display = '';
-        } else if (!alwaysOn.includes(name)) {
+        } else {
             el.style.display = 'none';
         }
     });
 }
 
-// ── Pozíció ──────────────────────────────────────────────────
+// ── Pozicio ─────────────────────────────────────────────────────────
 
 function setPosition(pos) {
     root.className = '';
     root.classList.add('pos-' + (pos || 'bottom-left'));
 }
 
-// ── HUD láthatóság ──────────────────────────────────────────
+// ── HUD lathatosag ────────────────────────────────────────────────
 
 function setHudVisible(visible) {
     root.classList.toggle('hidden', !visible);
 }
 
-// ── Modul be/kikapcsolás ────────────────────────────────────
+// ── Modul be/kikapcsolas ──────────────────────────────────────────
 
 function setModule(name, enabled) {
     const m = modules[name];
@@ -76,7 +76,7 @@ function setModule(name, enabled) {
     }
 }
 
-// ── Ideiglenes show/hide ───────────────────────────────────
+// ── Ideiglenes show/hide ─────────────────────────────────────────
 
 function showModuleTemporary(name) {
     const m = modules[name];
@@ -99,7 +99,7 @@ function hideModuleTemporary(name) {
     }, 220);
 }
 
-// ── Modul frissítések ────────────────────────────────────────
+// ── Modul frissitesek ─────────────────────────────────────────────
 
 function updateModule(data) {
     const name = data.module;
@@ -113,10 +113,10 @@ function updateModule(data) {
     if (name === 'street') {
         const s = document.getElementById('val-street');
         const c = document.getElementById('val-cross');
-        if (s) s.textContent = data.name  || '';
+        if (s) s.textContent = data.name || '';
         if (c) {
             if (data.cross && data.cross !== '') {
-                c.textContent = '\u2229 ' + data.cross;
+                c.textContent   = '\u2229 ' + data.cross;
                 c.style.display = '';
             } else {
                 c.style.display = 'none';
@@ -132,15 +132,14 @@ function updateModule(data) {
     }
 
     if (name === 'zone') {
-        const zn = document.getElementById('val-zone-name');
-        const zg = document.getElementById('val-zone-gang');
+        const zn  = document.getElementById('val-zone-name');
+        const zg  = document.getElementById('val-zone-gang');
         const blk = document.querySelector('.lhud-zone-block');
         if (zn) zn.textContent = data.zoneName || '';
         if (zg) {
-            zg.textContent = data.gangName || '';
+            zg.textContent  = data.gangName || '';
             zg.style.display = data.gangName ? '' : 'none';
         }
-        // Banda szin a bal keret szinere
         if (blk && data.gangColor && data.gangColor !== '') {
             blk.style.borderLeftColor = data.gangColor;
             const icon = blk.querySelector('i');
@@ -169,7 +168,7 @@ function updateModule(data) {
         const val   = document.getElementById('val-wanted');
         const stars = document.querySelectorAll('.lhud-wanted-stars i');
         const lvl   = Math.max(0, Math.min(5, parseInt(data.level) || 0));
-        if (val) val.textContent = data.label || 'KÖRÖZOTT';
+        if (val) val.textContent = data.label || 'KÖRÖZÖTT';
         stars.forEach((s, i) => s.classList.toggle('active', i < lvl));
         return;
     }
@@ -184,7 +183,7 @@ function updateModule(data) {
     }
 }
 
-// ── NUI message feldolgozás ──────────────────────────────────
+// ── NUI message feldolgozas ────────────────────────────────────────
 
 window.addEventListener('message', function(e) {
     const d = e.data;
