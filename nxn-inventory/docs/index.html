@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-inventory – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:   #5b6af0;
+            --bg:       #0e0f14;
+            --surface:  #16181f;
+            --surface2: #1e2030;
+            --border:   #2a2d3a;
+            --text:     #e4e6f0;
+            --muted:    #6b6f85;
+            --success:  #3ecf8e;
+            --danger:   #f05b5b;
+            --warning:  #f0b55b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+
+        /* Header */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 24px 40px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        header i { font-size: 30px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header .ver { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        header .dep {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+        .dep-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            display: flex; align-items: center; gap: 5px;
+        }
+        .dep-badge i { font-size: 12px; color: var(--accent); }
+
+        /* Nav */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 40px;
+            display: flex;
+            gap: 2px;
+        }
+        nav a {
+            display: flex; align-items: center; gap: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color .15s, border-color .15s;
+        }
+        nav a:hover { color: var(--text); }
+        nav a.active { color: var(--accent); border-color: var(--accent); }
+        nav i { font-size: 14px; }
+
+        /* Main */
+        main { max-width: 900px; margin: 36px auto; padding: 0 24px 60px; }
+        section { margin-bottom: 48px; }
+
+        h2 {
+            font-size: 17px;
+            color: var(--accent);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        h3 { font-size: 14px; color: var(--text); margin: 18px 0 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+
+        pre {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        code { color: var(--success); }
+        pre .cm { color: var(--muted); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+        td:first-child { color: var(--text); font-family: monospace; }
+        tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; padding: 2px 8px; border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-server  { background: rgba(91,106,240,0.15); color: var(--accent);  border: 1px solid rgba(91,106,240,0.3); }
+        .badge-client  { background: rgba(62,207,142,0.12); color: var(--success); border: 1px solid rgba(62,207,142,0.3); }
+        .badge-event   { background: rgba(240,181,91,0.12); color: var(--warning); border: 1px solid rgba(240,181,91,0.3); }
+        .badge-bool    { background: rgba(240,91,91,0.12);  color: var(--danger);  border: 1px solid rgba(240,91,91,0.3); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab {
+            padding: 7px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--muted);
+            transition: color .15s;
+        }
+        .tab.active { color: var(--text); background: var(--surface2); }
+        .tab-content {
+            display: none;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 0 8px 8px 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .tab-content.active { display: block; }
+        .tab-content pre { margin-bottom: 0; background: var(--surface); }
+
+        /* Info box */
+        .info-box {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .info-box.tip    { background: rgba(91,106,240,0.08);  border: 1px solid rgba(91,106,240,0.25); color: #a0a8f8; }
+        .info-box.warn   { background: rgba(240,181,91,0.08);  border: 1px solid rgba(240,181,91,0.25); color: var(--warning); }
+        .info-box i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+
+        /* Architecture diagram */
+        .arch {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 18px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+        .arch-node {
+            text-align: center;
+            padding: 10px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .arch-node i { display: block; font-size: 20px; color: var(--accent); margin-bottom: 4px; }
+        .arch-arrow {
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            padding: 0 8px;
+            min-width: 60px;
+        }
+        .arch-arrow span { display: block; }
+        .arch-arrow .arr { font-size: 16px; color: var(--border); }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="hgi hgi-stroke hgi-backpack-01"></i>
+    <div>
+        <h1>nxn-inventory <span class="ver">v1.0.0</span></h1>
+    </div>
+    <div class="dep">
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-database-01"></i> nxn-database</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-notification-01"></i> nxn-notify</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-heart-pulse"></i> nxn-needs</span>
+    </div>
+</header>
+
+<nav>
+    <a href="#about"    class="active" onclick="navClick(event,this)"><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</a>
+    <a href="#config"   onclick="navClick(event,this)"><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</a>
+    <a href="#exports"  onclick="navClick(event,this)"><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</a>
+    <a href="#events"   onclick="navClick(event,this)"><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</a>
+    <a href="#items"    onclick="navClick(event,this)"><i class="hgi hgi-stroke hgi-box-01"></i> Itemek</a>
+    <a href="#examples" onclick="navClick(event,this)"><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</a>
+</nav>
+
+<main>
+
+    <!-- ÁTTEKINTÉS -->
+    <section id="about">
+        <h2><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</h2>
+        <p>
+            Az <strong>nxn-inventory</strong> a Nexon RP szerver alap inventory és itemkezelő rendszere.
+            Játékosonként tárolja az itemeket adatbázisban, súlyrendszerrel működik, tartalmaz
+            hotbart, jobb klikkes kontextmenüt, és teljes export API-t nyújt más resourceoknak
+            (pl. <code>nxn-trunk</code>, shopok, szállítási scriptek).
+        </p>
+
+        <div class="arch">
+            <div class="arch-node">
+                <i class="hgi hgi-stroke hgi-user-01"></i>
+                Játékos (F1)
+            </div>
+            <div class="arch-arrow">
+                <span class="arr">→</span>
+                <span>NUI / Lua</span>
+            </div>
+            <div class="arch-node">
+                <i class="hgi hgi-stroke hgi-backpack-01"></i>
+                nxn-inventory
+            </div>
+            <div class="arch-arrow">
+                <span class="arr">→</span>
+                <span>export</span>
+            </div>
+            <div class="arch-node">
+                <i class="hgi hgi-stroke hgi-database-01"></i>
+                nxn-database
+            </div>
+            <div class="arch-arrow">
+                <span class="arr">↔</span>
+                <span>modifyNeed</span>
+            </div>
+            <div class="arch-node">
+                <i class="hgi hgi-stroke hgi-heart-pulse"></i>
+                nxn-needs
+            </div>
+        </div>
+
+        <h3>Főbb funkciók</h3>
+        <table>
+            <tr><th>Funkció</th><th>Leírás</th></tr>
+            <tr><td>Súlyrendszer</td><td>Minden item kg-ban számított súlykorláttal (alap: 30 kg)</td></tr>
+            <tr><td>Hotbar</td><td>1-5 (konfigurálható) slot, gyors eléréshez</td></tr>
+            <tr><td>Kontextmenü</td><td>Jobb klikk: használat, hotbar, eldobás, törlés</td></tr>
+            <tr><td>Stack rendszer</td><td>Stáckoló itemek kupácba kerülnek (maxStack)</td></tr>
+            <tr><td>nxn-needs integráció</td><td>Használatra étel/ital/stressz érték változik</td></tr>
+            <tr><td>DB persistálás</td><td>nxn-database <code>registerTable</code> exportán keresztül</td></tr>
+            <tr><td>Export API</td><td>addItem, removeItem, hasItem, getInventory …</td></tr>
+        </table>
+    </section>
+
+    <!-- KONFIGURÁCIÓ -->
+    <section id="config">
+        <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+
+        <h3>Alapértelmezetek</h3>
+        <table>
+            <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+            <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+            <tr><td>Config.OpenKey</td><td>'F1'</td><td>Inventory megnyitó gomb</td></tr>
+            <tr><td>Config.MaxWeight</td><td>30.0</td><td>Maximum súly kg-ban</td></tr>
+            <tr><td>Config.HotbarSlots</td><td>5</td><td>Hotbar slotok száma (1-8)</td></tr>
+            <tr><td>Config.InventoryTable</td><td>'nxn_inventories'</td><td>Adatbázis tábla neve</td></tr>
+            <tr><td>Config.SaveInterval</td><td>120</td><td>Periodikális DB-mentés (másodperc)</td></tr>
+        </table>
+
+        <h3>Item definíció mezők</h3>
+        <table>
+            <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
+            <tr><td>label</td><td>string</td><td>Játékban megjelenikő név</td></tr>
+            <tr><td>icon</td><td>string</td><td>HugeIcons CSS osztálynév (pl. <code>hgi-water-polo</code>)</td></tr>
+            <tr><td>weight</td><td>number</td><td>Súly kg-ban / darab</td></tr>
+            <tr><td>stackable</td><td>boolean</td><td>Több darab egy slotba kerülhet-e</td></tr>
+            <tr><td>maxStack</td><td>number</td><td>Maximum kupác méret (stackable = true)</td></tr>
+            <tr><td>usable</td><td>boolean</td><td>Használható-e jobb klikkel</td></tr>
+            <tr><td>useAction</td><td>string</td><td>Használatra triggerelt szerver event neve</td></tr>
+            <tr><td>needs</td><td>table</td><td>nxn-needs érték változtatás (pl. <code>{ thirst=30 }</code>)</td></tr>
+            <tr><td>heal</td><td>number</td><td>HP gyógyítás (gyógyászati itemeknél)</td></tr>
+            <tr><td>category</td><td>string</td><td><code>food</code> | <code>medical</code> | <code>misc</code></td></tr>
+        </table>
+
+        <h3>Példa – új item hozzáadása</h3>
+        <pre><code>Config.Items['coffee'] = {
+    label     = 'Kvé',
+    icon      = 'hgi-coffee-01',
+    weight    = 0.3,
+    stackable = true,
+    maxStack  = 5,
+    usable    = true,
+    useAction = 'nxn-inventory:use:coffee',
+    needs     = { fatigue = -10, thirst = 15 },
+    category  = 'food',
+}</code></pre>
+    </section>
+
+    <!-- EXPORTOK -->
+    <section id="exports">
+        <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+
+        <h3>Szerver oldali exportok</h3>
+        <table>
+            <tr><th>Export</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+            <tr>
+                <td>getInventory(src)</td>
+                <td>src: integer</td>
+                <td>table | nil</td>
+                <td>Teljes inventory visszaadása <code>{ items={}, hotbar={} }</code></td>
+            </tr>
+            <tr>
+                <td>hasItem(src, itemName, amount)</td>
+                <td>src, string, integer</td>
+                <td>boolean</td>
+                <td>Van-e a játékosnál megadott mennyiség az itemből</td>
+            </tr>
+            <tr>
+                <td>addItem(src, itemName, amount)</td>
+                <td>src, string, integer</td>
+                <td>boolean, string</td>
+                <td>Item hozzáadása; súlyellenorzéssel, szinkronizálva</td>
+            </tr>
+            <tr>
+                <td>removeItem(src, itemName, amount)</td>
+                <td>src, string, integer</td>
+                <td>boolean</td>
+                <td>Item eltávolítása; hotbar tisztitással</td>
+            </tr>
+            <tr>
+                <td>clearInventory(src)</td>
+                <td>src: integer</td>
+                <td>boolean</td>
+                <td>Teljes inventory törlése</td>
+            </tr>
+            <tr>
+                <td>syncInventory(src)</td>
+                <td>src: integer</td>
+                <td>–</td>
+                <td>Azonnali szinkronizálás a kliensre</td>
+            </tr>
+            <tr>
+                <td>saveInventory(src)</td>
+                <td>src: integer</td>
+                <td>–</td>
+                <td>Azonnali DB-mentés</td>
+            </tr>
+        </table>
+
+        <h3>Kliens oldali exportok</h3>
+        <table>
+            <tr><th>Export</th><th>Leírás</th></tr>
+            <tr><td>openInventory()</td><td>Megnyitja az inventory panelt</td></tr>
+            <tr><td>closeInventory()</td><td>Bezárja az inventory panelt</td></tr>
+            <tr><td>isOpen()</td><td>Visszaadja, hogy nyitva van-e</td></tr>
+            <tr><td>getLocalInventory()</td><td>Helyi cache visszaadása (kliens)</td></tr>
+            <tr><td>getLocalWeight()</td><td>Jelenlegi súly lekérése (kliens)</td></tr>
+        </table>
+    </section>
+
+    <!-- NET EVENTS -->
+    <section id="events">
+        <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+        <table>
+            <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+            <tr>
+                <td>nxn-inventory:server:requestSync</td>
+                <td><span class="badge badge-event">Client → Szerver</span></td>
+                <td>Szinkronizáció kérése</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:useItem</td>
+                <td><span class="badge badge-event">Client → Szerver</span></td>
+                <td>Item használat kérése (itemName)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:dropItem</td>
+                <td><span class="badge badge-event">Client → Szerver</span></td>
+                <td>Eldobni kívánt item (itemName, count)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:deleteItem</td>
+                <td><span class="badge badge-event">Client → Szerver</span></td>
+                <td>Item törlése az inventoryból (itemName, count)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:updateHotbar</td>
+                <td><span class="badge badge-event">Client → Szerver</span></td>
+                <td>Hotbar frissítése ({ [slot]=itemName })</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:client:sync</td>
+                <td><span class="badge badge-server">Szerver → Client</span></td>
+                <td>Teljes inventory szinkronizáció</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:client:useResult</td>
+                <td><span class="badge badge-server">Szerver → Client</span></td>
+                <td>Használat eredménye (ok, itemName, errMsg)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:client:applyHeal</td>
+                <td><span class="badge badge-server">Szerver → Client</span></td>
+                <td>HP gyógyítás (amount)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:loaded</td>
+                <td><span class="badge badge-server">Server event</span></td>
+                <td>Játékos inventory betöltött (src, data)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:itemUsed</td>
+                <td><span class="badge badge-server">Server event</span></td>
+                <td>Item használva (src, itemName, def)</td>
+            </tr>
+            <tr>
+                <td>nxn-inventory:server:itemDropped</td>
+                <td><span class="badge badge-server">Server event</span></td>
+                <td>Item eldobva (src, itemName, count)</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- ITEMEK -->
+    <section id="items">
+        <h2><i class="hgi hgi-stroke hgi-box-01"></i> Előre definiált itemek</h2>
+        <p>Az alábbi itemek az alap <code>config.lua</code>-ban szerepelnek. Bővíthetők, módosíthatók.</p>
+        <table>
+            <tr><th>Azonosító</th><th>Név</th><th>Súly</th><th>Kategória</th><th>Használható</th><th>nxn-needs hats</th></tr>
+            <tr><td>water_bottle</td><td>Vízespohár</td><td>0.5 kg</td><td>food</td><td>✓</td><td>thirst +30</td></tr>
+            <tr><td>sandwich</td><td>Szendvics</td><td>0.3 kg</td><td>food</td><td>✓</td><td>hunger +25</td></tr>
+            <tr><td>energy_drink</td><td>Energiaéital</td><td>0.4 kg</td><td>food</td><td>✓</td><td>thirst +20, fatigue -15</td></tr>
+            <tr><td>burger</td><td>Burger</td><td>0.4 kg</td><td>food</td><td>✓</td><td>hunger +40</td></tr>
+            <tr><td>bandage</td><td>Kötöszer</td><td>0.2 kg</td><td>medical</td><td>✓</td><td>heal +15 HP</td></tr>
+            <tr><td>painkiller</td><td>Fájdalomcsillapító</td><td>0.1 kg</td><td>medical</td><td>✓</td><td>stress -20</td></tr>
+            <tr><td>phone</td><td>Mobiltelefon</td><td>0.3 kg</td><td>misc</td><td>✗</td><td>–</td></tr>
+            <tr><td>wallet</td><td>Pénztárca</td><td>0.1 kg</td><td>misc</td><td>✗</td><td>–</td></tr>
+            <tr><td>keys</td><td>Kulcsok</td><td>0.1 kg</td><td>misc</td><td>✗</td><td>–</td></tr>
+        </table>
+    </section>
+
+    <!-- PÉLDÁK -->
+    <section id="examples">
+        <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Használati példák</h2>
+
+        <h3>Item hozzáadása más resource-ból (szerver)</h3>
+        <div class="tabs">
+            <div class="tab active" onclick="sw(this,'e1')">addItem</div>
+            <div class="tab" onclick="sw(this,'e2')">removeItem / hasItem</div>
+            <div class="tab" onclick="sw(this,'e3')">Item használat figyelese</div>
+            <div class="tab" onclick="sw(this,'e4')">nxn-trunk int.</div>
+        </div>
+        <div class="tab-content active" id="e1">
+<pre><code><span class="cm">-- Szerver oldal: item hozzáadása</span>
+local ok, err = exports['nxn-inventory']:addItem(src, 'water_bottle', 2)
+if ok then
+    exports['nxn-notify']:notifyPlayer(src, 'Kaptad: 2x Vízespohár', 'success')
+else
+    exports['nxn-notify']:notifyPlayer(src, err, 'warning')
+end</code></pre>
+        </div>
+        <div class="tab-content" id="e2">
+<pre><code><span class="cm">-- Van-e nála legalább 1 szendvics?</span>
+if exports['nxn-inventory']:hasItem(src, 'sandwich', 1) then
+    exports['nxn-inventory']:removeItem(src, 'sandwich', 1)
+    <span class="cm">-- ... feldolgozás</span>
+end</code></pre>
+        </div>
+        <div class="tab-content" id="e3">
+<pre><code><span class="cm">-- nxn-trunk vagy más script figyeli a használat eseményt</span>
+AddEventHandler('nxn-inventory:server:itemUsed', function(src, itemName, def)
+    if itemName == 'keys' then
+        <span class="cm">-- Jel kulcs használatnál</span>
+        TriggerClientEvent('nxn-vehicle:client:toggleLock', src)
+    end
+end)
+
+<span class="cm">-- Vagy a config-ban definiált useAction event figyelhető:</span>
+AddEventHandler('nxn-inventory:use:water_bottle', function(src)
+    print(('src=%d ivott egy pohár vizet'):format(src))
+end)</code></pre>
+        </div>
+        <div class="tab-content" id="e4">
+<pre><code><span class="cm">-- nxn-trunk szerver oldal (jövőbeli script)</span>
+<span class="cm">-- Csomagtartóból itemek átmozgatása az inventory-ba:</span>
+local ok, err = exports['nxn-inventory']:addItem(src, itemName, count)
+if not ok then
+    exports['nxn-notify']:notifyPlayer(src, err, 'warning')
+    return
+end
+<span class="cm">-- Trunk-ból kiveszükés notify</span>
+exports['nxn-trunk']:removeFromTrunk(vehicle, itemName, count)
+exports['nxn-notify']:notifyPlayer(src, 'Tvitte: ' .. itemName, 'success')</code></pre>
+        </div>
+
+        <h3>Kliens oldal</h3>
+        <pre><code><span class="cm">-- Inventory programmatikus megnyitása kliens script-ből:</span>
+exports['nxn-inventory']:openInventory()
+
+<span class="cm">-- Helyi súly lekérése:</span>
+local w = exports['nxn-inventory']:getLocalWeight()
+print(('Jelenlegi súly: %.2f kg'):format(w))</code></pre>
+
+        <div class="info-box tip">
+            <i class="hgi hgi-stroke hgi-information-circle"></i>
+            <span>Az <code>nxn-trunk</code> resource az <code>addItem</code> / <code>removeItem</code> exportokon keresztül kezeli már most is az inventory rendszert – a trunk script elkészítése után nem szükséges módosítás ezen a scripten.</span>
+        </div>
+        <div class="info-box warn">
+            <i class="hgi hgi-stroke hgi-alert-circle"></i>
+            <span>A <code>nxn-inventory</code>-t az <code>ensure</code> listában az <code>nxn-database</code> és <code>nxn-needs</code> <strong>után</strong> kell elindítani.</span>
+        </div>
+    </section>
+
+</main>
+
+<script>
+function navClick(e, el) {
+    e.preventDefault();
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+    const target = document.querySelector(el.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+}
+function sw(el, id) {
+    const parent = el.closest('section');
+    parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    parent.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
