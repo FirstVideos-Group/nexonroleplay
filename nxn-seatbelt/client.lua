@@ -4,37 +4,40 @@
 
 -- ── Allapot ─────────────────────────────────────────────────
 
-local fastened       = false
-local inVehicle      = false
-local currentVehicle = 0
-local warnTimer      = 0.0
-local warnPlaying    = false
--- kiszallas-blokk cooldown: ertesitot csak egyszer kuldjuk frame-enkent
+local fastened        = false
+local inVehicle       = false
+local currentVehicle  = 0
+local warnTimer       = 0.0
+local warnPlaying     = false
 local lastBlockNotify = 0
 
--- ── Billentyu regisztracio ──────────────────────────────────────
+-- ── Billentyu regisztracio ───────────────────────────────────
 -- RegisterKeyMapping: jatekos az esc > keybinds menuben atallithatja
--- Masodik parameter: label, harmadik: input group, negyedik: alapert. bill.
+
 RegisterKeyMapping('nxn_seatbelt_toggle', Config.ToggleKeyLabel, 'keyboard', Config.ToggleKey)
 
--- ── Segd: nxn-notify ──────────────────────────────────────────
+-- ── Segd: nxn-notify ─────────────────────────────────────────
+-- FIX: exports['nxn-notify']:send() nem letezik
+-- Helyes exportok: notify(msg, type, duration, title)
+-- vagy tipusos shorthandek: info / success / danger / warning
 
 local function Notify(msg, ntype)
-    if GetResourceState('nxn-notify') == 'started' then
-        exports['nxn-notify']:send(msg, ntype or 'info')
-    else
+    if GetResourceState('nxn-notify') ~= 'started' then
         NXN.Seatbelt.Warn(('Notify fallback: [%s] %s'):format(ntype or 'info', msg))
+        return
     end
+    local t = ntype or 'info'
+    NXN.Seatbelt.Log(('Notify: type=%s msg=%s'):format(t, msg))
+    -- notify(msg, type, duration, title) – az nxn-notify altalanos exportja
+    exports['nxn-notify']:notify(msg, t)
 end
 
--- ── Segd: nxn-vehicle-hud szinkron ──────────────────────────────
+-- ── Segd: nxn-vehicle-hud szinkron ──────────────────────────
 
 local function SyncHUD()
     if GetResourceState('nxn-vehicle-hud') ~= 'started' then return end
-    -- Ellenorzuk hogy a seatbelt modul engedelyezve van-e
     local modState = exports['nxn-vehicle-hud']:getModuleState('seatbelt')
     if modState == nil then
-        -- Modul letezik de ki van kapcsolva: bekapcsoljuk
         exports['nxn-vehicle-hud']:setModule('seatbelt', true)
         NXN.Seatbelt.Log('nxn-vehicle-hud seatbelt modul bekapcsolva')
     end
@@ -62,7 +65,7 @@ local function PlayWarningSound()
     })
 end
 
--- ── Ov toggle ───────────────────────────────────────────────
+-- ── Ov toggle ────────────────────────────────────────────────
 
 local function SetFastened(state)
     if fastened == state then return end
@@ -81,15 +84,16 @@ local function SetFastened(state)
     SyncHUD()
 end
 
--- ── Billentyu command ──────────────────────────────────────────
+-- ── Billentyu command ─────────────────────────────────────────
 -- RegisterKeyMapping-hez RegisterCommand kell parban
+
 RegisterCommand('nxn_seatbelt_toggle', function()
     if not inVehicle then return end
     NXN.Seatbelt.Log('Toggle gomb megnyomva')
     SetFastened(not fastened)
 end, false)
 
--- ── Fo loop ─────────────────────────────────────────────────
+-- ── Fo loop ──────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -116,25 +120,22 @@ CreateThread(function()
             NXN.Seatbelt.Log('Kiszallt, ov visszaallitva')
         end
 
-        -- ── Kiszallas blokkolasa (frame-folytonos DisableControlAction) ──
+        -- ── Kiszallas blokkolasa (frame-folytonos) ─────────────
         if inVehicle and fastened and Config.BlockExitWhenFastened then
-            -- FiveM-ben a DisableControlAction csak az adott frame-re tiltja le
-            -- ezert MINDEN frame-ben hivni kell amig kint akarjuk tartani
-            DisableControlAction(0, 75, true)   -- INPUT_ENTER (F / kiszallas)
-            DisableControlAction(0, 245, true)  -- INPUT_VEH_EXIT (jobb-gomb / padpad)
+            DisableControlAction(0, 75, true)   -- INPUT_ENTER
+            DisableControlAction(0, 245, true)  -- INPUT_VEH_EXIT
 
-            -- Ertesites csak egyszer 2 masodpercenkent (ne spammelje)
             local now = GetGameTimer()
             if IsControlJustPressed(0, 75) or IsControlJustPressed(0, 245) then
                 if (now - lastBlockNotify) > 2000 then
                     lastBlockNotify = now
                     Notify(Config.Notify.blocked, 'danger')
-                    NXN.Seatbelt.Log('Kiszallas blokkolva (ov be van kotve)')
+                    NXN.Seatbelt.Log('Kiszallas blokkolva')
                 end
             end
         end
 
-        -- ── Figyelmezteto hang ──────────────────────────────
+        -- ── Figyelmezteto hang ─────────────────────────────────
         if inVehicle and not fastened then
             warnTimer = warnTimer + GetFrameTime()
 
@@ -151,11 +152,10 @@ CreateThread(function()
                 NXN.Seatbelt.Log('Figyelmeztetes lejart')
             end
         elseif warnPlaying then
-            -- Ha bekototte vagy kiszallt: biztonsagi leallitas
             StopWarningSound()
         end
 
-        -- ── Auto-kicsatolas sebesseg felett ────────────────────
+        -- ── Auto-kicsatolas ────────────────────────────────────
         if inVehicle and fastened and Config.AutoUnbuckleSpeedThreshold then
             local speed = GetEntitySpeed(currentVehicle) * 3.6
             if speed > Config.AutoUnbuckleSpeedThreshold then
@@ -164,8 +164,6 @@ CreateThread(function()
             end
         end
 
-        -- Ha inVehicle: Wait(0) a frame-folytonos DisableControlAction miatt
-        -- Ha nincs jarmube: ritkabban pollozunk
         if inVehicle then
             Wait(0)
         else
@@ -174,7 +172,7 @@ CreateThread(function()
     end
 end)
 
--- ── NUI callbacks ────────────────────────────────────────────
+-- ── NUI callbacks ─────────────────────────────────────────────
 
 RegisterNUICallback('soundEnded', function(_, cb)
     warnPlaying = false
@@ -182,7 +180,7 @@ RegisterNUICallback('soundEnded', function(_, cb)
     cb('ok')
 end)
 
--- ── Exportok ───────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────
 
 exports('isFastened', function()
     return fastened
