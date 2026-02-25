@@ -1,7 +1,7 @@
 /* ============================================================
-   nxn-hud | style.css  –  Nexon Design System tokenek
-   FIX: hud-module bar sorokhoz hatter + border hozzaadva,
-        illeszkedik az nxn-vehicle-hud es a tobbi HUD stilusahoz
+   nxn-hud | style.css  -  Nexon Design System tokenek
+   FIX: 24px margin hozzaadva a pos-* classokhoz
+        (egyforma az nxn-vehicle-hud stilusaval)
    ============================================================ */
 
 :root {
@@ -30,7 +30,8 @@ html, body {
     pointer-events: none;
 }
 
-/* ── HUD root poziciok ────────────────────────────────────── */
+/* -- HUD root poziciok ------------------------------------ */
+/* FIX: 24px margin minden iranyban, egyforma vehicle-hud-dal */
 
 #hud-root {
     position: fixed;
@@ -48,7 +49,7 @@ html, body {
 
 #hud-root.hidden { opacity: 0; pointer-events: none; }
 
-/* ── Modul alap ───────────────────────────────────────────── */
+/* -- Modul alap ------------------------------------------- */
 
 .hud-module {
     animation: nxnHudFadeIn .25s ease forwards;
@@ -58,9 +59,7 @@ html, body {
     animation: nxnHudFadeIn .25s ease forwards;
 }
 
-/* ── Bar container (health, armor, hunger, stb.) ─────────────── */
-/* FIX: a bar sorok csoportja kap hatteri panelt,
-   megegyezik az nxn-vehicle-hud es badge modulok stilusaval */
+/* -- Bar container (health, armor, hunger, stb.) ----------- */
 
 .hud-bars-panel {
     display: flex;
@@ -72,7 +71,7 @@ html, body {
     padding: 8px 10px;
 }
 
-/* ── Bar sor ──────────────────────────────────────────────── */
+/* -- Bar sor ---------------------------------------------- */
 
 .hud-bar-row {
     display: flex;
@@ -88,7 +87,6 @@ html, body {
     color: var(--nxn-muted);
 }
 
-/* Ikon szinek bar tipusonkent */
 .icon-health   { color: var(--nxn-danger); }
 .icon-armor    { color: #5b9cf0; }
 .icon-hunger   { color: var(--nxn-warning); }
@@ -116,7 +114,6 @@ html, body {
     transition: width .35s ease;
 }
 
-/* Fill szinek */
 .fill-health  { background: var(--nxn-danger); }
 .fill-armor   { background: #5b9cf0; }
 .fill-hunger  { background: var(--nxn-warning); }
@@ -133,7 +130,7 @@ html, body {
     font-variant-numeric: tabular-nums;
 }
 
-/* ── Badge modulok (penz, munka, ID, idopont) ───────────────── */
+/* -- Badge modulok (penz, munka, ID, idopont) -------------- */
 
 .hud-module--badge {
     display: flex;
@@ -152,7 +149,7 @@ html, body {
     font-variant-numeric: tabular-nums;
 }
 
-/* ── Elvalaszto vonal a panelen belul ───────────────────────── */
+/* -- Elvalaszto vonal a panelen belul --------------------- */
 
 .hud-panel-divider {
     width: 100%;
@@ -162,7 +159,7 @@ html, body {
     margin: 1px 0;
 }
 
-/* ── Animaciok ───────────────────────────────────────────── */
+/* -- Animaciok -------------------------------------------- */
 
 @keyframes nxnHudFadeIn {
     from { opacity: 0; transform: translateY(6px); }

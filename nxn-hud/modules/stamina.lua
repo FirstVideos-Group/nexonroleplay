@@ -1,6 +1,10 @@
 -- ============================================================
 --  nxn-hud | modules/stamina.lua
---  Stamina (kifejezetten futaskor jelenik meg)
+--  FIX: stamina megjelenesi logika javitva
+--   - GetPlayerSprintStaminaRemaining: 100 = teli, 0 = ures
+--   - megjelenik ha stamina < 100 (azaz fut / fogyaszt)
+--   - eltunk ha visszatoltodott 100-ra (hideDelay utan)
+--   - a bar ertek: stamina (0-100), nem megforditva
 -- ============================================================
 
 local hideTimer = nil
@@ -14,25 +18,26 @@ CreateThread(function()
         if not hudVisible then goto continue end
         if not moduleStates['stamina'] then goto continue end
 
-        -- GTA nativan: stamina 0-100, csokken futasnal
+        -- 100 = teli stamina, 0 = teljesen lemerult
         local stamina = math.floor(GetPlayerSprintStaminaRemaining(PlayerId()))
 
         if stamina ~= lastStamina then
             lastStamina = stamina
+
+            -- A bar egyenesen toltodik: 100% = teli, 0% = ures
             NXN.HUD.Send('updateModule', { module = 'stamina', value = stamina })
             NXN.HUD.Log(('stamina: %d'):format(stamina))
 
-            -- Megjelenes / eltunes logika
             if not cfg.alwaysVisible then
-                if stamina < (cfg.threshold or 99) then
-                    -- Fut: megjelenik
+                if stamina < 100 then
+                    -- Fogy a stamina: megjelenik
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'stamina' })
                     if hideTimer then
                         clearTimeout(hideTimer)
                         hideTimer = nil
                     end
                 else
-                    -- Megalt: hide delay utan eltuntetes
+                    -- Teljesen visszatoltodott: hideDelay utan eltuntetes
                     if not hideTimer then
                         hideTimer = setTimeout(function()
                             SendNUIMessage({ action = 'hideModuleTemporary', module = 'stamina' })

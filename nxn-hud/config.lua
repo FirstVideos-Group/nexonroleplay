@@ -8,8 +8,6 @@ Config.ResourceName = GetCurrentResourceName()
 Config.Position = 'bottom-left'
 
 -- Modul beallitasok
--- enabled: latszik-e altalaban
--- alwaysVisible: mindig latszik (true) vagy csak esemenynel (false)
 Config.Modules = {
     health = {
         enabled       = true,
@@ -28,26 +26,24 @@ Config.Modules = {
     },
     stamina = {
         enabled       = true,
-        alwaysVisible = false,   -- csak futasnal
-        threshold     = 99,      -- ha ertek < threshold, megjelenik
-        hideDelay     = 4000,    -- ms, ennyi utan tunik el ismet
+        alwaysVisible = false,  -- csak ha fogy (< 100)
+        hideDelay     = 4000,   -- ms, ennyi utan tunik el ha visszatoltodott
         order         = 4,
     },
     oxygen = {
         enabled       = true,
-        alwaysVisible = false,   -- csak vizben
+        alwaysVisible = false,  -- csak vizben
         threshold     = 99,
         hideDelay     = 3000,
         order         = 5,
     },
     stress = {
         enabled       = true,
-        alwaysVisible = false,   -- csak ha stress > threshold
-        threshold     = 10,      -- ha ertek > threshold, megjelenik
+        alwaysVisible = false,  -- csak ha stress > threshold
+        threshold     = 10,
         hideDelay     = 5000,
         order         = 6,
     },
-    -- Opcionalis modulok
     money = {
         enabled       = false,
         alwaysVisible = true,
