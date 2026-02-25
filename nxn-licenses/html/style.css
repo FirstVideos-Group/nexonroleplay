@@ -1,0 +1,328 @@
+/* ============================================================
+   nxn-licenses | style.css  –  Nexon Design System
+   ============================================================ */
+
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-surface3: #252840;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: var(--nxn-font);
+    font-size: 14px;
+    color: var(--nxn-text);
+    user-select: none;
+}
+.hidden { display: none !important; }
+
+/* ── Fő panel ── */
+#lic-root {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: nxnFadeIn .2s ease;
+}
+#lic-panel {
+    width: 520px;
+    max-height: 700px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(0,0,0,.6);
+    animation: nxnSlideUp .2s ease;
+}
+
+/* ── Header ── */
+.lic-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--nxn-border);
+    flex-shrink: 0;
+}
+.lic-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    font-size: 16px;
+    font-weight: 700;
+}
+.lic-title i { color: var(--nxn-accent); font-size: 18px; }
+.lic-close {
+    width: 30px; height: 30px;
+    background: transparent;
+    border: 1px solid var(--nxn-border);
+    border-radius: 8px;
+    color: var(--nxn-muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s, background .15s;
+}
+.lic-close:hover { color: var(--nxn-danger); background: rgba(240,91,91,.1); }
+
+/* ── Listázás ── */
+.lic-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+.lic-list::-webkit-scrollbar { width: 4px; }
+.lic-list::-webkit-scrollbar-thumb { background: var(--nxn-border); border-radius: 2px; }
+
+/* Kártya sor */
+.lic-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    transition: border-color .15s;
+}
+.lic-row:hover { border-color: rgba(91,106,240,.4); }
+.lic-icon {
+    width: 44px; height: 44px;
+    background: rgba(91,106,240,.1);
+    border: 1px solid rgba(91,106,240,.25);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    color: var(--nxn-accent);
+    flex-shrink: 0;
+}
+.lic-icon.expired { background: rgba(240,91,91,.08); border-color: rgba(240,91,91,.25); color: var(--nxn-danger); }
+.lic-icon.pending { background: rgba(240,181,91,.08); border-color: rgba(240,181,91,.25); color: var(--nxn-warning); }
+.lic-info { flex: 1; min-width: 0; }
+.lic-label { font-size: 13px; font-weight: 600; }
+.lic-sub {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    margin-top: 2px;
+    display: flex; align-items: center; gap: 6px;
+}
+.status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid;
+}
+.status-badge.active  { color: var(--nxn-success); border-color: rgba(62,207,142,.35); background: rgba(62,207,142,.08); }
+.status-badge.expired { color: var(--nxn-danger);  border-color: rgba(240,91,91,.35);  background: rgba(240,91,91,.08);  }
+.status-badge.pending { color: var(--nxn-warning); border-color: rgba(240,181,91,.35); background: rgba(240,181,91,.08); }
+.status-badge.none    { color: var(--nxn-muted);   border-color: var(--nxn-border);    background: transparent; }
+
+.lic-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.btn-icon {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--nxn-border);
+    background: transparent;
+    color: var(--nxn-muted);
+    cursor: pointer;
+    font-size: 15px;
+    transition: color .15s, background .15s, border-color .15s;
+}
+.btn-icon:hover           { color: var(--nxn-text); background: var(--nxn-surface3); }
+.btn-icon.view:hover      { color: var(--nxn-accent); border-color: rgba(91,106,240,.4); }
+.btn-icon.show:hover      { color: var(--nxn-success); border-color: rgba(62,207,142,.4); }
+.btn-icon.apply:hover     { color: var(--nxn-warning); border-color: rgba(240,181,91,.4); }
+.btn-icon:disabled        { opacity: .35; cursor: not-allowed; pointer-events: none; }
+
+/* ── Modal overlay ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 200;
+    animation: nxnFadeIn .2s ease;
+}
+
+/* ── Igazolvány kártya ── */
+.card-wrap {
+    width: 380px;
+    animation: nxnSlideUp .2s ease;
+}
+.id-card {
+    background: linear-gradient(135deg, var(--nxn-surface) 0%, var(--nxn-surface2) 100%);
+    border: 1px solid var(--nxn-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.id-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: rgba(91,106,240,.12);
+    border-bottom: 1px solid rgba(91,106,240,.2);
+}
+.id-card-header i { font-size: 26px; color: var(--nxn-accent); }
+.id-card-header .card-title { font-size: 15px; font-weight: 700; }
+.id-card-header .card-subtitle { font-size: 11px; color: var(--nxn-muted); margin-top: 2px; }
+.id-card-flag {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.id-card-flag.active  { background: rgba(62,207,142,.15);  color: var(--nxn-success); border: 1px solid rgba(62,207,142,.3); }
+.id-card-flag.expired { background: rgba(240,91,91,.15);   color: var(--nxn-danger);  border: 1px solid rgba(240,91,91,.3); }
+
+.id-card-body {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.id-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--nxn-border);
+    font-size: 13px;
+}
+.id-field:last-child { border-bottom: none; }
+.id-field-key { color: var(--nxn-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.id-field-val { font-weight: 600; color: var(--nxn-text); }
+.id-card-footer {
+    padding: 10px 18px 14px;
+    border-top: 1px solid var(--nxn-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--nxn-muted);
+}
+.id-card-footer i { font-size: 14px; color: var(--nxn-accent); }
+
+.modal-close {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: 10px;
+    color: var(--nxn-text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.modal-close:hover { background: var(--nxn-surface2); }
+
+/* ── Felmutatás panel ── */
+.show-panel {
+    width: 400px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: 14px;
+    overflow: hidden;
+    animation: nxnSlideUp .2s ease;
+}
+.show-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--nxn-border);
+    font-size: 15px;
+    font-weight: 700;
+}
+.show-header i { color: var(--nxn-accent); font-size: 18px; }
+.show-header button { margin-left: auto; }
+.show-hint { padding: 10px 18px 4px; font-size: 12px; color: var(--nxn-muted); }
+.show-players {
+    padding: 10px 14px;
+    max-height: 240px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.show-loading {
+    display: flex; align-items: center; gap: 8px;
+    padding: 20px 0;
+    color: var(--nxn-muted);
+    font-size: 13px;
+    justify-content: center;
+}
+.show-player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+.show-player-row:hover { border-color: rgba(62,207,142,.4); }
+.show-player-name { flex: 1; font-size: 13px; font-weight: 600; }
+.show-player-dist { font-size: 11px; color: var(--nxn-muted); }
+.show-actions {
+    padding: 10px 14px 14px;
+    border-top: 1px solid var(--nxn-border);
+    display: flex;
+    justify-content: flex-end;
+}
+.btn-secondary {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 8px;
+    color: var(--nxn-text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s;
+    font-family: var(--nxn-font);
+}
+.btn-secondary:hover { background: var(--nxn-surface3); }
+
+/* ── Animációk ── */
+@keyframes nxnFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nxnSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }

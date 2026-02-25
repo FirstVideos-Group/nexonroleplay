@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>nxn-licenses</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== FŐ PANEL ===== -->
+<div id="lic-root" class="hidden">
+    <div id="lic-panel">
+
+        <!-- FEJLÉC -->
+        <div class="lic-header">
+            <div class="lic-title">
+                <i class="hgi hgi-stroke hgi-id-verified"></i>
+                <span>Igazolványok</span>
+            </div>
+            <button class="lic-close" id="lic-close">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i>
+            </button>
+        </div>
+
+        <!-- LISTA -->
+        <div class="lic-list" id="lic-list">
+            <!-- JS tölti -->
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== IGAZOLVÁNY NÉZETI MODAL ===== -->
+<div id="card-modal" class="modal-overlay hidden">
+    <div class="card-wrap" id="card-wrap">
+        <!-- JS tölti -->
+    </div>
+    <button class="modal-close" id="card-close">
+        <i class="hgi hgi-stroke hgi-cancel-01"></i>
+        Bezárás
+    </button>
+</div>
+
+<!-- ===== FELMUTATÁS MODAL ===== -->
+<div id="show-modal" class="modal-overlay hidden">
+    <div class="show-panel">
+        <div class="show-header">
+            <i class="hgi hgi-stroke hgi-user-share-01"></i>
+            <span>Felmutatás</span>
+            <button class="lic-close" id="show-close"><i class="hgi hgi-stroke hgi-cancel-01"></i></button>
+        </div>
+        <p class="show-hint">Válassz egy közelben lévő játékost akinek meg akarod mutatni az igazolványodat.</p>
+        <div class="show-players" id="show-players">
+            <div class="show-loading">
+                <i class="hgi hgi-stroke hgi-loading-01"></i>
+                Keressük a közelben lévőket...
+            </div>
+        </div>
+        <div class="show-actions">
+            <button class="btn-secondary" id="show-refresh">
+                <i class="hgi hgi-stroke hgi-refresh-01"></i> Frissítés
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
