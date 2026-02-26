@@ -10,8 +10,23 @@ NXN.Loading = {}
 ---@param msg string
 function NXN.Loading.Log(msg)
     if Config.Debug then
-        print(('[nxn-loading] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-loading]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
+end
+
+---@param msg string
+function NXN.Loading.Info(msg)
+    print(('^9[nxn-loading]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
+end
+
+---@param msg string
+function NXN.Loading.Warn(msg)
+    print(('^9[nxn-loading]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
+end
+
+---@param msg string
+function NXN.Loading.Error(msg)
+    print(('^9[nxn-loading]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
 
 --- Tábla hosszának lekérése (mixed keys esetén is)
