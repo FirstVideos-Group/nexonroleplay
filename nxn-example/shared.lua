@@ -10,8 +10,23 @@ NXN.Example = {}
 ---@param msg string
 function NXN.Example.Log(msg)
     if Config.Debug then
-        print(('[nxn-example] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-example]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
+end
+
+---@param msg string
+function NXN.Example.Info(msg)
+    print(('^9[nxn-example]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
+end
+
+---@param msg string
+function NXN.Example.Warn(msg)
+    print(('^9[nxn-example]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
+end
+
+---@param msg string
+function NXN.Example.Error(msg)
+    print(('^9[nxn-example]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
 
 --- Tábla tartalmaz-e értéket?
