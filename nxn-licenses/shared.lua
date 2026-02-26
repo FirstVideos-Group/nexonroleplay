@@ -7,23 +7,23 @@ NXN.Licenses = {}
 
 function NXN.Licenses.Log(msg)
     if Config and Config.Debug then
-        print(('[nxn-licenses] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-licenses]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
 end
 
 function NXN.Licenses.Info(msg)
-    print(('[nxn-licenses] [INFO] %s'):format(tostring(msg)))
+    print(('^9[nxn-licenses]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
 end
 
 function NXN.Licenses.Warn(msg)
-    print(('[nxn-licenses] [WARN] %s'):format(tostring(msg)))
+    print(('^9[nxn-licenses]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
 end
 
 function NXN.Licenses.Error(msg)
-    print(('[nxn-licenses] [ERROR] %s'):format(tostring(msg)))
+    print(('^9[nxn-licenses]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
 
---- Igazolvány típus definició visszaadása id alapján
+--- Igazolvány típus definìió visszaadása id alapján
 ---@param typeId string
 ---@return table|nil
 function NXN.Licenses.GetTypeDef(typeId)
@@ -53,7 +53,6 @@ end
 ---@return boolean
 function NXN.Licenses.IsExpired(row)
     if not row or not row.expires_at then return false end
-    -- SQL DATETIME string → os.time
     local y,mo,d,h,mi,s = row.expires_at:match('(%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)')
     if not y then return false end
     local t = os.time({
