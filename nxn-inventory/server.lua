@@ -282,7 +282,8 @@ end)
 ---@param src integer
 ---@param itemName string
 ---@param amount integer
----@return boolean, string  ok, hibüz
+---@return boolean ok -- Sikeres volt-e a művelet
+---@return string errmsg -- Hibaüzenet (sikernél üres string)
 exports('addItem', function(src, itemName, amount)
     local amount = math.max(1, tonumber(amount) or 1)
     local inv    = invCache[src]
@@ -291,7 +292,7 @@ exports('addItem', function(src, itemName, amount)
     local def = NXN.Inventory.GetItemDef(itemName)
     if not def then return false, ('Ismeretlen item: %s'):format(itemName) end
 
-    -- Súlyellenorzés
+    -- Súlyellenőrzés
     local currentWeight = NXN.Inventory.CalcWeight(inv.items)
     local addWeight     = def.weight * amount
     if currentWeight + addWeight > Config.MaxWeight then
@@ -303,7 +304,7 @@ exports('addItem', function(src, itemName, amount)
         local current = inv.items[itemName].count or 1
         local max     = def.stackable and (def.maxStack or 99) or 1
         if current >= max then
-            return false, 'Teljes a kupác'
+            return false, 'Teljes a kupac'
         end
         inv.items[itemName].count = math.min(current + amount, max)
     else
@@ -315,6 +316,7 @@ exports('addItem', function(src, itemName, amount)
     NXN.Inventory.Log(('addItem: src=%d item=%s cnt=%d'):format(src, itemName, amount))
     return true, ''
 end)
+
 
 --- Item eltávolítása
 ---@param src integer
