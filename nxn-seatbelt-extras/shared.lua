@@ -8,16 +8,21 @@ NXN.SeatbeltExt  = NXN.SeatbeltExt or {}
 ---@param msg string
 function NXN.SeatbeltExt.Log(msg)
     if Config.Debug then
-        print(('[nxn-seatbelt-extras] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-seatbelt-extras]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
 end
 
 ---@param msg string
 function NXN.SeatbeltExt.Info(msg)
-    print(('[nxn-seatbelt-extras] [INFO] %s'):format(tostring(msg)))
+    print(('^9[nxn-seatbelt-extras]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
 end
 
 ---@param msg string
 function NXN.SeatbeltExt.Warn(msg)
-    print(('[nxn-seatbelt-extras] [WARN] %s'):format(tostring(msg)))
+    print(('^9[nxn-seatbelt-extras]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
+end
+
+---@param msg string
+function NXN.SeatbeltExt.Error(msg)
+    print(('^9[nxn-seatbelt-extras]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
