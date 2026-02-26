@@ -9,20 +9,20 @@ NXN.Inventory = {}
 ---@param msg string
 function NXN.Inventory.Log(msg)
     if Config and Config.Debug then
-        print(('[nxn-inventory] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-inventory]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
 end
 
 function NXN.Inventory.Info(msg)
-    print(('[nxn-inventory] [INFO] %s'):format(tostring(msg)))
+    print(('^9[nxn-inventory]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
 end
 
 function NXN.Inventory.Warn(msg)
-    print(('[nxn-inventory] [WARN] %s'):format(tostring(msg)))
+    print(('^9[nxn-inventory]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
 end
 
 function NXN.Inventory.Error(msg)
-    print(('[nxn-inventory] [ERROR] %s'):format(tostring(msg)))
+    print(('^9[nxn-inventory]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
 
 --- Súlyolás: inventory jelenlegi súlya
@@ -39,7 +39,7 @@ function NXN.Inventory.CalcWeight(items)
     return math.floor(total * 100) / 100
 end
 
---- Item definició visszaadása
+--- Item definìió visszaadása
 ---@param name string
 ---@return table|nil
 function NXN.Inventory.GetItemDef(name)
