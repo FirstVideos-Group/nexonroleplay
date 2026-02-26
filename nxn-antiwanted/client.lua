@@ -48,7 +48,7 @@ local function BlockWantedSystem()
     if not Config.BlockWantedEvents then return end
     local playerId = PlayerId()
     SetMaxWantedLevel(0)
-    ClearOverrideWantedLevel(playerId)
+    SetPlayerWantedLevel(playerId, 0, false)
     NXN.AntiWanted.Log('Wanted system blocked (max level = 0)')
 end
 

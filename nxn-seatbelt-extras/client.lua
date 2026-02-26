@@ -44,7 +44,8 @@ local function ApplyEjection(ped, vehicle, deltaV)
     NXN.SeatbeltExt.Log(('Ejection: deltaV=%.1f km/h'):format(deltaV))
 
     -- Jatekos kiszedese a jarmubol
-    SetPedCoordsKeepVehicle(ped, GetEntityCoords(ped))
+    local coords = GetEntityCoords(ped)
+    SetPedCoordsKeepVehicle(ped, coords.x, coords.y, coords.z)
     TaskLeaveVehicle(ped, vehicle, 4160)  -- 4160 = force exit
 
     -- Impulzus - jarmu mozgasiranyaba + felfelé

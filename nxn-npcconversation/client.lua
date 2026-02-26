@@ -41,7 +41,6 @@ local function SpawnNPC(npcId, cfg)
     local c   = cfg.coords
     local ped = CreatePed(4, modelHash, c.x, c.y, c.z - 1.0, c.w, false, true)
 
-    SetPedAsMissionEntity(ped, true, true)
     SetEntityAsMissionEntity(ped, true, true)
     SetBlockingOfNonTemporaryEvents(ped, true)
     SetPedFleeAttributes(ped, 0, false)
@@ -201,7 +200,7 @@ CreateThread(function()
                 )
                 SetTextComponentFormat('STRING')
                 AddTextComponentString(txt)
-                DisplayHelpTextFromStringLabel(0, 0, 1, -1)
+                DisplayHelpTextFromStringLabel(0, false, true, -1)
 
                 if IsControlJustReleased(0, Config.InteractKey) then
                     OpenConversation(nearest.id)

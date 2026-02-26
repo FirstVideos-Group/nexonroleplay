@@ -64,7 +64,10 @@ end
 
 local function ApplyBlipVisibility()
     if not showBlips then
-        SetRadarAsInteriorThisFrame()
+        local playerPed = PlayerPedId()
+        local px, py, pz = table.unpack(GetEntityCoords(playerPed))
+        local heading = GetEntityHeading(playerPed)
+        SetRadarAsInteriorThisFrame(px, py, pz, heading, 1.0)
     end
 end
 
