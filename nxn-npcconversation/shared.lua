@@ -9,18 +9,24 @@ NXN.NPC = NXN.NPC or {}
 ---@param msg string
 function NXN.NPC.Log(msg)
     if Config.Debug then
-        print(('[nxn-npcconversation] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-npcconversation]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
 end
 
 --- Info log
 ---@param msg string
 function NXN.NPC.Info(msg)
-    print(('[nxn-npcconversation] [INFO] %s'):format(tostring(msg)))
+    print(('^9[nxn-npcconversation]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
 end
 
 --- Warn log
 ---@param msg string
 function NXN.NPC.Warn(msg)
-    print(('[nxn-npcconversation] [WARN] %s'):format(tostring(msg)))
+    print(('^9[nxn-npcconversation]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
+end
+
+--- Error log
+---@param msg string
+function NXN.NPC.Error(msg)
+    print(('^9[nxn-npcconversation]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
