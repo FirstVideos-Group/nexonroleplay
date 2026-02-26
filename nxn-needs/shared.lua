@@ -10,26 +10,26 @@ NXN.Needs  = NXN.Needs or {}
 ---@param msg string
 function NXN.Needs.Log(msg)
     if Config.Debug then
-        print(('[nxn-needs] [DEBUG] %s'):format(tostring(msg)))
+        print(('^9[nxn-needs]^7 ^5[DEBUG]^7 %s'):format(tostring(msg)))
     end
 end
 
 --- Info log – mindig megjelenik
 ---@param msg string
 function NXN.Needs.Info(msg)
-    print(('[nxn-needs] [INFO] %s'):format(tostring(msg)))
+    print(('^9[nxn-needs]^7 ^4[INFO]^7 %s'):format(tostring(msg)))
 end
 
 --- Warn log
 ---@param msg string
 function NXN.Needs.Warn(msg)
-    print(('[nxn-needs] [WARN] %s'):format(tostring(msg)))
+    print(('^9[nxn-needs]^7 ^3[WARN]^7 %s'):format(tostring(msg)))
 end
 
 --- Error log
 ---@param msg string
 function NXN.Needs.Error(msg)
-    print(('[nxn-needs] [ERROR] %s'):format(tostring(msg)))
+    print(('^9[nxn-needs]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
 
 --- Értéket clamp-el min és max közé
