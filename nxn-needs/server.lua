@@ -86,7 +86,7 @@ local function LoadNeeds(src, identifier)
         }
         NXN.Needs.Log(('LoadNeeds: betöltve DB-ből src=%d'):format(src))
     else
-        -- Első alkalmas játékos
+        -- Első alkalommal: defaults alapján
         local defaults = DefaultNeeds()
         MySQL.insert.await(
             'INSERT INTO `' .. Config.NeedsTable .. '` (`identifier`, `hunger`, `thirst`, `stress`, `fatigue`) VALUES (?, ?, ?, ?, ?)',
@@ -141,6 +141,20 @@ AddEventHandler('playerDropped', function()
     end)
 end)
 
+-- ── nxn-inventory itemUsed esemény figyelése ─────────────────
+-- Az nxn-inventory server.lua a 'nxn-inventory:server:itemUsed' eventet
+-- triggereli minden item használat után (src, itemName, def).
+-- Ha a def.needs mező ki van töltve, az nxn-inventory már elvégezte
+-- a modifyNeed hívást. Ez az eseménykezelő csak logolásra / kiterjesztésre
+-- való, hogy az nxn-needs is tudjon róla.
+
+AddEventHandler('nxn-inventory:server:itemUsed', function(src, itemName, def)
+    if not def then return end
+    if def.needs and next(def.needs) then
+        NXN.Needs.Log(('itemUsed event: src=%d item=%s needs alkalmazva az inventory oldalon'):format(src, itemName))
+    end
+end)
+
 -- ── Auto-decay (szükségletek automatikus változása) ───────────
 
 if Config.AutoDecay and Config.AutoDecay.enabled then
@@ -151,9 +165,12 @@ if Config.AutoDecay and Config.AutoDecay.enabled then
                 local changed = false
                 for need, rule in pairs(Config.AutoDecay.rates) do
                     if data[need] ~= nil and rule.change ~= 0 then
-                        local newVal = data[need] + rule.change
                         local needCfg = Config.Needs[need]
-                        newVal = NXN.Needs.Clamp(newVal, needCfg.min, needCfg.max)
+                        local newVal  = NXN.Needs.Clamp(
+                            data[need] + rule.change,
+                            needCfg.min,
+                            needCfg.max
+                        )
                         if newVal ~= data[need] then
                             data[need] = newVal
                             changed = true
@@ -292,6 +309,7 @@ end)
 
 --- Visszaállítja az összes szükségletet alapértelmezett értékre
 ---@param src number
+---@return boolean
 exports('resetNeeds', function(src)
     local identifier = GetIdentifier(src)
     if not identifier then return false end
