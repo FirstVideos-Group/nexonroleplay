@@ -62,10 +62,10 @@
 <body>
 <header>
     <i class="hgi hgi-stroke hgi-engine-01"></i>
-    <div><h1>nxn-engine <span>v1.0.0</span></h1></div>
+    <div><h1>nxn-engine <span>v1.1.0</span></h1></div>
 </header>
 <main>
-    <p>Az <strong>nxn-engine</strong> kezeli a jármű motorának indítását/leállítását, HP-alapú sérülését és szinkronizál az <strong>nxn-vehicle-hud</strong>-dal. Export API-ja előkészítve az <strong>nxn-keys</strong> (kulcsrendszer) és <strong>nxn-hotwire</strong> (autólopás) resource-okhoz.</p>
+    <p>Az <strong>nxn-engine</strong> kezeli a jármű motorának indítását/leállítását, HP-alapú sérülését, <strong>sérülés-romlás (degradáció)</strong> rendszerét és szinkronizál az <strong>nxn-vehicle-hud</strong>-dal. Export API-ja előkészítve az <strong>nxn-keys</strong> (kulcsrendszer) és <strong>nxn-hotwire</strong> (autólopás) resource-okhoz.</p>
 
     <div class="info-box"><strong>Integrációk:</strong> nxn-vehicle-hud (setEngineState), nxn-notify, nxn-seatbelt-extras (collision event)</div>
 
@@ -108,7 +108,36 @@
         <tr><td>EngineDamage</td><td>criticalStallChance</td><td>0.15</td><td>Valószínűség/perc hogy leáll a motor</td></tr>
         <tr><td>overheat</td><td>rpmThreshold</td><td>0.95</td><td>E felett kezd melegni</td></tr>
         <tr><td>overheat</td><td>heatRate</td><td>0.05 HP/mp</td><td>Sérülés ráta túlhevülésnél</td></tr>
-        <tr><td>collision</td><td>thresholds</td><td>[20-40: 3%...]</td><td>deltaV -> sérülés%  tábla</td></tr>
+        <tr><td>collision</td><td>thresholds</td><td>[20-40: 3%...]</td><td>deltaV -> sérülés% tábla</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-arrow-down-double"></i> Degradáció (sérülés-romlás) rendszer</h2>
+    <p>Minél sérültebb a motor, annál rosszabbul működik: csökkent teljesítmény, ritmikus leállogatás (stutter), füst és szikra effektek. Minden alrendszer a <code>Config.Degradation</code> blokkban konfigurálható.</p>
+
+    <div class="info-box warn"><strong>Stutter logika:</strong> HP &lt; <code>stutter.threshold</code> (alap: 50%) esetén minden <code>checkInterval</code> másodpercben eséllyel leáll a motor. Az esély arányos: minél alacsonyabb a HP, annál sűrűbb a kihagy. Leállás után <code>restartChance</code> valószínűséggel újraindul.</div>
+
+    <div class="flow">
+        <div class="flow-step">HP &lt; 60%</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">Füst effekt</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step warn">HP &lt; 50%<br><small>Stutter kezd</small></div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step danger">HP &lt; 25%<br><small>Szikra effekt</small></div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-step danger">HP = 0%<br><small>Motor leáll</small></div>
+    </div>
+
+    <table>
+        <tr><th>Blokk</th><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>performance</td><td>maxPenalty</td><td>0.60</td><td>Max teljesítményvesztés 0% HP-nél (60%)</td></tr>
+        <tr><td>stutter</td><td>threshold</td><td>50%</td><td>HP ennyi % alatt kezd kihagy a motor</td></tr>
+        <tr><td>stutter</td><td>checkInterval</td><td>4.0 mp</td><td>Ennyi másodpercenként ellenőrzi az esélyt</td></tr>
+        <tr><td>stutter</td><td>maxChance</td><td>0.55</td><td>Max kihagy-esély 0% HP-nél (tick alapú)</td></tr>
+        <tr><td>stutter</td><td>stallDuration</td><td>1.5–4.0 mp</td><td>Mennyi ideig áll le stutter miatt</td></tr>
+        <tr><td>stutter</td><td>restartChance</td><td>0.85</td><td>Újraindulás valószínűsége stall után</td></tr>
+        <tr><td>effects</td><td>smokeThreshold</td><td>60%</td><td>HP ennyi % alatt jelenik meg a füst</td></tr>
+        <tr><td>effects</td><td>sparkThreshold</td><td>25%</td><td>HP ennyi % alatt jelenik meg a szikra</td></tr>
     </table>
 
     <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok (kliens)</h2>
@@ -127,7 +156,10 @@
         <tr><td>clearStartAuthCallback()</td><td>–</td><td>Auth callback törlés</td></tr>
         <tr><td>hotwireStart(vehicle?, silent?)</td><td>boolean</td><td>Hotwire start (nxn-hotwire)</td></tr>
         <tr><td>isInVehicle()</td><td>boolean</td><td>Játékos járműben van-e</td></tr>
-        <tr><td>getCurrentVehicle()</td><td>number</td><td>Aktuális jármű entitas</td></tr>
+        <tr><td>getCurrentVehicle()</td><td>number</td><td>Aktuális jármű entitás</td></tr>
+        <tr><td>getPerfModifier()</td><td>number</td><td>Aktuális teljesítmény szorzó (0.05–1.0); 1.0 = teli erő, kisebb = degradált</td></tr>
+        <tr><td>isStuttering()</td><td>boolean</td><td>Motor éppen stutter miatt le van-e állítva</td></tr>
+        <tr><td>resetDegradation()</td><td>–</td><td>Degradáció visszaállítása (szerviz után); teljesítmény és effektek resetje</td></tr>
     </table>
 
     <h2><i class="hgi hgi-stroke hgi-broadcast"></i> Kliensoldali Events</h2>
@@ -136,13 +168,18 @@
         <tr><td>nxn-engine:started</td><td>{ vehicle, hp, hotwire? }</td><td>Motor elindult</td></tr>
         <tr><td>nxn-engine:stopped</td><td>{ vehicle }</td><td>Motor leállt</td></tr>
         <tr><td>nxn-engine:damaged</td><td>{ vehicle, hp, dmg, reason }</td><td>Sérülés alkalmazva</td></tr>
+        <tr><td>nxn-engine:stutter:stall</td><td>{ vehicle, hp, duration }</td><td>Motor kihagyott (stutter leállás)</td></tr>
+        <tr><td>nxn-engine:stutter:restart</td><td>{ vehicle, hp }</td><td>Motor visszaindult stutter után</td></tr>
+        <tr><td>nxn-engine:stutter:failed</td><td>{ vehicle, hp }</td><td>Motor nem tudott újraindulni stutter után</td></tr>
     </table>
 
     <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
     <div class="tabs">
         <div class="tab active" onclick="switchTab(this,'t1')">nxn-keys integráció</div>
         <div class="tab" onclick="switchTab(this,'t2')">nxn-hotwire integráció</div>
-        <div class="tab" onclick="switchTab(this,'t3')">Szerváles/élmény példa</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Sérülés/élmény példa</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Degradáció figyelés</div>
+        <div class="tab" onclick="switchTab(this,'t5')">Szerviz / reset</div>
     </div>
     <div class="tab-content active" id="t1"><pre><code>-- nxn-keys/client.lua inicializalas:
 
@@ -165,16 +202,15 @@ exports['nxn-engine']:setLocked(false)</code></pre></div>
 -- Hotwire siker utan motor inditasa:
 local ok = exports['nxn-engine']:hotwireStart()
 if ok then
-    -- Motor elindult, kezeld a kulcs-allapotot
-    exports['nxn-notify']:send('Sikeres hotwire!', 'success')
+    exports['nxn-notify']:success('Sikeres hotwire!')
 else
-    exports['nxn-notify']:send('A motor tul sulyosan serult.', 'danger')
+    exports['nxn-notify']:danger('A motor tul sulyosan serult.')
 end
 
 -- Motor allapot ellenorzese hotwire elott:
 local hp = exports['nxn-engine']:getEngineHP()
 if hp < 10 then
-    exports['nxn-notify']:send('A motor tul torott a hotwire-hoz.', 'danger')
+    exports['nxn-notify']:danger('A motor tul torott a hotwire-hoz.')
 end</code></pre></div>
     <div class="tab-content" id="t3"><pre><code>-- Motor serules esemeny figyelese:
 AddEventHandler('nxn-engine:damaged', function(data)
@@ -191,9 +227,66 @@ end)
 -- Motor HP manualis allitasa (pl. szerelo utan):
 exports['nxn-engine']:setEngineHP(100)  -- teli repair
 exports['nxn-engine']:setEngineHP(50)   -- felig megjavitva</code></pre></div>
+    <div class="tab-content" id="t4"><pre><code>-- Degradacios allapot folyamatos figyelese (pl. HUD frissiteshez):
+
+CreateThread(function()
+    while true do
+        Wait(1000)
+        if exports['nxn-engine']:isInVehicle() then
+            local hp   = exports['nxn-engine']:getEngineHP()
+            local perf = exports['nxn-engine']:getPerfModifier()
+            local stut = exports['nxn-engine']:isStuttering()
+
+            -- Kiiras konzolra (debug)
+            print(('HP: %.1f%% | Teljesitmeny: %.0f%% | Stutter: %s'):format(
+                hp, perf * 100, tostring(stut)
+            ))
+
+            -- Pl. masik script ertesitese a teljesitmenyrol:
+            -- exports['nxn-vehicle-hud']:setPerfBar(perf)
+        end
+    end
+end)
+
+-- Stutter esemenyek figyelese (pl. hangeffekt lejatszas):
+AddEventHandler('nxn-engine:stutter:stall', function(data)
+    -- Motor kihagyott data.duration masodpercre
+    -- Pl. kikapcsolo hang lejatszasa:
+    -- PlaySoundFrontend(-1, 'ENGINE_OFF', 'HUD_FRONTEND_DEFAULT_SOUNDSET', true)
+    print(('Stutter: motor leall %.1f mp-re, HP=%.1f%%'):format(data.duration, data.hp))
+end)
+
+AddEventHandler('nxn-engine:stutter:failed', function(data)
+    -- Motor nem indult ujra stutter utan
+    exports['nxn-notify']:danger('A motor teljesen kikeszult – szerviz szukseges!')
+end)</code></pre></div>
+    <div class="tab-content" id="t5"><pre><code>-- nxn-mechanic / szerviz script peldaja:
+
+-- Teljes javitas utan motor HP visszaallitasa ES degradacio reset:
+local function FullRepair()
+    exports['nxn-engine']:setEngineHP(100)
+    exports['nxn-engine']:resetDegradation()
+    exports['nxn-notify']:success('Motor teljesen megjavitva!')
+end
+
+-- Reszleges javitas (pl. 70%-ig):
+local function PartialRepair(targetHP)
+    exports['nxn-engine']:setEngineHP(targetHP)
+    -- Ha a cel HP mar a stutter kuszob felett van,
+    -- a degradacio automatikusan csokkent kovetkezo ticknel,
+    -- de a resetDegradation() azonnal visszaallitja:
+    if targetHP >= 50 then
+        exports['nxn-engine']:resetDegradation()
+    end
+    exports['nxn-notify']:success(('Motor %d%%-ra megjavitva.'):format(targetHP))
+end
+
+-- Peldahivas:
+FullRepair()
+PartialRepair(70)</code></pre></div>
 
     <h2><i class="hgi hgi-stroke hgi-bug-01"></i> Debug</h2>
-    <p><code>Config.Debug = true</code> eseten minden motor-esemeny, RPM mintavetel, HUD szinkron es serules megjelenik <code>[nxn-engine] [DEBUG]</code> prefixszel. Tipp: figyelj a <code>Overheat</code> es <code>Kolliziо serules</code> sorokra.</p>
+    <p><code>Config.Debug = true</code> esetén minden motor-esemény, RPM mintavétel, HUD szinkron, sérülés, <strong>degradáció tick</strong> és <strong>stutter check</strong> megjelenik <code>[nxn-engine] [DEBUG]</code> prefixszel a konzolban. Figyelj a <code>PerfDeg:</code>, <code>Stutter check:</code> és <code>Effekt</code> sorokra a degradáció diagnosztikához.</p>
 </main>
 <script>
     function switchTab(el,id){
