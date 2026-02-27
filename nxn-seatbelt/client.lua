@@ -1,12 +1,8 @@
 -- ============================================================
 --  nxn-seatbelt | client.lua
---  FIX: kiszallas blokk ertesites soha nem jelent meg, mert
---       DisableControlAction elott nem lehetett IsControlJustPressed
---       true-t kapni - a check sorrendje forditva volt.
---       Javitas: ELOBB ellenorizzuk a gombot, UTANA tiltjuk le.
 -- ============================================================
 
--- ── Allapot ─────────────────────────────────────────────────
+-- ── Állapot ──────────────────────────────────────────────────
 
 local fastened        = false
 local inVehicle       = false
@@ -15,11 +11,21 @@ local warnTimer       = 0.0
 local warnPlaying     = false
 local lastBlockNotify = 0
 
--- ── Billentyu regisztracio ────────────────────────────────────
+-- ── FiveM Control ID-k ───────────────────────────────────────
+-- FIX: A korabbi kod 75 (INPUT_ENTER = E gomb) es 245 (INPUT_VEH_HORN =
+--      dudagas) ID-kat hasznalta, egyik sem az F kiszallas gomb.
+--      Helyes ID-k:
+--        23  = INPUT_ENTER       (E gomb, jarmube szallas)
+--        194 = INPUT_VEH_EXIT    (F gomb, kiszallas jarmubol)  <-- ez kell
+
+local INPUT_VEH_ENTER = 23   -- E gomb
+local INPUT_VEH_EXIT  = 194  -- F gomb
+
+-- ── Billentyű regisztráció ───────────────────────────────────
 
 RegisterKeyMapping('nxn_seatbelt_toggle', Config.ToggleKeyLabel, 'keyboard', Config.ToggleKey)
 
--- ── Notify ─────────────────────────────────────────────────
+-- ── Notify ───────────────────────────────────────────────
 
 local function Notify(msg, ntype)
     if GetResourceState('nxn-notify') ~= 'started' then
@@ -27,18 +33,14 @@ local function Notify(msg, ntype)
         return
     end
     local t = ntype or 'info'
-    if t == 'success' then
-        exports['nxn-notify']:success(msg)
-    elseif t == 'danger' then
-        exports['nxn-notify']:danger(msg)
-    elseif t == 'warning' then
-        exports['nxn-notify']:warning(msg)
-    else
-        exports['nxn-notify']:info(msg)
+    if     t == 'success' then exports['nxn-notify']:success(msg)
+    elseif t == 'danger'  then exports['nxn-notify']:danger(msg)
+    elseif t == 'warning' then exports['nxn-notify']:warning(msg)
+    else                       exports['nxn-notify']:info(msg)
     end
 end
 
--- ── HUD szinkron ─────────────────────────────────────────────
+-- ── HUD szinkron ───────────────────────────────────────────
 
 local function SyncHUD()
     if GetResourceState('nxn-vehicle-hud') ~= 'started' then return end
@@ -50,7 +52,7 @@ local function SyncHUD()
     NXN.Seatbelt.Log(('HUD szinkron: fastened=%s'):format(tostring(fastened)))
 end
 
--- ── Hang ───────────────────────────────────────────────────
+-- ── Hang ─────────────────────────────────────────────────
 
 local function StopWarningSound()
     if not warnPlaying then return end
@@ -68,7 +70,7 @@ local function PlayWarningSound()
     })
 end
 
--- ── Ov toggle ─────────────────────────────────────────────────
+-- ── Öv toggle ───────────────────────────────────────────────
 
 local function SetFastened(state)
     if fastened == state then return end
@@ -85,21 +87,21 @@ local function SetFastened(state)
     SyncHUD()
 end
 
--- ── Command ──────────────────────────────────────────────────
+-- ── Command ────────────────────────────────────────────────
 
 RegisterCommand('nxn_seatbelt_toggle', function()
     if not inVehicle then return end
     SetFastened(not fastened)
 end, false)
 
--- ── Fo loop ──────────────────────────────────────────────────
+-- ── Fő loop ─────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
 
-        -- Jarmube / kiszallas eszleles
+        -- Járműbe / kiszállás észlelés
         if veh ~= 0 and not inVehicle then
             inVehicle      = true
             currentVehicle = veh
@@ -119,19 +121,21 @@ CreateThread(function()
             NXN.Seatbelt.Log('Kiszallt')
         end
 
-        -- Kiszallas blokkolasa bekotott ov eseten
-        -- FIX: IsControlJustPressed ellenorzese ELOBB tortenik mint
-        --      a DisableControlAction hivas, kulonben a gomb le van
-        --      tiltva mire a check lefut, es soha nem lesz 'JustPressed'.
+        -- Kiszállás blokkolása bekötött öv esetén
+        -- FIX: IsControlJustPressed ELOBB fut, UTANA DisableControlAction.
+        --      INPUT_VEH_EXIT = 194 (F gomb), INPUT_ENTER = 23 (E gomb).
         if inVehicle and fastened and Config.BlockExitWhenFastened then
-            local now          = GetGameTimer()
-            local tryingToExit = IsControlJustPressed(0, 75)   -- INPUT_ENTER
-                              or IsControlJustPressed(0, 245)  -- INPUT_VEH_EXIT
+            local now = GetGameTimer()
 
-            -- UTANA tiltjuk le a gombot
-            DisableControlAction(0, 75, true)
-            DisableControlAction(0, 245, true)
+            -- 1. Először leolvassuk a gombnyomást
+            local tryingToExit = IsControlJustPressed(0, INPUT_VEH_EXIT)
+                              or IsControlJustPressed(0, INPUT_VEH_ENTER)
 
+            -- 2. Utána tiltjuk le (ha előbb tiltjuk, JustPressed már false lesz)
+            DisableControlAction(0, INPUT_VEH_EXIT,  true)
+            DisableControlAction(0, INPUT_VEH_ENTER, true)
+
+            -- 3. Értesítés spam-védelemmel (2 másodpercenként egyszer)
             if tryingToExit and (now - lastBlockNotify) > 2000 then
                 lastBlockNotify = now
                 Notify(Config.Notify.blocked, 'warning')
@@ -156,7 +160,7 @@ CreateThread(function()
             StopWarningSound()
         end
 
-        -- Auto-kicsatolas sebesseg felett
+        -- Auto-kicsatolás sebesség felett
         if inVehicle and fastened and Config.AutoUnbuckleSpeedThreshold then
             local speed = GetEntitySpeed(currentVehicle) * 3.6
             if speed > Config.AutoUnbuckleSpeedThreshold then
@@ -173,14 +177,14 @@ CreateThread(function()
     end
 end)
 
--- ── NUI callbacks ─────────────────────────────────────────────
+-- ── NUI callbacks ────────────────────────────────────────────
 
 RegisterNUICallback('soundEnded', function(_, cb)
     warnPlaying = false
     cb('ok')
 end)
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ───────────────────────────────────────────────
 
 exports('isFastened', function()
     return fastened
