@@ -8,7 +8,7 @@
 
 const STATE = {
     licenses:       {},   // { [typeId]: { def, license, pending } }
-    activeLicType:  null, // igazolvány típus az épp nézett felmutatáshoz
+    activeLicType:  null,
 };
 
 // ── DOM helper ──
@@ -24,6 +24,21 @@ function nuiFetch(cb, data) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data || {})
     }).then(r => r.json()).catch(() => null);
+}
+
+// ── Szín segéd ──
+// Az elem és gyerekei számára beállítja a --lic-color CSS property-t,
+// plusz lic-type-{id} class-t ad hozzá a CSS-alapú fallback-hez.
+
+function applyLicColor(el, def) {
+    const color = (def && def.color) ? def.color : 'var(--nxn-accent)';
+    el.style.setProperty('--lic-color', color);
+    // Tipusosztaly: lic-type-drivers_license stb.
+    if (def && def.id) {
+        // Toroljuk a korabbi lic-type-* osztalyokat
+        el.classList.forEach(c => { if (c.startsWith('lic-type-')) el.classList.remove(c); });
+        el.classList.add('lic-type-' + def.id);
+    }
 }
 
 // ── Fő panel ──
@@ -64,6 +79,10 @@ function renderList() {
 
         const row = document.createElement('div');
         row.className = 'lic-row';
+
+        // Tipusszin alkalmazasa a sorra
+        applyLicColor(row, def);
+
         row.innerHTML = `
             <div class="lic-icon ${esc(iconClass)}"><i class="hgi hgi-stroke ${esc(def.icon)}"></i></div>
             <div class="lic-info">
@@ -89,7 +108,6 @@ function renderList() {
             </div>
         `;
 
-        // Gomb eseménykezelők
         row.querySelector('.btn-icon.view').onclick  = () => openViewModal(typeId);
         row.querySelector('.btn-icon.show').onclick  = () => openShowModal(typeId);
         row.querySelector('.btn-icon.apply').onclick = () => applyLicense(typeId);
@@ -109,31 +127,19 @@ function openViewModal(typeId) {
 
 function buildCard(container, entry, isShown) {
     const { def, license } = entry;
-    const expired = license.expires_at ? isExpired(license.expires_at) : false;
-    const showName = entry.ownerName || null;
-    const showBirth = entry.birthdate || null;
+    const expired    = license.expires_at ? isExpired(license.expires_at) : false;
+    const showName   = entry.ownerName || null;
+    const showBirth  = entry.birthdate || null;
     const showGender = entry.gender || null;
-    const fields = def.showFields || ['name','birthdate','id_number','issued','expires'];
+    const fields     = def.showFields || ['name','birthdate','id_number','issued','expires'];
 
     let rows = '';
-    if (fields.includes('name') && showName) {
-        rows += fieldRow('Név', showName);
-    }
-    if (fields.includes('birthdate') && showBirth) {
-        rows += fieldRow('Születési dátum', showBirth);
-    }
-    if (fields.includes('gender') && showGender) {
-        rows += fieldRow('Nem', showGender);
-    }
-    if (fields.includes('id_number')) {
-        rows += fieldRow('Azonosító', license.id_number || '?');
-    }
-    if (fields.includes('issued') && license.issued_at) {
-        rows += fieldRow('Kiállítva', fmtDate(license.issued_at));
-    }
-    if (fields.includes('expires') && license.expires_at) {
-        rows += fieldRow('Lejár', fmtDate(license.expires_at));
-    }
+    if (fields.includes('name') && showName)   rows += fieldRow('Név', showName);
+    if (fields.includes('birthdate') && showBirth)  rows += fieldRow('Születési dátum', showBirth);
+    if (fields.includes('gender') && showGender)    rows += fieldRow('Nem', showGender);
+    if (fields.includes('id_number'))               rows += fieldRow('Azonosító', license.id_number || '?');
+    if (fields.includes('issued') && license.issued_at)   rows += fieldRow('Kiállítva', fmtDate(license.issued_at));
+    if (fields.includes('expires') && license.expires_at) rows += fieldRow('Lejár', fmtDate(license.expires_at));
 
     container.innerHTML = `
         <div class="id-card">
@@ -150,10 +156,13 @@ function buildCard(container, entry, isShown) {
             <div class="id-card-body">${rows}</div>
             <div class="id-card-footer">
                 <i class="hgi hgi-stroke hgi-shield-01"></i>
-                ${isShown ? 'Felmutatva által egy játékos' : 'Saját igazolvány'}
+                ${isShown ? 'Felmutatva egy játékos által' : 'Saját igazolvány'}
             </div>
         </div>
     `;
+
+    // Tipusszin alkalmazasa a kartya-wrapra (ez terjeszti le a --lic-color-t)
+    applyLicColor(container, def);
 }
 
 function fieldRow(key, val) {
@@ -233,15 +242,12 @@ window.addEventListener('message', function(ev) {
             renderList();
             break;
 
-        // Más játékos megmutatja nekunk az igazolványát
+        // Más játékos megmutatja nekünk az igazolványát
         case 'showCard': {
             const payload = d.payload;
-            const def     = payload.def;
-            const license = payload.license;
-            // Adatok bekötése a buildCard-ba
             const fakeEntry = {
-                def:       def,
-                license:   license,
+                def:       payload.def,
+                license:   payload.license,
                 ownerName: payload.ownerName,
                 birthdate: payload.birthdate,
                 gender:    payload.gender,
@@ -257,7 +263,6 @@ window.addEventListener('message', function(ev) {
 // ── Események ──
 
 document.addEventListener('DOMContentLoaded', function() {
-
     $id('lic-close').addEventListener('click',  () => nuiFetch('close'));
     $id('card-close').addEventListener('click', () => $id('card-modal').classList.add('hidden'));
     $id('show-close').addEventListener('click', () => $id('show-modal').classList.add('hidden'));
