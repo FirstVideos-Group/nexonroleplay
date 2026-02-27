@@ -191,22 +191,53 @@ CreateThread(function()
                     local src = tonumber(src)
                     local ident = exports['nxn-database']:getIdentifier(src)
                     if ident == req.identifier then
-                        -- Cache frissítés
+
+                        -- Cache frissítés – nil guard: INSERT és SELECT között race condition lehetséges
                         local newRow = MySQL.single.await(
                             'SELECT * FROM `nxn_licenses` WHERE identifier=? AND license_type=?',
                             { req.identifier, req.license_type }
                         )
+
+                        -- Ha az INSERT még nem commitált, 300ms után újra próbáljuk
+                        if not newRow then
+                            Wait(300)
+                            newRow = MySQL.single.await(
+                                'SELECT * FROM `nxn_licenses` WHERE identifier=? AND license_type=?',
+                                { req.identifier, req.license_type }
+                            )
+                        end
+
                         if not licenseCache[src] then licenseCache[src] = {} end
-                        licenseCache[src][req.license_type] = newRow
+
+                        if newRow then
+                            -- Normál eset: DB sor megvan
+                            licenseCache[src][req.license_type] = newRow
+                        else
+                            -- Fallback: minimális in-memory sor, hogy a cache ne maradjon nil-es
+                            licenseCache[src][req.license_type] = {
+                                identifier   = req.identifier,
+                                license_type = req.license_type,
+                                id_number    = idNum,
+                                issued_at    = os.date('!%Y-%m-%d %H:%M:%S'),
+                                expires_at   = expStr,
+                                revoked      = 0,
+                            }
+                            NXN.Licenses.Warn(('newRow nil volt, fallback cache: src=%d type=%s'):format(
+                                src, req.license_type
+                            ))
+                        end
+
                         if pendingCache[src] then
                             pendingCache[src][req.license_type] = nil
                         end
+
                         SyncClient(src)
-                        local def2 = NXN.Licenses.GetTypeDef(req.license_type)
-                        NotifyPlayer(src,
-                            ('✅ Megkaptad: %s'):format(def2 and def2.label or req.license_type),
-                            'success'
-                        )
+
+                        -- def2 nil guard: GetTypeDef edge case-re
+                        local def2  = NXN.Licenses.GetTypeDef(req.license_type)
+                        local label = (def2 and def2.label) or req.license_type
+                        NotifyPlayer(src, ('✅ Megkaptad: %s'):format(label), 'success')
+
                         NXN.Licenses.Log(('Online játékosnak küldve: src=%d'):format(src))
                         break
                     end
