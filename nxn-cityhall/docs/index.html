@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-cityhall – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:#5b6af0;--bg:#0e0f14;--surface:#16181f;--surface2:#1e2030;
+            --border:#2a2d3a;--text:#e4e6f0;--muted:#6b6f85;
+            --success:#3ecf8e;--danger:#f05b5b;--warning:#f0b55b;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;line-height:1.7}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:30px;color:var(--accent)}
+        header h1{font-size:22px;font-weight:700}
+        .ver{color:var(--muted);font-size:13px;margin-left:10px}
+        .deps{margin-left:auto;display:flex;gap:8px}
+        .dep-badge{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:5px}
+        .dep-badge i{font-size:12px;color:var(--accent)}
+        nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 40px;display:flex;gap:2px}
+        nav a{display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
+        nav a:hover{color:var(--text)}
+        nav a.active{color:var(--accent);border-color:var(--accent)}
+        nav i{font-size:14px}
+        main{max-width:940px;margin:36px auto;padding:0 24px 60px}
+        section{margin-bottom:52px}
+        h2{font-size:17px;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        h3{font-size:14px;color:var(--text);margin:20px 0 8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px;line-height:1.6}
+        code{color:var(--success)}
+        .cm{color:var(--muted)}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top}
+        td:first-child{color:var(--text);font-family:monospace}
+        tr:last-child td{border-bottom:none}
+        .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+        .bs{background:rgba(91,106,240,.15);color:var(--accent);border:1px solid rgba(91,106,240,.3)}
+        .bc{background:rgba(62,207,142,.12);color:var(--success);border:1px solid rgba(62,207,142,.3)}
+        .be{background:rgba(240,181,91,.12);color:var(--warning);border:1px solid rgba(240,181,91,.3)}
+        .tabs{display:flex;gap:4px}
+        .tab{padding:7px 16px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;color:var(--muted)}
+        .tab.active{color:var(--text);background:var(--surface2)}
+        .tab-content{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:16px}
+        .tab-content.active{display:block}
+        .tab-content pre{margin-bottom:0;background:var(--surface)}
+        .info-box{display:flex;gap:12px;padding:14px 16px;border-radius:8px;margin-bottom:16px;font-size:13px}
+        .tip{background:rgba(91,106,240,.08);border:1px solid rgba(91,106,240,.25);color:#a0a8f8}
+        .warn{background:rgba(240,181,91,.08);border:1px solid rgba(240,181,91,.25);color:var(--warning)}
+        .info-box i{font-size:16px;margin-top:1px;flex-shrink:0}
+        .flow{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;overflow-x:auto;gap:0}
+        .fn{text-align:center;padding:10px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;white-space:nowrap}
+        .fn i{display:block;font-size:20px;color:var(--accent);margin-bottom:4px}
+        .fa{flex:1;text-align:center;font-size:11px;color:var(--muted);padding:0 8px;min-width:50px}
+        .fa .arr{font-size:16px;color:var(--border);display:block}
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="hgi hgi-stroke hgi-building-04"></i>
+    <div><h1>nxn-cityhall <span class="ver">v1.0.0</span></h1></div>
+    <div class="deps">
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-database-01"></i> nxn-database</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-user-conversation"></i> nxn-npcconversation</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-id-verified"></i> nxn-licenses</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-notification-01"></i> nxn-notify</span>
+    </div>
+</header>
+
+<nav>
+    <a href="#about"    class="active" onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</a>
+    <a href="#flow"     onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-workflow-square-07"></i> Folyamat</a>
+    <a href="#config"   onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</a>
+    <a href="#exports"  onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</a>
+    <a href="#events"   onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</a>
+    <a href="#extend"   onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-add-circle"></i> Bővítés</a>
+    <a href="#examples" onclick="nc(event,this)"><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</a>
+</nav>
+
+<main>
+
+<!-- ÁTTEKINTÉS -->
+<section id="about">
+    <h2><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</h2>
+    <p>
+        Az <strong>nxn-cityhall</strong> az önkormányzati rendszer, amely fizikai helyszínt és NPC-t biztosít az igazolvány kiváltáshoz, csekk befizetéshez és egyéb úgyekhez. Az NPC-t az <code>nxn-npcconversation</code> kezeli, az igazolványokat az <code>nxn-licenses</code>, bírságokat saját DB tábla tárolja.
+    </p>
+    <h3>Főbb funkciók</h3>
+    <table>
+        <tr><th>Funkció</th><th>Leírás</th></tr>
+        <tr><td>Fő blip</td><td>Épület blip (mindig látszik, konfigurálható)</td></tr>
+        <tr><td>NPC blip</td><td>Csak <code>visibleDist</code> méteren belül látszik</td></tr>
+        <tr><td>NPC regisztráció</td><td>nxn-npcconversation <code>registerNPC</code> exportán keresztül</td></tr>
+        <tr><td>Igazolvány</td><td>nxn-licenses <code>openLicenses()</code> hívás</td></tr>
+        <tr><td>Csekk</td><td>Saját <code>nxn_fines</code> DB, befizetés szerver export-ból is</td></tr>
+        <tr><td>További ügyek</td><td>Config + export úton dinamikusan bővíthető</td></tr>
+    </table>
+</section>
+
+<!-- FOLYAMAT -->
+<section id="flow">
+    <h2><i class="hgi hgi-stroke hgi-workflow-square-07"></i> Működési folyamat</h2>
+    <div class="flow">
+        <div class="fn"><i class="hgi hgi-stroke hgi-user-01"></i>Játékos közelít</div>
+        <div class="fa"><span class="arr">→</span><span>E gomb</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-user-conversation"></i>nxn-npcconversation</div>
+        <div class="fa"><span class="arr">→</span><span>action event</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-building-04"></i>nxn-cityhall</div>
+        <div class="fa"><span class="arr">→</span><span>openLicenses /<br>openFines / stb.</span></div>
+        <div class="fn"><i class="hgi hgi-stroke hgi-id-verified"></i>Target script</div>
+    </div>
+    <p>
+        Az NPC közelítésekor az <code>nxn-npcconversation</code> megjeleníti a beszélgetés opciókat.
+        Kiválasztáskor egy <code>nxn-cityhall:action:&lt;id&gt;</code> kliens event keletkezik.
+        Ezeket a cityhall script kezeli, majd az aktuális scriptet hívja meg (igazolvány, csekk stb.).
+    </p>
+</section>
+
+<!-- KONFIGURÁCIÓ -->
+<section id="config">
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <h3>Config.Building</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Leírás</th></tr>
+        <tr><td>name</td><td>Blip címe / megjelenesés neve</td></tr>
+        <tr><td>coords</td><td>vector3 épület koordináták</td></tr>
+        <tr><td>blip.enabled</td><td>Fő blip engedélyezése (mindig látszik)</td></tr>
+        <tr><td>blip.sprite / color / scale</td><td>GTA blip paraméterek</td></tr>
+    </table>
+    <h3>Config.NPC</h3>
+    <table>
+        <tr><th>Kulcs</th><th>Leírás</th></tr>
+        <tr><td>id</td><td>Egyedi NPC azonosító az nxn-npcconversation-ban</td></tr>
+        <tr><td>label</td><td>Megjelenitési név</td></tr>
+        <tr><td>model</td><td>GTA ped model hash</td></tr>
+        <tr><td>coords</td><td>vector4 (x, y, z, heading)</td></tr>
+        <tr><td>scenario</td><td>GTA WORLD_ scenario (nil = áll)</td></tr>
+        <tr><td>blip.visibleDist</td><td>Hány méteren belül látszik az NPC blip</td></tr>
+    </table>
+    <h3>Config.MenuItems</h3>
+    <table>
+        <tr><th>Mező</th><th>Leírás</th></tr>
+        <tr><td>id</td><td>Egyedi azonosító</td></tr>
+        <tr><td>label</td><td>NPC beszélgetés gomb szövege</td></tr>
+        <tr><td>icon</td><td>HugeIcons osztály</td></tr>
+        <tr><td>response</td><td>NPC válasz szöveg</td></tr>
+        <tr><td>action</td><td><code>openLicenses</code> | <code>openFines</code> | <code>openInfo</code> | <code>custom</code></td></tr>
+        <tr><td>eventName</td><td>Ha action=<code>custom</code>: kiváltandó kliens event neve</td></tr>
+    </table>
+</section>
+
+<!-- EXPORTOK -->
+<section id="exports">
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <h3>Szerver exportok</h3>
+    <table>
+        <tr><th>Export</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>issueFine(src,reason,amount,issuedBy)</td><td>int, string, int, string?</td><td>integer|nil</td><td>Bírság kiadása + notify</td></tr>
+        <tr><td>getFines(src)</td><td>integer</td><td>table</td><td>Játékos bírságai (cache)</td></tr>
+        <tr><td>revokeFine(fineId)</td><td>integer</td><td>boolean</td><td>Bírság visszavonása</td></tr>
+        <tr><td>getTotalFines(src)</td><td>integer</td><td>integer</td><td>Összes fizetetlen összeg</td></tr>
+        <tr><td>hasUnpaidFines(src)</td><td>integer</td><td>boolean</td><td>Van-e ki nem fizetett bírság</td></tr>
+    </table>
+    <h3>Kliens exportok</h3>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>addMenuItem(item)</td><td>Menüelem hozzáadása futás közben + NPC beszélgetés frissítése</td></tr>
+        <tr><td>removeMenuItem(itemId)</td><td>Menüelem eltávolítása</td></tr>
+        <tr><td>openView(view)</td><td>Nézet közvetlen megnyitása (<code>'info'</code> | <code>'fines'</code>)</td></tr>
+        <tr><td>closePanel()</td><td>Panel bezárása</td></tr>
+        <tr><td>isOpen()</td><td>Nyitva van-e a panel</td></tr>
+    </table>
+</section>
+
+<!-- NET EVENTS -->
+<section id="events">
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-cityhall:server:getFines</td><td><span class="badge be">Client → Szerver</span></td><td>Csekk lista lekérés</td></tr>
+        <tr><td>nxn-cityhall:server:payFine</td><td><span class="badge be">Client → Szerver</span></td><td>Csekk befizetés (fineId)</td></tr>
+        <tr><td>nxn-cityhall:client:openFines</td><td><span class="badge bs">Szerver → Client</span></td><td>Csekk lista megnyitása (fines[])</td></tr>
+        <tr><td>nxn-cityhall:client:finesPaid</td><td><span class="badge bs">Szerver → Client</span></td><td>Befizetés visszaigazolása (fineId)</td></tr>
+        <tr><td>nxn-cityhall:server:fineIssued</td><td><span class="badge bs">Server event</span></td><td>Bírság kiadva (src, id, reason, amount)</td></tr>
+        <tr><td>nxn-cityhall:server:finePaid</td><td><span class="badge bs">Server event</span></td><td>Bírság megfizetve (src, fineRow)</td></tr>
+        <tr><td>nxn-cityhall:action:&lt;id&gt;</td><td><span class="badge bc">Kliens event</span></td><td>NPC menüelem kiválasztás</td></tr>
+    </table>
+</section>
+
+<!-- BŐVÍTÉS -->
+<section id="extend">
+    <h2><i class="hgi hgi-stroke hgi-add-circle"></i> Bővítés más resource-ból</h2>
+    <p>
+        Hozzáadhatsz új NPC beszélgetési opciót az <code>addMenuItem</code> kliensexportával. Ez egyszerre frissíti a konfigot és az <code>nxn-npcconversation</code> diálogus listáját is.
+    </p>
+    <pre><code><span class="cm">-- nxn-police client.lua: saját ügy hozzáadása</span>
+AddEventHandler('onClientResourceStart', function(res)
+    if res ~= 'nxn-cityhall' then return end
+
+    exports['nxn-cityhall']:addMenuItem({
+        id        = 'evidence',
+        label     = 'Bizonyíték beadása',
+        icon      = 'hgi-folder-security',
+        response  = 'Rendeljék elő a beadási űrlapot.',
+        action    = 'custom',
+        eventName = 'nxn-police:client:openEvidenceForm',
+    })
+end)</code></pre>
+    <div class="info-box tip">
+        <i class="hgi hgi-stroke hgi-information-circle"></i>
+        <span>Az <code>action = 'custom'</code> + <code>eventName</code> kombilációval bármely jovőbeli script (bíróság, rendorség, igazságszolgáltatás) dinamikusan adhat új működést az ügyintézőnek – az nxn-cityhall códja módosítása nélkül.</span>
+    </div>
+</section>
+
+<!-- PÉLDÁK -->
+<section id="examples">
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="sw(this,'ex1')">Bírság kiadás (Rendor)</div>
+        <div class="tab" onclick="sw(this,'ex2')">Bírság visszavonás</div>
+        <div class="tab" onclick="sw(this,'ex3')">Fizetetlen ellenőrzés</div>
+        <div class="tab" onclick="sw(this,'ex4')">Jövőbeli script int.</div>
+    </div>
+    <div class="tab-content active" id="ex1">
+<pre><code><span class="cm">-- nxn-police szerver: bírság kiadása (targetSrc = járő játékos)</span>
+local fineId = exports['nxn-cityhall']:issueFine(
+    targetSrc,
+    'Megillető helyen parkolás',
+    5000,
+    'Rendorség'
+)
+if fineId then
+    print('Bírság ID:', fineId)
+end</code></pre>
+    </div>
+    <div class="tab-content" id="ex2">
+<pre><code><span class="cm">-- Bírság visszavonása (pl. bírósági felmentés)</span>
+local ok = exports['nxn-cityhall']:revokeFine(fineId)
+print('Visszavonva:', ok)</code></pre>
+    </div>
+    <div class="tab-content" id="ex3">
+<pre><code><span class="cm">-- Van-e ki nem fizetett bírság?
+if exports['nxn-cityhall']:hasUnpaidFines(src) then
+    local total = exports['nxn-cityhall']:getTotalFines(src)
+    exports['nxn-notify']:notifyPlayer(src,
+        ('Figyelem! $%d ki nem fizetett bírságod van.'):format(total),
+        'warning'
+    )
+end</span></code></pre>
+    </div>
+    <div class="tab-content" id="ex4">
+<pre><code><span class="cm">-- nxn-court (bíróság) ügy hozzáadása az Ügyintézőhöz:</span>
+exports['nxn-cityhall']:addMenuItem({
+    id        = 'court_schedule',
+    label     = 'Bírósági időpont',
+    icon      = 'hgi-justice-scale-01',
+    response  = 'A következő sz. időpont előfoglalva.',
+    action    = 'custom',
+    eventName = 'nxn-court:client:openSchedule',
+})</code></pre>
+    </div>
+    <div class="info-box warn">
+        <i class="hgi hgi-stroke hgi-alert-circle"></i>
+        <span><code>ensure</code> sorrend: <code>nxn-database</code> → <code>nxn-npcconversation</code> → <code>nxn-licenses</code> → <code>nxn-notify</code> → <code>nxn-cityhall</code></span>
+    </div>
+</section>
+
+</main>
+<script>
+function nc(e,el){e.preventDefault();document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));el.classList.add('active');const t=document.querySelector(el.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth'})}
+function sw(el,id){const p=el.closest('section');p.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));p.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById(id).classList.add('active')}
+</script>
+</body>
+</html>
