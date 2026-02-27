@@ -6,7 +6,7 @@ local isOpen       = false
 local licenses     = {}   -- { [type] = row }
 local pending      = {}   -- { [type] = row }
 
--- ── UI ──────────────────────────────────────────────────
+-- ── UI ──────────────────────────────────────────────────────
 
 local function SetUIVisible(state)
     isOpen = state
@@ -16,7 +16,6 @@ local function SetUIVisible(state)
 end
 
 local function PushToUI()
-    -- Igazolvány definiciók csatolása az adathoz
     local enriched = {}
     for _, def in ipairs(Config.LicenseTypes) do
         enriched[def.id] = {
@@ -40,7 +39,7 @@ local function CloseUI()
     SetUIVisible(false)
 end
 
--- ── Net events ────────────────────────────────────────────
+-- ── Net events ──────────────────────────────────────────────
 
 RegisterNetEvent('nxn-licenses:client:sync', function(data, pend)
     NXN.Licenses.Log('Szinkronizáció fogadva')
@@ -51,7 +50,11 @@ end)
 
 -- Más játékos megmutatja az igazolványát
 RegisterNetEvent('nxn-licenses:client:viewShown', function(payload)
-    NXN.Licenses.Log(('viewShown: type=%s from=%d'):format(tostring(payload.licenseType), tostring(payload.showedBy)))
+    -- FIX: showedBy integer, tostring() helyett %d formatum
+    NXN.Licenses.Log(('viewShown: type=%s from=%d'):format(
+        tostring(payload.licenseType),
+        tonumber(payload.showedBy) or 0
+    ))
     SendNUIMessage({
         action  = 'showCard',
         payload = payload,
@@ -60,7 +63,7 @@ RegisterNetEvent('nxn-licenses:client:viewShown', function(payload)
     isOpen = true
 end)
 
--- ── NUI callbacks ─────────────────────────────────────────
+-- ── NUI callbacks ─────────────────────────────────────────────
 
 RegisterNUICallback('close', function(_, cb)
     CloseUI()
@@ -73,7 +76,6 @@ RegisterNUICallback('apply', function(data, cb)
     cb('ok')
 end)
 
--- Felmutatás: létező játékos kiválasztása közeléből
 RegisterNUICallback('showTo', function(data, cb)
     NXN.Licenses.Log(('NUI showTo: type=%s target=%s'):format(
         tostring(data.licenseType), tostring(data.targetSrc)
@@ -82,7 +84,6 @@ RegisterNUICallback('showTo', function(data, cb)
     cb('ok')
 end)
 
--- Legközelebb a közelemben lévő játékosok listája (felmutatáshoz)
 RegisterNUICallback('getNearbyPlayers', function(_, cb)
     local ped    = PlayerPedId()
     local myPos  = GetEntityCoords(ped)
@@ -101,29 +102,33 @@ RegisterNUICallback('getNearbyPlayers', function(_, cb)
             end
         end
     end
-    -- Rendezés távolság szerint
     table.sort(result, function(a,b) return a.dist < b.dist end)
     cb(result)
 end)
 
--- ── Parancs + billentyű ───────────────────────────────────────
+-- ── Parancs + billentyű ─────────────────────────────────────────────
 
 RegisterCommand(Config.Command, function()
     if isOpen then CloseUI() else OpenUI() end
 end, false)
 
+-- FIX: Wait(0) helyett Wait(100) + isOpen guard, hogy ne pörögjön minden frame-ben
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
-        if isOpen and IsControlJustPressed(0, 322) then  -- ESC
-            CloseUI()
+        if isOpen then
+            Citizen.Wait(0)
+            if IsControlJustPressed(0, 322) then  -- ESC
+                CloseUI()
+            end
+        else
+            Citizen.Wait(100)  -- UI zárva: ritkán ellenőriz, nincs CPU terhelés
         end
     end
 end)
 
--- ── Exportok ──────────────────────────────────────────────
+-- ── Exportok ──────────────────────────────────────────────────
 
-exports('openLicenses',  function() if not isOpen then OpenUI()  end end)
-exports('closeLicenses', function() if isOpen then CloseUI() end end)
-exports('isOpen',        function() return isOpen end)
+exports('openLicenses',     function() if not isOpen then OpenUI()  end end)
+exports('closeLicenses',    function() if isOpen     then CloseUI() end end)
+exports('isOpen',           function() return isOpen end)
 exports('getLocalLicenses', function() return licenses end)
