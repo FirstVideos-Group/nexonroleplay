@@ -14,17 +14,21 @@ local hudSyncTimer     = 0.0
 
 local startAuthCallback = nil
 
+-- Motorállapot-tár: megjegyzi hogy az adott jármű motorja járt-e
+-- amikor a játékos kiszallt belole.
+-- Kulcs: jármű network ID (int), érték: boolean (futott-e a motor)
+local vehicleEngineStateCache = {}
+
 -- ── Degradáció belső állapot ──────────────────────────────────
 
-local stutterTimer      = 0.0
-local isStuttering      = false
-local stutterEndTime    = 0.0
-local effectsActive     = false
+local stutterTimer       = 0.0
+local isStuttering       = false
+local stutterEndTime     = 0.0
+local effectsActive      = false
 local activeEffectHandle = -1
-local lastPerfMod       = 1.0
+local lastPerfMod        = 1.0
 
 -- ── Túlhévülés belső állapot ──────────────────────────────────
--- FIX: overheatAccum (használatlan) eltávolítva, kizárólag ovheatTimer van.
 
 local ovheatTimer    = 0.0
 local critStallTimer = 0.0
@@ -114,7 +118,6 @@ local function StartEngine(vehicle, silent)
     SetVehicleEngineOn(vehicle, true, false, true)
     engineRunning  = true
     isStuttering   = false
-    -- FIX: overheatAccum eltávolítva – a helyes változó ovheatTimer
     ovheatTimer    = 0.0
     stutterTimer   = 0.0
     NXN.Engine.Info(('Motor elindult: entId=%d hp=%.1f%%'):format(vehicle, engineHPPercent))
@@ -202,8 +205,6 @@ end
 --  DEGRADÁCIÓ RENDSZER
 -- ============================================================
 
--- ── Teljesítmény degradáció ───────────────────────────────────
-
 local function ApplyPerformanceDegradation(vehicle)
     local dcfg = Config.Degradation
     if not dcfg.enabled or not dcfg.performance.enabled then
@@ -224,8 +225,6 @@ local function ApplyPerformanceDegradation(vehicle)
         NXN.Engine.Log(('PerfDeg: hp=%.1f%% mod=%.2f'):format(engineHPPercent, newMod))
     end
 end
-
--- ── Motor stutter (kihagy / leállogatás) ─────────────────────
 
 local function ProcessStutter(vehicle, dt)
     local dcfg = Config.Degradation
@@ -282,13 +281,6 @@ local function ProcessStutter(vehicle, dt)
     end
 end
 
--- ── Vizuális effektek (füst, szikra) ─────────────────────────
--- FIX: GetVehicleEngineLocation nem létező native, eltávolítva.
--- FIX: 'core' asset nem tartalmaz jármű effekteket.
---      Helyes: 'veh_damage' asset, 'veh_damage_event' füst,
---              'scr_josh_fire' szikrához (vanilla GTA5 assets).
--- A particle az entity-re van kötve fix motor-offset-tel (0, 1.5, 0).
-
 local function StopVehicleEffect()
     if activeEffectHandle ~= -1 then
         StopParticleFxLooped(activeEffectHandle, false)
@@ -307,16 +299,13 @@ local function ProcessVisualEffects(vehicle)
 
     local ecfg = dcfg.effects
 
-    -- Szikra (25% HP alatt)
     if engineHPPercent <= ecfg.sparkThreshold then
         if not effectsActive or activeEffectHandle == -1 then
             StopVehicleEffect()
-            -- FIX: 'scr_josh_fire' tartalmazza a szikra effekteket
             UseParticleFxAssetNextCall('scr_josh_fire')
             activeEffectHandle = StartNetworkedParticleFxLoopedOnEntity(
                 'scr_josh_sparks',
-                vehicle,
-                0.0, 1.5, 0.3,   -- motor közelítő offset (x, y, z)
+                vehicle, 0.0, 1.5, 0.3,
                 0.0, 0.0, 0.0,
                 0.8, false, false, false
             )
@@ -324,17 +313,14 @@ local function ProcessVisualEffects(vehicle)
             NXN.Engine.Log(('Szikra effekt: hp=%.1f%%'):format(engineHPPercent))
         end
 
-    -- Füst (60% HP alatt)
     elseif engineHPPercent <= ecfg.smokeThreshold then
         if not effectsActive or activeEffectHandle == -1 then
             StopVehicleEffect()
-            -- FIX: 'veh_damage' asset + 'veh_damage_event' füst effekt
             UseParticleFxAssetNextCall('veh_damage')
             local intensity = math.max(0.2, (ecfg.smokeThreshold - engineHPPercent) / ecfg.smokeThreshold)
             activeEffectHandle = StartNetworkedParticleFxLoopedOnEntity(
                 'veh_damage_event',
-                vehicle,
-                0.0, 1.5, 0.3,   -- motor közelítő offset (x, y, z)
+                vehicle, 0.0, 1.5, 0.3,
                 0.0, 0.0, 0.0,
                 intensity * 0.8, false, false, false
             )
@@ -343,9 +329,7 @@ local function ProcessVisualEffects(vehicle)
         end
 
     else
-        if effectsActive then
-            StopVehicleEffect()
-        end
+        if effectsActive then StopVehicleEffect() end
     end
 end
 
@@ -386,22 +370,47 @@ CreateThread(function()
             isStuttering   = false
             lastPerfMod    = 1.0
             ReadEngineHP(veh)
-            NXN.Engine.Log(('Jarmube szallt: entId=%d hp=%.1f%%'):format(veh, engineHPPercent))
+
+            local netId     = NetworkGetNetworkIdFromEntity(veh)
+            local cached    = vehicleEngineStateCache[netId]
 
             if Config.StopEngineOnEnter then
+                -- Konfiguració szerint mindig leallitjuk belepéskor
                 SetVehicleEngineOn(veh, false, true, true)
                 engineRunning = false
+                NXN.Engine.Log(('Jarmube szallt (StopOnEnter): entId=%d netId=%d hp=%.1f%%'):format(veh, netId, engineHPPercent))
+
+            elseif cached ~= nil then
+                -- Van mentett allapot: pontosan azt allitjuk vissza
+                engineRunning = cached
+                SetVehicleEngineOn(veh, cached, not cached, true)
+                NXN.Engine.Log(('Jarmube szallt (cache): entId=%d netId=%d running=%s hp=%.1f%%'):format(
+                    veh, netId, tostring(cached), engineHPPercent
+                ))
             else
+                -- Eloszor szallunk be ebbe a jarmube: GTA natív allapótól függ
                 engineRunning = IsVehicleEngineOn(veh)
+                NXN.Engine.Log(('Jarmube szallt (natív): entId=%d netId=%d running=%s hp=%.1f%%'):format(
+                    veh, netId, tostring(engineRunning), engineHPPercent
+                ))
             end
+
+            -- Felhasznalt cache torles (egyszeri visszatoltes)
+            vehicleEngineStateCache[netId] = nil
             SyncHUD(true)
 
         -- Kiszállás
-        -- FIX: KeepEngineOnExit sorénd javítva – az engineRunning és
-        -- currentVehicle ellenőrzése most a nullázás ELŐTT történik.
         elseif veh == 0 and inVehicle then
             local wasRunning = engineRunning
             local lastVeh    = currentVehicle
+            local netId      = NetworkGetNetworkIdFromEntity(lastVeh)
+
+            -- Motorállapot mentése a jármű network ID-jához
+            -- Igy visszaszallaskor pontosan tudjuk hogy jart-e a motor
+            if netId and netId ~= 0 then
+                vehicleEngineStateCache[netId] = wasRunning
+                NXN.Engine.Log(('Kiszallas: netId=%d running=%s elmentve'):format(netId, tostring(wasRunning)))
+            end
 
             -- Degradáció cleanup
             StopVehicleEffect()
@@ -416,8 +425,8 @@ CreateThread(function()
             lastPerfMod    = 1.0
             currentVehicle = 0
 
-            -- FIX: a wasRunning snapshot alapján dönt, nem az már
-            -- nullázott engineRunning alapján
+            -- KeepEngineOnExit: ha a motor futott kiszallaskor, fenntartjuk
+            -- a GTA fizikai allapotat is (igy masok latjak jaro motorkent)
             if wasRunning and Config.KeepEngineOnExit and lastVeh ~= 0 then
                 SetVehicleEngineOn(lastVeh, true, true, true)
             end
@@ -428,7 +437,8 @@ CreateThread(function()
         -- In-vehicle logika
         if inVehicle and currentVehicle ~= 0 then
 
-            -- GTA saját logikája újraindítja a motort ha mi leállítottuk
+            -- GTA sajat logikaja ujrainditja a motort ha mi leallitottuk;
+            -- stutter kozben mi kezeljuk, ezert azt kihagyjuk
             if not engineRunning and not isStuttering and IsVehicleEngineOn(currentVehicle) then
                 SetVehicleEngineOn(currentVehicle, false, true, true)
             end
@@ -442,15 +452,12 @@ CreateThread(function()
                 end
             end
 
-            -- Túlhévülés
             ProcessOverheat(currentVehicle, dt)
 
-            -- Kritikus leállás
             if engineRunning then
                 CheckCriticalStall(currentVehicle, dt)
             end
 
-            -- Degradáció rendszer
             if Config.Degradation.enabled then
                 if engineRunning then
                     ApplyPerformanceDegradation(currentVehicle)
@@ -459,7 +466,6 @@ CreateThread(function()
                 ProcessVisualEffects(currentVehicle)
             end
 
-            -- HUD szinkron
             hudSyncTimer = hudSyncTimer + dt * 1000
             if hudSyncTimer >= Config.HUDSyncInterval then
                 hudSyncTimer = 0
