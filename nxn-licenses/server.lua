@@ -49,6 +49,13 @@ local function GenerateIdNumber(licenseType)
     return ('%s-%s-%s-%d'):format(Config.IdPrefix, licenseType:upper():sub(1,3), ts, rnd)
 end
 
+--- Táblázat bejegyzéseinek számlálása (pairs alapon, mert string kulcsú map)
+local function countMap(t)
+    local c = 0
+    for _ in pairs(t) do c = c + 1 end
+    return c
+end
+
 -- ── Adatbázis ─────────────────────────────────────────────
 
 local function RegisterTables()
@@ -120,10 +127,11 @@ local function LoadPlayerLicenses(src, identifier)
         pendingCache[src][row.license_type] = row
     end
 
+    -- countMap használata: a cache string-kulcsú map, a # operátor számon nem működik
     NXN.Licenses.Log(('Betöltve: src=%d licenses=%d pending=%d'):format(
         src,
-        #(function() local c=0; for _ in pairs(licenseCache[src]) do c=c+1 end; return c end)(),
-        #(function() local c=0; for _ in pairs(pendingCache[src]) do c=c+1 end; return c end)()
+        countMap(licenseCache[src]),
+        countMap(pendingCache[src])
     ))
 
     SyncClient(src)
