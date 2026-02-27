@@ -3,7 +3,7 @@ game 'gta5'
 
 author      'Nexon Dev Team <nexondev@firstvideosgroup.eu>'
 description 'nxn-engine – Motorvezerlesi rendszer'
-version     '1.0.0'
+version     '1.1.0'
 
 shared_scripts {
     'config.lua',
