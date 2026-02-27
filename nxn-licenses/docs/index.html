@@ -31,7 +31,7 @@
         nav a:hover { color:var(--text); }
         nav a.active { color:var(--accent); border-color:var(--accent); }
         nav i { font-size:14px; }
-        main { max-width:940px; margin:36px auto; padding:0 24px 60px; }
+        main { max-width:980px; margin:36px auto; padding:0 24px 60px; }
         section { margin-bottom:52px; }
         h2 { font-size:17px; color:var(--accent); margin-bottom:14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding-bottom:8px; }
         h3 { font-size:14px; color:var(--text); margin:20px 0 8px; }
@@ -64,23 +64,30 @@
         .fa { flex:1; text-align:center; font-size:11px; color:var(--muted); padding:0 8px; min-width:60px; }
         .fa .arr { font-size:16px; color:var(--border); display:block; }
 
-        /* ── Vizuális minták szekció ── */
+        /* ── Vizuális minták ── */
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+            gap: 28px;
             margin-top: 8px;
         }
+
+        /* Government card – pontosan a játékbeli megfelelő */
+        .doc-card-wrap { --lic: #5b6af0; }
         .doc-card {
-            --lic: #5b6af0;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid color-mix(in srgb, var(--lic) 30%, var(--border));
+            width: 460px;
+            height: 278px;
+            display: flex;
+            flex-direction: row;
             background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+            border: 1px solid color-mix(in srgb, var(--lic) 35%, var(--border));
+            border-radius: 15px;
+            overflow: hidden;
             box-shadow:
-                0 8px 28px rgba(0,0,0,.45),
+                0 10px 32px rgba(0,0,0,.5),
                 0 0 0 1px color-mix(in srgb, var(--lic) 12%, transparent),
-                0 0 28px color-mix(in srgb, var(--lic) 14%, transparent);
+                0 0 30px color-mix(in srgb, var(--lic) 16%, transparent),
+                0 0 70px color-mix(in srgb, var(--lic) 7%, transparent);
             position: relative;
         }
         .doc-card::before {
@@ -90,9 +97,9 @@
             border-radius: inherit;
             background: linear-gradient(
                 105deg,
-                transparent 25%,
-                color-mix(in srgb, var(--lic) 16%, transparent) 50%,
-                transparent 75%
+                transparent 28%,
+                color-mix(in srgb, var(--lic) 18%, transparent) 50%,
+                transparent 72%
             );
             background-size: 200% 100%;
             animation: docShimmer 3.8s ease-in-out infinite;
@@ -100,86 +107,149 @@
             z-index: 1;
         }
         .doc-card > * { position: relative; z-index: 2; }
-        .doc-card-header {
+
+        /* Bal sáv */
+        .dc-side {
+            width: 84px;
+            flex-shrink: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 10px;
-            padding: 14px 16px;
-            background: color-mix(in srgb, var(--lic) 13%, transparent);
-            border-bottom: 1px solid color-mix(in srgb, var(--lic) 22%, transparent);
+            background: color-mix(in srgb, var(--lic) 16%, transparent);
+            border-right: 1px solid color-mix(in srgb, var(--lic) 28%, transparent);
+            padding: 16px 8px;
         }
-        .doc-card-header i { font-size: 22px; color: var(--lic); flex-shrink: 0; }
-        .doc-card-title { font-size: 13px; font-weight: 700; color: var(--text); }
-        .doc-card-sub   { font-size: 10px; color: var(--muted); margin-top: 1px; }
-        .doc-card-flag {
-            margin-left: auto;
+        .dc-side i { font-size: 34px; color: var(--lic); }
+        .dc-side-label {
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: color-mix(in srgb, var(--lic) 75%, var(--muted));
+            text-align: center;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            line-height: 1.4;
+        }
+
+        /* Főtartalom */
+        .dc-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .dc-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 14px 16px 9px;
+            border-bottom: 1px solid color-mix(in srgb, var(--lic) 18%, var(--border));
+            gap: 8px;
+        }
+        .dc-title {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .dc-subtitle {
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: color-mix(in srgb, var(--lic) 70%, var(--muted));
+            margin-top: 3px;
+        }
+        .dc-flag {
+            flex-shrink: 0;
             font-size: 9px;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 3px 10px;
             border-radius: 20px;
             text-transform: uppercase;
             letter-spacing: .5px;
-            background: rgba(62,207,142,.12);
+            background: rgba(62,207,142,.15);
             color: var(--success);
-            border: 1px solid rgba(62,207,142,.28);
+            border: 1px solid rgba(62,207,142,.3);
+            margin-top: 2px;
             white-space: nowrap;
         }
-        .doc-card-body {
-            padding: 12px 16px;
+        .dc-fields {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            padding: 9px 16px 6px;
+            align-content: start;
+        }
+        .dc-field {
             display: flex;
             flex-direction: column;
-            gap: 0;
+            gap: 2px;
+            padding: 5px 6px 5px 0;
+            border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
         }
-        .doc-field {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid var(--border);
+        .dc-field:nth-last-child(-n+2) { border-bottom: none; }
+        .dc-field-key {
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--muted);
+        }
+        .dc-field-val {
             font-size: 11px;
+            font-weight: 700;
+            color: var(--text);
         }
-        .doc-field:last-child { border-bottom: none; }
-        .doc-field-key { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .4px; }
-        .doc-field-val { font-weight: 600; color: var(--text); }
-        .doc-card-footer {
-            padding: 8px 16px 12px;
+        .dc-field.wide { grid-column: 1 / -1; }
+        .dc-field.wide .dc-field-val {
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .dc-footer {
+            padding: 7px 16px 9px;
             border-top: 1px solid color-mix(in srgb, var(--lic) 16%, var(--border));
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 10px;
-            color: var(--muted);
+            justify-content: space-between;
         }
-        .doc-card-footer i { font-size: 12px; color: var(--lic); }
-        .color-pill {
-            display: inline-flex;
+        .dc-footer-left {
+            display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 11px;
+            gap: 5px;
+            font-size: 9px;
             color: var(--muted);
-            padding: 3px 10px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-family: monospace;
         }
-        .color-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
+        .dc-footer-left i { font-size: 12px; color: var(--lic); }
+        .dc-footer-right {
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: color-mix(in srgb, var(--lic) 60%, var(--muted));
         }
         .card-meta {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 8px;
+            margin-top: 10px;
             padding: 0 2px;
         }
-        .card-meta-id {
-            font-size: 11px;
-            color: var(--muted);
+        .card-meta-id { font-size: 11px; color: var(--muted); font-family: monospace; }
+        .color-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 11px; color: var(--muted);
+            padding: 3px 10px; border-radius: 20px;
+            border: 1px solid var(--border); background: var(--surface);
             font-family: monospace;
         }
+        .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
         @keyframes docShimmer {
             0%   { background-position: 200% 0; opacity: 0; }
             15%  { opacity: 1; }
@@ -219,15 +289,13 @@
 <!-- ÁTTEKINTÉS -->
 <section id="about">
     <h2><i class="hgi hgi-stroke hgi-information-circle"></i> Áttekintés</h2>
-    <p>
-        Az <strong>nxn-licenses</strong> a Nexon RP szerver igazolvány- és engedélykezelő rendszere.
-        Karakterenként tárolja adatbázisban az igazolványokat (két külön tábla:
-        <code>nxn_licenses</code> és <code>nxn_license_requests</code>). Az igénylés kiváltáskor nem
-        azonnal kerül a játékoshoz, hanem konfigurálható idő múltán („feldolgozási idő”).
-        Minden igazolványnak lejárati ideje van, amittől újra igényelhető.
-        A játékos <code>/idcard</code> parancsal nyár meg a UI-t, ahol megtekintheti, igényelheti
-        és felmutathatja igazolványait. Az adatok az <code>nxn-identity</code> exportáiból származnak.
-    </p>
+    <p>Az <strong>nxn-licenses</strong> a Nexon RP szerver igazolvány- és engedélykezelő rendszere.
+    Karakterenként tárolja adatbázisban az igazolványokat (két külön tábla:
+    <code>nxn_licenses</code> és <code>nxn_license_requests</code>). Az igénylés kiváltáskor nem
+    azonnal kerül a játékoshoz, hanem konfigurálható idő múltán („feldolgozási idő”).
+    Minden igazolványnak lejárati ideje van, amittől újra igényelhető.
+    A játékos <code>/idcard</code> parancsal nyár meg a UI-t, ahol megtekintheti, igényelheti
+    és felmutathatja igazolványait. Az adatok az <code>nxn-identity</code> exportáiból származnak.</p>
     <h3>Főbb jellemzők</h3>
     <table>
         <tr><th>Funkció</th><th>Leírás</th></tr>
@@ -255,12 +323,10 @@
         <div class="fa"><span class="arr">→</span><span>notify + sync</span></div>
         <div class="fn"><i class="hgi hgi-stroke hgi-notification-01"></i>Játékos</div>
     </div>
-    <p>
-        A feldolgozó tick <strong>minden <code>Config.ProcessInterval</code> másodpercben</strong> fut.
-        Az igénylés <code>ready_at</code> mezőjét hasonlítja az aktuális UTC időhöz.
-        Ha a játékos online, azonnal szinkronizál és nxn-notify ertésítést küld.
-        Ha offline volt az igazolvány kiadásakor, a következő bejelentkezéskor töltődik be.
-    </p>
+    <p>A feldolgozó tick <strong>minden <code>Config.ProcessInterval</code> másodpercben</strong> fut.
+    Az igénylés <code>ready_at</code> mezőjét hasonlítja az aktuális UTC időhöz.
+    Ha a játékos online, azonnal szinkronizál és nxn-notify ertésítést küld.
+    Ha offline volt az igazolvány kiadásakor, a következő bejelentkezéskor töltődik be.</p>
     <h3>Felmutatás folyamata</h3>
     <div class="flow">
         <div class="fn"><i class="hgi hgi-stroke hgi-user-01"></i>Játékos A</div>
@@ -301,9 +367,9 @@
     id          = 'taxi_license',
     label       = 'Taxi Engedély',
     icon        = 'hgi-taxi',
-    color       = '#f59e0b',   <span class="cm">-- borostyán sárga</span>
-    processSec  = 1200,     <span class="cm">-- 20 perc</span>
-    validDays   = 365,      <span class="cm">-- 1 év</span>
+    color       = '#f59e0b',
+    processSec  = 1200,
+    validDays   = 365,
     cost        = 800,
     requiredAge = 21,
     showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
@@ -366,197 +432,164 @@
 <!-- VIZUÁLIS MINTÁK -->
 <section id="visuals">
     <h2><i class="hgi hgi-stroke hgi-paint-board"></i> Vizuális minták</h2>
-    <p>
-        Az alábbi kártyák pontosan azt az elrendezést és ragyogás effektet mutatják, ahogy
-        az igazolványok a játékban megjelennek. Minden kártya típusának egyedi <code>--lic-color</code>
-        CSS változója van, amelyet a <code>config.lua</code> <code>color</code> mezőjében vagy
-        a <code>style.css</code> aljára írt <code>.lic-type-{id}</code> osztályban lehet módosítani.
-    </p>
+    <p>Az alábbi kártyák pontosan azt az elrendezést és ragyogás effektet mutatják, ahogy
+    az igazolványok a játékban megjelennek. Minden kártya mérete egységesen <strong>460×278&nbsp;px</strong>,
+    fekhvő elrendezéssel, bal oldali színes sávval és 2-oszlopos mezőráccsal.</p>
 
     <div class="card-grid">
 
         <!-- Személyi igazolvány -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#5b6af0">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-id-verified"></i>
-                    <div>
-                        <div class="doc-card-title">Személyi igazolvány</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-id-verified"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Személyi igazolvány</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Nem</span><span class="dc-field-val">Férfi</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00412</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2036. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Nem</span><span class="doc-field-val">Férfi</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00412</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2036. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">id_card</span>
-                <span class="color-pill"><span class="color-dot" style="background:#5b6af0"></span>#5b6af0</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">id_card</span><span class="color-pill"><span class="color-dot" style="background:#5b6af0"></span>#5b6af0</span></div>
         </div>
 
         <!-- Jogosítvány -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#4ea8de">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-steering-wheel"></i>
-                    <div>
-                        <div class="doc-card-title">Jogosítvány</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-steering-wheel"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Jogosítvány</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00413</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Kiállítva</span><span class="dc-field-val">2026. 01. 05.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2031. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00413</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2031. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">drivers_license</span>
-                <span class="color-pill"><span class="color-dot" style="background:#4ea8de"></span>#4ea8de</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">drivers_license</span><span class="color-pill"><span class="color-dot" style="background:#4ea8de"></span>#4ea8de</span></div>
         </div>
 
         <!-- Fegyverengedély -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#f05b5b">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-gun-01"></i>
-                    <div>
-                        <div class="doc-card-title">Fegyverengedély</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-gun-01"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Fegyverengedély</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00414</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Kiállítva</span><span class="dc-field-val">2026. 01. 05.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2028. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00414</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2028. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">weapon_license</span>
-                <span class="color-pill"><span class="color-dot" style="background:#f05b5b"></span>#f05b5b</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">weapon_license</span><span class="color-pill"><span class="color-dot" style="background:#f05b5b"></span>#f05b5b</span></div>
         </div>
 
         <!-- Repülő engedély -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#a78bfa">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-airplane-01"></i>
-                    <div>
-                        <div class="doc-card-title">Repülő engedély</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-airplane-01"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Repülő engedély</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00415</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Kiállítva</span><span class="dc-field-val">2026. 01. 05.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2029. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00415</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2029. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">pilot_license</span>
-                <span class="color-pill"><span class="color-dot" style="background:#a78bfa"></span>#a78bfa</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">pilot_license</span><span class="color-pill"><span class="color-dot" style="background:#a78bfa"></span>#a78bfa</span></div>
         </div>
 
         <!-- Mentős kártya -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#3ecf8e">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-first-aid-kit"></i>
-                    <div>
-                        <div class="doc-card-title">Mentős Szolgálati Kártya</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-first-aid-kit"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Mentős Szolgálati Kártya</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Nem</span><span class="dc-field-val">Férfi</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00416</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2027. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Nem</span><span class="doc-field-val">Férfi</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00416</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2027. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">medical_card</span>
-                <span class="color-pill"><span class="color-dot" style="background:#3ecf8e"></span>#3ecf8e</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">medical_card</span><span class="color-pill"><span class="color-dot" style="background:#3ecf8e"></span>#3ecf8e</span></div>
         </div>
 
         <!-- Rendőrségi kártya -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#60a5fa">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-police-badge"></i>
-                    <div>
-                        <div class="doc-card-title">Rendőrségi Szolgálati Kártya</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-police-badge"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Rendőrségi Szolgálati Kártya</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00417</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Kiállítva</span><span class="dc-field-val">2026. 01. 05.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2027. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00417</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2027. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">police_badge</span>
-                <span class="color-pill"><span class="color-dot" style="background:#60a5fa"></span>#60a5fa</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">police_badge</span><span class="color-pill"><span class="color-dot" style="background:#60a5fa"></span>#60a5fa</span></div>
         </div>
 
         <!-- Hajó engedély -->
-        <div>
+        <div class="doc-card-wrap">
             <div class="doc-card" style="--lic:#22d3ee">
-                <div class="doc-card-header">
-                    <i class="hgi hgi-stroke hgi-anchor-01"></i>
-                    <div>
-                        <div class="doc-card-title">Hajó Engedély</div>
-                        <div class="doc-card-sub">Nexon Roleplay – Hivatalos Igazolvány</div>
+                <div class="dc-side"><i class="hgi hgi-stroke hgi-anchor-01"></i><span class="dc-side-label">Nexon&nbsp;RP</span></div>
+                <div class="dc-main">
+                    <div class="dc-top">
+                        <div><div class="dc-title">Hajó Engedély</div><div class="dc-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolvány</div></div>
+                        <span class="dc-flag">Érvényes</span>
                     </div>
-                    <span class="doc-card-flag">Érvényes</span>
+                    <div class="dc-fields">
+                        <div class="dc-field wide"><span class="dc-field-key">Név</span><span class="dc-field-val">Kovács János</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Születési dátum</span><span class="dc-field-val">1995. 03. 12.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Azonosító</span><span class="dc-field-val">NXN-00418</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Kiállítva</span><span class="dc-field-val">2026. 01. 05.</span></div>
+                        <div class="dc-field"><span class="dc-field-key">Lejár</span><span class="dc-field-val">2031. 01. 05.</span></div>
+                    </div>
+                    <div class="dc-footer"><div class="dc-footer-left"><i class="hgi hgi-stroke hgi-shield-01"></i>Saját igazolvány</div><div class="dc-footer-right">NEXON&nbsp;RP</div></div>
                 </div>
-                <div class="doc-card-body">
-                    <div class="doc-field"><span class="doc-field-key">Név</span><span class="doc-field-val">Kovács János</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Szül. dátum</span><span class="doc-field-val">1995. 03. 12.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Azonosító</span><span class="doc-field-val">NXN-00418</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Kiállítva</span><span class="doc-field-val">2026. 01. 05.</span></div>
-                    <div class="doc-field"><span class="doc-field-key">Lejár</span><span class="doc-field-val">2031. 01. 05.</span></div>
-                </div>
-                <div class="doc-card-footer"><i class="hgi hgi-stroke hgi-shield-01"></i> Saját igazolvány</div>
             </div>
-            <div class="card-meta">
-                <span class="card-meta-id">boat_license</span>
-                <span class="color-pill"><span class="color-dot" style="background:#22d3ee"></span>#22d3ee</span>
-            </div>
+            <div class="card-meta"><span class="card-meta-id">boat_license</span><span class="color-pill"><span class="color-dot" style="background:#22d3ee"></span>#22d3ee</span></div>
         </div>
 
     </div>
@@ -571,83 +604,61 @@
 <pre><code><span class="cm">-- config.lua-ban a color mezőt állítsd be:</span>
 {
     id    = 'weapon_license',
-    color = '#e11d48',   <span class="cm">-- mély piros – CSS érték vagy hex</span>
+    color = '#e11d48',
     <span class="cm">-- ... többi mező</span>
 }</code></pre>
     </div>
     <div class="tab-content" id="vc2">
-<pre><code><span class="cm">/* style.css alján – ez felülírja a JS által állított értéket is */</span>
+<pre><code><span class="cm">/* style.css alján */</span>
 .lic-type-weapon_license {
     --lic-color: #e11d48;
 }
-
-<span class="cm">/* Ha új típust adsz hozzá, az osztaly mindig: lic-type-{id} */</span>
 .lic-type-taxi_license {
     --lic-color: #f59e0b;
 }</code></pre>
     </div>
-
     <div class="info-box tip">
         <i class="hgi hgi-stroke hgi-information-circle"></i>
-        <span>A shimmer (ragyogás) effekt sebessége és intenzitása a <code>@keyframes licShimmer</code> és a
-        <code>.id-card::before</code> background értékeiben állítható a <code>style.css</code>-ben.</span>
+        <span>A shimmer effekt sebessége és intenzitása a <code>@keyframes licShimmer</code> és
+        a <code>.id-card::before</code> értékeiben állítható a <code>style.css</code>-ben.</span>
     </div>
 </section>
 
 <!-- PÉLDÁK -->
 <section id="examples">
     <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Példák</h2>
-
     <div class="tabs">
         <div class="tab active" onclick="sw(this,'ex1')">Jogosítvány ellenőrzés</div>
         <div class="tab" onclick="sw(this,'ex2')">Visszavonás (Rendőr)</div>
         <div class="tab" onclick="sw(this,'ex3')">Közvetlen kiadás (Admin)</div>
         <div class="tab" onclick="sw(this,'ex4')">Kliens export</div>
     </div>
-
     <div class="tab-content active" id="ex1">
-<pre><code><span class="cm">-- Jarmű használatkor: van-e érvényes jogosítvány?
--- nxn-vehicle script szerver oldal</span>
+<pre><code><span class="cm">-- Jarmű használatkor: van-e érvényes jogosítvány?</span>
 AddEventHandler('nxn-vehicle:server:entered', function(src, class)
     if class == 'car' then
         local ok = exports['nxn-licenses']:hasLicense(src, 'drivers_license')
         if not ok then
-            exports['nxn-notify']:notifyPlayer(src,
-                'Nincs érvényes jogosítványod!', 'warning'
-            )
+            exports['nxn-notify']:notifyPlayer(src, 'Nincs érvényes jogosítványod!', 'warning')
         end
     end
 end)</code></pre>
     </div>
-
     <div class="tab-content" id="ex2">
-<pre><code><span class="cm">-- Rendőr visszavonja a jogosítványt (nxn-police script)
--- targetSrc: a megallított játékos source-a</span>
-exports['nxn-licenses']:revokeLicense(targetSrc, 'drivers_license')
-<span class="cm">-- Automatikusan notify-t küld a céljátékosnak, DB-ben is revoked=1</span></code></pre>
+<pre><code>exports['nxn-licenses']:revokeLicense(targetSrc, 'drivers_license')</code></pre>
     </div>
-
     <div class="tab-content" id="ex3">
-<pre><code><span class="cm">-- Admin / cégrendszer közvetlenül ad ki igazolványt (azonnali):</span>
-local ok = exports['nxn-licenses']:grantLicense(src, 'police_badge')
+<pre><code>local ok = exports['nxn-licenses']:grantLicense(src, 'police_badge')
 if ok then
-    exports['nxn-notify']:notifyPlayer(src,
-        'Rendőrségi kártya kiallitva.', 'success'
-    )
+    exports['nxn-notify']:notifyPlayer(src, 'Rendőrségi kártya kiallitva.', 'success')
 end</code></pre>
     </div>
-
     <div class="tab-content" id="ex4">
-<pre><code><span class="cm">-- Kliens oldal: megnyítás más scriptből</span>
-exports['nxn-licenses']:openLicenses()
+<pre><code>exports['nxn-licenses']:openLicenses()
 
-<span class="cm">-- Helyi cache (kliens)</span>
 local lics = exports['nxn-licenses']:getLocalLicenses()
-if lics['drivers_license'] then
-    print('Van jogosítvány (kliens cache)')
-end</code></pre>
+if lics['drivers_license'] then print('Van jogosítvány') end</code></pre>
     </div>
-
     <div class="info-box warn">
         <i class="hgi hgi-stroke hgi-alert-circle"></i>
         <span><code>nxn-licenses</code>-t az <code>ensure</code> listában az <code>nxn-database</code>, <code>nxn-identity</code> és <code>nxn-notify</code> <strong>után</strong> kell elindítani.</span>

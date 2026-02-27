@@ -16,11 +16,7 @@
     --nxn-warning:  #f0b55b;
     --nxn-radius:   10px;
     --nxn-font:     'Inter', 'Segoe UI', sans-serif;
-
-    /* Lic-color: az aktiv igazolvany tipusanak szine.
-       Alapertelmezetten az accent szin, JS felulirja per-kartya. */
-    --lic-color: var(--nxn-accent);
-    --lic-color-rgb: 91, 106, 240;  /* fallback RGB az accent-hez */
+    --lic-color:    var(--nxn-accent);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -101,7 +97,6 @@ html, body {
 .lic-list::-webkit-scrollbar { width: 4px; }
 .lic-list::-webkit-scrollbar-thumb { background: var(--nxn-border); border-radius: 2px; }
 
-/* Kártya sor – --lic-color-t a JS állítja rá az elemre */
 .lic-row {
     display: flex;
     align-items: center;
@@ -142,16 +137,12 @@ html, body {
     border-radius: 10px;
     border: 1px solid;
 }
-.status-badge.active  { color: var(--nxn-success); border-color: rgba(62,207,142,.35); background: rgba(62,207,142,.08); }
-.status-badge.expired { color: var(--nxn-danger);  border-color: rgba(240,91,91,.35);  background: rgba(240,91,91,.08);  }
-.status-badge.pending { color: var(--nxn-warning); border-color: rgba(240,181,91,.35); background: rgba(240,181,91,.08); }
-.status-badge.none    { color: var(--nxn-muted);   border-color: var(--nxn-border);    background: transparent; }
+.status-badge.active  { color: var(--nxn-success); border-color: rgba(62,207,142,.35);  background: rgba(62,207,142,.08); }
+.status-badge.expired { color: var(--nxn-danger);  border-color: rgba(240,91,91,.35);   background: rgba(240,91,91,.08);  }
+.status-badge.pending { color: var(--nxn-warning); border-color: rgba(240,181,91,.35);  background: rgba(240,181,91,.08); }
+.status-badge.none    { color: var(--nxn-muted);   border-color: var(--nxn-border);     background: transparent; }
 
-.lic-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-}
+.lic-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .btn-icon {
     width: 32px; height: 32px;
     display: flex; align-items: center; justify-content: center;
@@ -163,11 +154,11 @@ html, body {
     font-size: 15px;
     transition: color .15s, background .15s, border-color .15s;
 }
-.btn-icon:hover           { color: var(--nxn-text); background: var(--nxn-surface3); }
-.btn-icon.view:hover      { color: var(--lic-color); border-color: color-mix(in srgb, var(--lic-color) 40%, transparent); }
-.btn-icon.show:hover      { color: var(--nxn-success); border-color: rgba(62,207,142,.4); }
-.btn-icon.apply:hover     { color: var(--nxn-warning); border-color: rgba(240,181,91,.4); }
-.btn-icon:disabled        { opacity: .35; cursor: not-allowed; pointer-events: none; }
+.btn-icon:hover       { color: var(--nxn-text); background: var(--nxn-surface3); }
+.btn-icon.view:hover  { color: var(--lic-color); border-color: color-mix(in srgb, var(--lic-color) 40%, transparent); }
+.btn-icon.show:hover  { color: var(--nxn-success); border-color: rgba(62,207,142,.4); }
+.btn-icon.apply:hover { color: var(--nxn-warning); border-color: rgba(240,181,91,.4); }
+.btn-icon:disabled    { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
 /* ── Modal overlay ── */
 .modal-overlay {
@@ -182,12 +173,28 @@ html, body {
     animation: nxnFadeIn .2s ease;
 }
 
-/* ── Igazolvány kártya ── */
+/* ================================================================
+   GOVERNMENT CARD  –  fekvő, egységes 480×290 px
+   Struktúra:
+     .id-card
+       ::before          shimmer overlay
+       .id-card-side     bal oldalsáv (ikon + szervezet neve)
+       .id-card-main     jobb tartalom
+         .id-card-top    típus neve + flag
+         .id-card-fields 2-oszlopos mező grid
+         .id-card-footer kibocsátó sor
+   ================================================================ */
+
 .card-wrap {
-    width: 380px;
+    width: 480px;
     animation: nxnSlideUp .2s ease;
 }
+
 .id-card {
+    width: 480px;
+    height: 290px;
+    display: flex;
+    flex-direction: row;
     background: linear-gradient(135deg, var(--nxn-surface) 0%, var(--nxn-surface2) 100%);
     border: 1px solid color-mix(in srgb, var(--lic-color) 35%, var(--nxn-border));
     border-radius: 16px;
@@ -195,13 +202,12 @@ html, body {
     box-shadow:
         0 20px 60px rgba(0,0,0,.6),
         0 0 0 1px color-mix(in srgb, var(--lic-color) 15%, transparent),
-        0 0 32px color-mix(in srgb, var(--lic-color) 18%, transparent),
-        0 0 80px color-mix(in srgb, var(--lic-color) 8%, transparent);
+        0 0 36px color-mix(in srgb, var(--lic-color) 20%, transparent),
+        0 0 90px color-mix(in srgb, var(--lic-color) 9%, transparent);
     position: relative;
 }
 
-/* ── Ragyogás (shimmer) effekt ──
-   Egy ::before pseudo-elem futkos végig a kártyán, típusszin alapú. */
+/* Shimmer */
 .id-card::before {
     content: '';
     position: absolute;
@@ -209,69 +215,156 @@ html, body {
     border-radius: inherit;
     background: linear-gradient(
         105deg,
-        transparent 30%,
-        color-mix(in srgb, var(--lic-color) 18%, transparent) 50%,
-        transparent 70%
+        transparent 28%,
+        color-mix(in srgb, var(--lic-color) 20%, transparent) 50%,
+        transparent 72%
     );
     background-size: 200% 100%;
     animation: licShimmer 3.5s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
 }
-
-/* Az id-card tartalmát a shimmer fölé kell hozni */
 .id-card > * { position: relative; z-index: 2; }
 
-.id-card-header {
+/* ── Bal oldalsáv ── */
+.id-card-side {
+    width: 88px;
+    flex-shrink: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
-    padding: 16px 18px;
-    background: color-mix(in srgb, var(--lic-color) 14%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--lic-color) 25%, transparent);
+    justify-content: center;
+    gap: 10px;
+    background: color-mix(in srgb, var(--lic-color) 16%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--lic-color) 28%, transparent);
+    padding: 18px 10px;
 }
-.id-card-header i { font-size: 26px; color: var(--lic-color); }
-.id-card-header .card-title { font-size: 15px; font-weight: 700; }
-.id-card-header .card-subtitle { font-size: 11px; color: var(--nxn-muted); margin-top: 2px; }
-.id-card-flag {
-    margin-left: auto;
-    font-size: 10px;
+.id-card-side i {
+    font-size: 36px;
+    color: var(--lic-color);
+}
+.id-card-side-label {
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: color-mix(in srgb, var(--lic-color) 80%, var(--nxn-muted));
+    text-align: center;
+    line-height: 1.4;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+/* ── Jobb főtartalom ── */
+.id-card-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Felső sáv: típus neve + érvényesség flag */
+.id-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 18px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--lic-color) 18%, var(--nxn-border));
+    gap: 10px;
+}
+.id-card-top-titles {}
+.id-card-top-titles .card-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: var(--nxn-text);
+    line-height: 1.2;
+}
+.id-card-top-titles .card-subtitle {
+    font-size: 9px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: color-mix(in srgb, var(--lic-color) 70%, var(--nxn-muted));
+    margin-top: 3px;
+}
+.id-card-flag {
+    flex-shrink: 0;
+    font-size: 9px;
+    font-weight: 700;
     padding: 3px 10px;
     border-radius: 20px;
     text-transform: uppercase;
-    letter-spacing: .5px;
+    letter-spacing: .6px;
+    margin-top: 2px;
 }
 .id-card-flag.active  { background: rgba(62,207,142,.15);  color: var(--nxn-success); border: 1px solid rgba(62,207,142,.3); }
 .id-card-flag.expired { background: rgba(240,91,91,.15);   color: var(--nxn-danger);  border: 1px solid rgba(240,91,91,.3); }
 
-.id-card-body {
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+/* Mezők 2-oszlopos grid */
+.id-card-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 10px 18px 8px;
+    align-content: start;
 }
 .id-field {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--nxn-border);
-    font-size: 13px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px 6px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--nxn-border) 60%, transparent);
 }
-.id-field:last-child { border-bottom: none; }
-.id-field-key { color: var(--nxn-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
-.id-field-val { font-weight: 600; color: var(--nxn-text); }
-.id-card-footer {
-    padding: 10px 18px 14px;
-    border-top: 1px solid color-mix(in srgb, var(--lic-color) 20%, var(--nxn-border));
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
+.id-field:nth-last-child(-n+2) { border-bottom: none; }
+.id-field-key {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
     color: var(--nxn-muted);
 }
-.id-card-footer i { font-size: 14px; color: var(--lic-color); }
+.id-field-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--nxn-text);
+    line-height: 1.3;
+}
+/* Kiemelt mező (pl. Név) – teljes sor szélességű */
+.id-field.wide {
+    grid-column: 1 / -1;
+}
+.id-field.wide .id-field-val {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .1px;
+}
+
+/* Footer sor */
+.id-card-footer {
+    padding: 8px 18px 10px;
+    border-top: 1px solid color-mix(in srgb, var(--lic-color) 16%, var(--nxn-border));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.id-card-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--nxn-muted);
+}
+.id-card-footer-left i { font-size: 13px; color: var(--lic-color); }
+.id-card-footer-right {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: color-mix(in srgb, var(--lic-color) 60%, var(--nxn-muted));
+}
 
 .modal-close {
     display: flex;
@@ -361,8 +454,6 @@ html, body {
 /* ── Animációk ── */
 @keyframes nxnFadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes nxnSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Shimmer: végigfut a fényszál a kártyán balról jobbra */
 @keyframes licShimmer {
     0%   { background-position: 200% 0; opacity: 0; }
     15%  { opacity: 1; }
@@ -371,13 +462,7 @@ html, body {
     100% { background-position: -200% 0; opacity: 0; }
 }
 
-/* ============================================================
-   TÍPUSONKÉNTI SZÍNEK – CSS-ben szabadon módosítható
-   A --lic-color értékét a JS is állítja az elemeken;
-   ezek a class-alapú szablyok fallback-ként és CSS-szinten
-   módosítható alternatívaként szolgálnak.
-   ============================================================ */
-
+/* ── Típusonkénti színek ── */
 .lic-type-id_card         { --lic-color: #5b6af0; }
 .lic-type-drivers_license { --lic-color: #4ea8de; }
 .lic-type-weapon_license  { --lic-color: #f05b5b; }

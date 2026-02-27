@@ -7,7 +7,7 @@
 // ── Állapot ──
 
 const STATE = {
-    licenses:       {},   // { [typeId]: { def, license, pending } }
+    licenses:       {},
     activeLicType:  null,
 };
 
@@ -27,15 +27,11 @@ function nuiFetch(cb, data) {
 }
 
 // ── Szín segéd ──
-// Az elem és gyerekei számára beállítja a --lic-color CSS property-t,
-// plusz lic-type-{id} class-t ad hozzá a CSS-alapú fallback-hez.
 
 function applyLicColor(el, def) {
     const color = (def && def.color) ? def.color : 'var(--nxn-accent)';
     el.style.setProperty('--lic-color', color);
-    // Tipusosztaly: lic-type-drivers_license stb.
     if (def && def.id) {
-        // Toroljuk a korabbi lic-type-* osztalyokat
         el.classList.forEach(c => { if (c.startsWith('lic-type-')) el.classList.remove(c); });
         el.classList.add('lic-type-' + def.id);
     }
@@ -72,15 +68,12 @@ function renderList() {
         }
 
         const statusLabels = { active: 'Érvényes', expired: 'Lejárt', pending: 'Folyamatban', none: 'Nincs' };
-
         const canView  = license && !isExpired(license.expires_at);
         const canShow  = canView;
         const canApply = !pending && (!license || isExpired(license.expires_at));
 
         const row = document.createElement('div');
         row.className = 'lic-row';
-
-        // Tipusszin alkalmazasa a sorra
         applyLicColor(row, def);
 
         row.innerHTML = `
@@ -111,7 +104,6 @@ function renderList() {
         row.querySelector('.btn-icon.view').onclick  = () => openViewModal(typeId);
         row.querySelector('.btn-icon.show').onclick  = () => openShowModal(typeId);
         row.querySelector('.btn-icon.apply').onclick = () => applyLicense(typeId);
-
         list.appendChild(row);
     }
 }
@@ -125,48 +117,79 @@ function openViewModal(typeId) {
     $id('card-modal').classList.remove('hidden');
 }
 
+/*
+ * Government-card HTML struktúra (fekvő, 480×290 px):
+ *
+ *  ┌──────────┬─────────────────────────────────────────┐
+ *  │          │  TÍPUS NEVE                 [ÉRVÉNYES]  │
+ *  │  [ikon]  │  Nexon Roleplay – Kiadó                 │
+ *  │          ├─────────────────────────────────────────┤
+ *  │  N E X O │  NÉV (wide)                             │
+ *  │  N  R  P │  Születési dátum │ Nem                  │
+ *  │          │  Azonosító       │ Kiállítva            │
+ *  │          │  ──────────────  │ Lejár                │
+ *  └──────────┴─────────────────────────────────────────┘
+ *              🛡  Saját igazolvány          NEXON RP
+ */
 function buildCard(container, entry, isShown) {
     const { def, license } = entry;
     const expired    = license.expires_at ? isExpired(license.expires_at) : false;
-    const showName   = entry.ownerName || null;
-    const showBirth  = entry.birthdate || null;
-    const showGender = entry.gender || null;
-    const fields     = def.showFields || ['name','birthdate','id_number','issued','expires'];
+    const ownerName  = entry.ownerName  || null;
+    const birthdate  = entry.birthdate  || null;
+    const gender     = entry.gender     || null;
+    const fields     = def.showFields   || ['name','birthdate','id_number','issued','expires'];
 
-    let rows = '';
-    if (fields.includes('name') && showName)   rows += fieldRow('Név', showName);
-    if (fields.includes('birthdate') && showBirth)  rows += fieldRow('Születési dátum', showBirth);
-    if (fields.includes('gender') && showGender)    rows += fieldRow('Nem', showGender);
-    if (fields.includes('id_number'))               rows += fieldRow('Azonosító', license.id_number || '?');
-    if (fields.includes('issued') && license.issued_at)   rows += fieldRow('Kiállítva', fmtDate(license.issued_at));
-    if (fields.includes('expires') && license.expires_at) rows += fieldRow('Lejár', fmtDate(license.expires_at));
+    // Mezők összeállítása a showFields sorrendje alapján.
+    // A 'name' mindig wide (teljes sor), a többi párosával kerül egymás mellé.
+    let fieldHTML = '';
+
+    if (fields.includes('name') && ownerName) {
+        fieldHTML += fieldEl('Név', ownerName, true);
+    }
+
+    // Nem-névmezők: párosával jelennek meg
+    const rest = [];
+    if (fields.includes('birthdate') && birthdate)      rest.push(fieldEl('Születési dátum', birthdate));
+    if (fields.includes('gender')    && gender)         rest.push(fieldEl('Nem', gender));
+    if (fields.includes('id_number'))                   rest.push(fieldEl('Azonosító', license.id_number || '?'));
+    if (fields.includes('issued') && license.issued_at) rest.push(fieldEl('Kiállítva', fmtDate(license.issued_at)));
+    if (fields.includes('expires') && license.expires_at) rest.push(fieldEl('Lejár', fmtDate(license.expires_at)));
+
+    fieldHTML += rest.join('');
 
     container.innerHTML = `
         <div class="id-card">
-            <div class="id-card-header">
+            <div class="id-card-side">
                 <i class="hgi hgi-stroke ${esc(def.icon)}"></i>
-                <div>
-                    <div class="card-title">${esc(def.label)}</div>
-                    <div class="card-subtitle">Nexon Roleplay – Hivatalos Igazolvány</div>
-                </div>
-                <span class="id-card-flag ${expired ? 'expired' : 'active'}">
-                    ${expired ? 'Lejárt' : 'Érvényes'}
-                </span>
+                <span class="id-card-side-label">Nexon&nbsp;RP</span>
             </div>
-            <div class="id-card-body">${rows}</div>
-            <div class="id-card-footer">
-                <i class="hgi hgi-stroke hgi-shield-01"></i>
-                ${isShown ? 'Felmutatva egy játékos által' : 'Saját igazolvány'}
+            <div class="id-card-main">
+                <div class="id-card-top">
+                    <div class="id-card-top-titles">
+                        <div class="card-title">${esc(def.label)}</div>
+                        <div class="card-subtitle">Nexon Roleplay &ndash; Hivatalos Igazolv&aacute;ny</div>
+                    </div>
+                    <span class="id-card-flag ${expired ? 'expired' : 'active'}">
+                        ${expired ? 'Lejárt' : 'Érvényes'}
+                    </span>
+                </div>
+                <div class="id-card-fields">${fieldHTML}</div>
+                <div class="id-card-footer">
+                    <div class="id-card-footer-left">
+                        <i class="hgi hgi-stroke hgi-shield-01"></i>
+                        ${isShown ? 'Felmutatva egy játékos által' : 'Saját igazolvány'}
+                    </div>
+                    <div class="id-card-footer-right">NEXON&nbsp;RP</div>
+                </div>
             </div>
         </div>
     `;
 
-    // Tipusszin alkalmazasa a kartya-wrapra (ez terjeszti le a --lic-color-t)
     applyLicColor(container, def);
 }
 
-function fieldRow(key, val) {
-    return `<div class="id-field">
+function fieldEl(key, val, wide = false) {
+    return `<div class="id-field${wide ? ' wide' : ''}">
         <span class="id-field-key">${esc(key)}</span>
         <span class="id-field-val">${esc(val)}</span>
     </div>`;
@@ -202,10 +225,7 @@ function loadNearbyPlayers() {
                 <span class="show-player-dist">${p.dist} m</span>
             `;
             row.onclick = () => {
-                nuiFetch('showTo', {
-                    licenseType: STATE.activeLicType,
-                    targetSrc:   p.src
-                });
+                nuiFetch('showTo', { licenseType: STATE.activeLicType, targetSrc: p.src });
                 $id('show-modal').classList.add('hidden');
             };
             wrap.appendChild(row);
@@ -226,7 +246,6 @@ window.addEventListener('message', function(ev) {
     if (!d || !d.action) return;
 
     switch (d.action) {
-
         case 'setVisible':
             if (d.visible) {
                 $id('lic-root').classList.remove('hidden');
@@ -242,7 +261,6 @@ window.addEventListener('message', function(ev) {
             renderList();
             break;
 
-        // Más játékos megmutatja nekünk az igazolványát
         case 'showCard': {
             const payload = d.payload;
             const fakeEntry = {
