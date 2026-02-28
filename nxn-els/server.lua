@@ -6,22 +6,40 @@
 -- ── Állapottár ───────────────────────────────────────────────
 -- Format: vehicleStates[netId] = { stage, muted, owner }
 local vehicleStates = {}
--- Format: playerJobs[src] = { job, allowed }
+-- Format: playerJobs[src]   = { job, allowed }
 local playerJobs    = {}
+-- Format: adminOverride[src] = true   (ace alapján engedélyezve)
+local adminOverride = {}
+
+-- ── Admin segéd ──────────────────────────────────────────────
+-- A config-ban megadott ace jogosultságot ellenőrzi.
+-- server.cfg-ben add: add_ace group.admin nxn.els.admin allow
+
+---@param src number  player source
+---@return boolean
+local function IsAdmin(src)
+    return IsPlayerAceAllowed(src, Config.AdminAce)
+end
+
+--- Egy játékos általános ELS-engedélye (job VAGY admin)
+---@param src number
+---@return boolean
+local function HasElsPermission(src)
+    if IsAdmin(src) then return true end
+    return playerJobs[src] ~= nil and playerJobs[src].allowed == true
+end
 
 -- ── State update (kliens → szerver) ──────────────────────────
 
 RegisterServerEvent('nxn-els:server:updateState', function(netId, stage, muted)
     local src = source
-    -- Jogosultság ellenőrzés szerver oldalon is
-    if not playerJobs[src] or not playerJobs[src].allowed then
+    if not HasElsPermission(src) then
         NXN.ELS.Warn(('updateState: Player %d nincs jogosultsaga!'):format(src))
         return
     end
     vehicleStates[netId] = { stage = stage, muted = muted, owner = src }
-    NXN.ELS.Log(('updateState: netId=%d stage=%d muted=%s src=%d'):format(
-        netId, stage, tostring(muted), src))
-    -- Broadcast minden más kliensnek
+    NXN.ELS.Log(('updateState: netId=%d stage=%d muted=%s src=%d admin=%s'):format(
+        netId, stage, tostring(muted), src, tostring(IsAdmin(src))))
     TriggerClientEvent('nxn-els:client:syncState', -1, netId, stage, muted)
 end)
 
@@ -37,17 +55,40 @@ end)
 RegisterServerEvent('nxn-els:server:setJobPermission', function(job, allowed)
     local src = source
     playerJobs[src] = { job = job, allowed = allowed and NXN.ELS.IsJobAllowed(job) }
-    TriggerClientEvent('nxn-els:client:setJobPermission', src, job, allowed)
-    NXN.ELS.Log(('setJobPermission: src=%d job=%s allowed=%s'):format(
-        src, job, tostring(allowed)))
+    -- Admin esetén a job-tól függetlenül engedélyezve marad
+    local finalAllowed = playerJobs[src].allowed or IsAdmin(src)
+    TriggerClientEvent('nxn-els:client:setJobPermission', src, job, finalAllowed)
+    NXN.ELS.Log(('setJobPermission: src=%d job=%s jobAllowed=%s admin=%s'):format(
+        src, job, tostring(playerJobs[src].allowed), tostring(IsAdmin(src))))
+end)
+
+-- ── Admin állapot lekérdezése (kliens kéri) ──────────────────
+
+RegisterServerEvent('nxn-els:server:requestAdminCheck', function()
+    local src    = source
+    local isAdm  = IsAdmin(src)
+    TriggerClientEvent('nxn-els:client:setAdminState', src, isAdm)
+    NXN.ELS.Log(('adminCheck: src=%d isAdmin=%s'):format(src, tostring(isAdm)))
+end)
+
+-- ── Játékos csatlakozás: admin állapot push ───────────────────
+
+AddEventHandler('playerJoining', function()
+    local src   = source
+    local isAdm = IsAdmin(src)
+    if isAdm then
+        -- Admin azonnal kap ELS engedélyt csatlakozáskor
+        TriggerClientEvent('nxn-els:client:setAdminState', src, true)
+        NXN.ELS.Log(('playerJoining: src=%d admin ELS engedély megadva'):format(src))
+    end
 end)
 
 -- ── Játékos kilép: cleanup ────────────────────────────────────
 
 AddEventHandler('playerDropped', function()
     local src = source
-    playerJobs[src] = nil
-    -- Nullázzuk az e játékos tulajdonában lévő jármű-állapotokat
+    playerJobs[src]    = nil
+    adminOverride[src] = nil
     for netId, state in pairs(vehicleStates) do
         if state.owner == src then
             TriggerClientEvent('nxn-els:client:syncState', -1, netId, 0, false)
@@ -59,48 +100,35 @@ end)
 
 -- ── Szerver Export API ────────────────────────────────────────
 
---- Visszaadja egy jármű ELS állapotát netId alapján
----@param netId number
----@return table|nil  { stage, muted, owner }
 exports('getVehicleState', function(netId)
     return vehicleStates[netId]
 end)
 
---- Visszaadja, hogy egy jármű ELS-e aktív-e
----@param netId number
----@return boolean
 exports('isElsActive', function(netId)
     local s = vehicleStates[netId]
     return s ~= nil and s.stage > 0
 end)
 
---- Visszaadja egy játékos ELS-jogosultságát
----@param src number  player source
----@return boolean
 exports('playerHasPermission', function(src)
-    return playerJobs[src] ~= nil and playerJobs[src].allowed == true
+    return HasElsPermission(src)
 end)
 
---- Jogosultság megadása szerver-oldalról (nxn-police/nxn-ems hívja)
----@param src number
----@param job string
----@param allowed boolean
+exports('isPlayerAdmin', function(src)
+    return IsAdmin(src)
+end)
+
 exports('setPlayerJobPermission', function(src, job, allowed)
     playerJobs[src] = { job = job, allowed = allowed and NXN.ELS.IsJobAllowed(job) }
-    TriggerClientEvent('nxn-els:client:setJobPermission', src, job, allowed)
-    NXN.ELS.Log(('setPlayerJobPermission: src=%d job=%s allowed=%s'):format(
-        src, job, tostring(allowed)))
+    local finalAllowed = playerJobs[src].allowed or IsAdmin(src)
+    TriggerClientEvent('nxn-els:client:setJobPermission', src, job, finalAllowed)
+    NXN.ELS.Log(('setPlayerJobPermission: src=%d job=%s final=%s'):format(
+        src, job, tostring(finalAllowed)))
 end)
 
---- Visszaadja az összes aktív ELS-állapotot
----@return table
 exports('getAllVehicleStates', function()
     return vehicleStates
 end)
 
---- Szerver-oldalról kényszeríti a stage-et egy jármüvön
----@param netId number
----@param stage number 0..3
 exports('forceStage', function(netId, stage)
     vehicleStates[netId] = vehicleStates[netId] or { stage = 0, muted = false, owner = -1 }
     vehicleStates[netId].stage = stage
