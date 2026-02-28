@@ -3,15 +3,13 @@
 --  Szerver-oldali szinkron, jogosultságkezelés, export API
 -- ============================================================
 
--- ── Állapottár ───────────────────────────────────────────────
+-- ── Állapottár ────────────────────────────────────────────
 -- Format: vehicleStates[netId] = { stage, muted, owner }
 local vehicleStates = {}
 -- Format: playerJobs[src]   = { job, allowed }
 local playerJobs    = {}
--- Format: adminOverride[src] = true   (ace alapján engedélyezve)
-local adminOverride = {}
 
--- ── Admin segéd ──────────────────────────────────────────────
+-- ── Admin segéd ──────────────────────────────────────────
 -- A config-ban megadott ace jogosultságot ellenőrzi.
 -- server.cfg-ben add: add_ace group.admin nxn.els.admin allow
 
@@ -29,7 +27,15 @@ local function HasElsPermission(src)
     return playerJobs[src] ~= nil and playerJobs[src].allowed == true
 end
 
--- ── State update (kliens → szerver) ──────────────────────────
+--- Admin flag push a kliensnek (késleltetett, ACE biztosan betöltött)
+---@param src number
+local function PushAdminState(src)
+    local isAdm = IsAdmin(src)
+    TriggerClientEvent('nxn-els:client:setAdminState', src, isAdm)
+    NXN.ELS.Log(('PushAdminState: src=%d isAdmin=%s'):format(src, tostring(isAdm)))
+end
+
+-- ── State update (kliens → szerver) ────────────────────────────
 
 RegisterServerEvent('nxn-els:server:updateState', function(netId, stage, muted)
     local src = source
@@ -43,14 +49,14 @@ RegisterServerEvent('nxn-els:server:updateState', function(netId, stage, muted)
     TriggerClientEvent('nxn-els:client:syncState', -1, netId, stage, muted)
 end)
 
--- ── Sziréna hang szinkron ─────────────────────────────────────
+-- ── Sziréna hang szinkron ──────────────────────────────────────
 
 RegisterServerEvent('nxn-els:server:setSirenSound', function(netId, tone)
     local src = source
     TriggerClientEvent('nxn-els:client:sirenSound', -1, netId, tone, src)
 end)
 
--- ── Jogosultság megadása (nxn-police / nxn-ems stb. hívja) ───
+-- ── Jogosultság megadása (nxn-police / nxn-ems stb. hívja) ───────
 
 RegisterServerEvent('nxn-els:server:setJobPermission', function(job, allowed)
     local src = source
@@ -62,24 +68,36 @@ RegisterServerEvent('nxn-els:server:setJobPermission', function(job, allowed)
         src, job, tostring(playerJobs[src].allowed), tostring(IsAdmin(src))))
 end)
 
--- ── Admin állapot lekérdezése (kliens kéri) ──────────────────
+-- ── Admin állapot lekérdezése (kliens kéri) ───────────────────
 
 RegisterServerEvent('nxn-els:server:requestAdminCheck', function()
-    local src    = source
-    local isAdm  = IsAdmin(src)
-    TriggerClientEvent('nxn-els:client:setAdminState', src, isAdm)
-    NXN.ELS.Log(('adminCheck: src=%d isAdmin=%s'):format(src, tostring(isAdm)))
+    local src = source
+    PushAdminState(src)
 end)
 
--- ── Játékos csatlakozás: admin állapot push ───────────────────
+-- ── Játékos betöltés: admin állapot push ─────────────────────────
+-- FIX: playerJoining helyett nxn-database:server:playerLoaded használata.
+-- playerJoining-kor az ACE jogosultságok még nem töltöttek be teljesen,
+-- ezért IsPlayerAceAllowed mindig false-t adott vissza.
+-- A playerLoaded event-kor a játékos már teljesen inicializált.
 
-AddEventHandler('playerJoining', function()
-    local src   = source
-    local isAdm = IsAdmin(src)
-    if isAdm then
-        -- Admin azonnal kap ELS engedélyt csatlakozáskor
-        TriggerClientEvent('nxn-els:client:setAdminState', src, true)
-        NXN.ELS.Log(('playerJoining: src=%d admin ELS engedély megadva'):format(src))
+AddEventHandler('nxn-database:server:playerLoaded', function(src)
+    -- Rövid várakozás hogy az ACE scope biztosan érvényes legyen
+    CreateThread(function()
+        Wait(500)
+        PushAdminState(src)
+    end)
+end)
+
+-- Fallback: ha nxn-database nem fut, hagyományos playerSpawned
+AddEventHandler('playerSpawned', function()
+    local src = source
+    -- Csak akkor push-ol, ha nxn-database nem futott előtte
+    if GetResourceState('nxn-database') ~= 'started' then
+        CreateThread(function()
+            Wait(500)
+            PushAdminState(src)
+        end)
     end
 end)
 
@@ -87,8 +105,7 @@ end)
 
 AddEventHandler('playerDropped', function()
     local src = source
-    playerJobs[src]    = nil
-    adminOverride[src] = nil
+    playerJobs[src] = nil
     for netId, state in pairs(vehicleStates) do
         if state.owner == src then
             TriggerClientEvent('nxn-els:client:syncState', -1, netId, 0, false)
@@ -98,7 +115,7 @@ AddEventHandler('playerDropped', function()
     NXN.ELS.Log(('playerDropped: src=%d cleanup kesz'):format(src))
 end)
 
--- ── Szerver Export API ────────────────────────────────────────
+-- ── Szerver Export API ─────────────────────────────────────────
 
 exports('getVehicleState', function(netId)
     return vehicleStates[netId]
