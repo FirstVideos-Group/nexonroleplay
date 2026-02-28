@@ -18,10 +18,16 @@ local function SetUIVisible(state)
     NXN.Inventory.Log(('SetUIVisible: %s'):format(tostring(state)))
 end
 
--- ── Inventory adat frissítése UI-ba ────────────────────────────
+--- String-kulcsú map elemeinek számlálása (# operátor nem működik számon)
+local function countMap(t)
+    local c = 0
+    for _ in pairs(t) do c = c + 1 end
+    return c
+end
+
+-- ── Inventory adat frissítése UI-ba ─────────────────────────────
 
 local function PushToUI(inv)
-    -- Kiegészítés: item definiciókat is küldjük
     local enriched = {}
     for name, slot in pairs(inv.items or {}) do
         local def = NXN.Inventory.GetItemDef(name)
@@ -37,7 +43,6 @@ local function PushToUI(inv)
         end
     end
 
-    -- Item definiciók (hotbar képhez)
     local itemDefs = {}
     for name, def in pairs(Config.Items) do
         itemDefs[name] = {
@@ -52,21 +57,23 @@ local function PushToUI(inv)
     local weight = NXN.Inventory.CalcWeight(inv.items or {})
 
     SendUI({
-        action    = 'updateInventory',
-        items     = enriched,
-        hotbar    = inv.hotbar or {},
-        weight    = weight,
-        maxWeight = Config.MaxWeight,
+        action      = 'updateInventory',
+        items       = enriched,
+        hotbar      = inv.hotbar or {},
+        weight      = weight,
+        maxWeight   = Config.MaxWeight,
         hotbarSlots = Config.HotbarSlots,
-        itemDefs  = itemDefs,
+        itemDefs    = itemDefs,
     })
+
+    -- FIX: countMap() használata a # operátor helyett (string-kulcsú map-en # hibát dobna)
     NXN.Inventory.Log(('PushToUI: %d item, súly=%.2f/%.2f'):format(
-        #(function() local c=0; for _ in pairs(inv.items or {}) do c=c+1 end; return c end)(),
+        countMap(inv.items or {}),
         weight, Config.MaxWeight
     ))
 end
 
--- ── Net events ────────────────────────────────────────────────
+-- ── Net events ──────────────────────────────────────────────
 
 RegisterNetEvent('nxn-inventory:client:sync', function(data)
     NXN.Inventory.Log('Szinkronizáció fogadva')
@@ -75,7 +82,7 @@ RegisterNetEvent('nxn-inventory:client:sync', function(data)
 end)
 
 RegisterNetEvent('nxn-inventory:client:useResult', function(ok, itemName, errMsg)
-    local def = NXN.Inventory.GetItemDef(itemName)
+    local def   = NXN.Inventory.GetItemDef(itemName)
     local label = def and def.label or itemName
     if ok then
         exports['nxn-notify']:success(('Használtad: %s'):format(label))
@@ -86,10 +93,9 @@ end)
 
 RegisterNetEvent('nxn-inventory:client:applyHeal', function(amount)
     NXN.Inventory.Log(('applyHeal: +%d HP'):format(amount))
-    local ped  = PlayerPedId()
+    local ped   = PlayerPedId()
     local curHp = GetEntityHealth(ped)
-    local maxHp = 200  -- GTA alap max
-    SetEntityHealth(ped, math.min(curHp + amount, maxHp))
+    SetEntityHealth(ped, math.min(curHp + amount, 200))
 end)
 
 -- ── NUI callbacks ────────────────────────────────────────────
@@ -130,7 +136,7 @@ RegisterNUICallback('updateHotbar', function(data, cb)
     cb('ok')
 end)
 
--- ── Billentyűkezelés ────────────────────────────────────────────
+-- ── Billentyűkezelés ──────────────────────────────────────────
 
 RegisterCommand('inventory', function()
     if isOpen then
@@ -141,31 +147,31 @@ RegisterCommand('inventory', function()
     end
 end, false)
 
+-- FIX: Citizen.Wait(0) helyett isOpen guard + Wait(100) amikor UI zárva
+-- – megakadályozza a folyamatos CPU terhelést bezzárt UI mellett
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
-        -- F1 (vagy config-olt billentyű)
-        if IsControlJustPressed(0, 289) then  -- F1
-            if isOpen then
+        if isOpen then
+            Citizen.Wait(0)
+            if IsControlJustPressed(0, 322) then  -- ESC
                 SetUIVisible(false)
-            else
+            end
+        else
+            Citizen.Wait(100)
+            if IsControlJustPressed(0, 289) then  -- F1
                 TriggerServerEvent('nxn-inventory:server:requestSync')
                 SetUIVisible(true)
             end
         end
-        -- ESC bezárás
-        if isOpen and IsControlJustPressed(0, 322) then
-            SetUIVisible(false)
-        end
     end
 end)
 
--- ── Exportok ──────────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────
 
-exports('openInventory',  function() if not isOpen then SetUIVisible(true)  end end)
-exports('closeInventory', function() if isOpen     then SetUIVisible(false) end end)
-exports('isOpen',         function() return isOpen end)
+exports('openInventory',     function() if not isOpen then SetUIVisible(true)  end end)
+exports('closeInventory',    function() if isOpen     then SetUIVisible(false) end end)
+exports('isOpen',            function() return isOpen end)
 exports('getLocalInventory', function() return inventory end)
-exports('getLocalWeight', function()
+exports('getLocalWeight',    function()
     return NXN.Inventory.CalcWeight(inventory.items or {})
 end)
