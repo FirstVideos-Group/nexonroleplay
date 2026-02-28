@@ -18,7 +18,16 @@ local patternActive  = false
 local patternName    = nil
 local patternThread  = nil
 
--- ── Kliens-oldali natív segédek (shared.lua-ból ide kerültek) ─
+-- ── Net event regisztrációk ───────────────────────────────────────
+-- FIX: minden szerver→kliens event előtt RegisterNetEvent szükséges,
+-- különben FiveM "not safe for net" hibát dob és az event nem fut le.
+
+RegisterNetEvent('nxn-els:client:setAdminState')
+RegisterNetEvent('nxn-els:client:setJobPermission')
+RegisterNetEvent('nxn-els:client:syncState')
+RegisterNetEvent('nxn-els:client:sirenSound')
+
+-- ── Kliens-oldali natív segédek ──────────────────────────────────
 
 ---@param vehicle number
 ---@return boolean
@@ -53,7 +62,7 @@ local function GetStageConfig(vehicle, stage)
     return base
 end
 
--- ── Admin állapot fogadása ────────────────────────────────────
+-- ── Admin állapot fogadása ─────────────────────────────────────
 
 AddEventHandler('nxn-els:client:setAdminState', function(adminState)
     isAdmin    = adminState == true
@@ -64,7 +73,7 @@ AddEventHandler('nxn-els:client:setAdminState', function(adminState)
         tostring(isAdmin), tostring(elsEnabled)))
 end)
 
--- ── Job jogosultság fogadása ──────────────────────────────────
+-- ── Job jogosultság fogadása ───────────────────────────────────
 
 AddEventHandler('nxn-els:client:setJobPermission', function(job, allowed)
     currentJob = job or ''
@@ -73,9 +82,7 @@ AddEventHandler('nxn-els:client:setJobPermission', function(job, allowed)
         currentJob, tostring(allowed), tostring(isAdmin), tostring(elsEnabled)))
 end)
 
--- ── Admin check kérése indításkor ────────────────────────────
--- 3000ms delay: nxn-database:server:playerLoaded után fut a szerveren,
--- de a kliens NUI/resource init is igényel némi időt.
+-- ── Admin check kérése indításkor ─────────────────────────────
 
 CreateThread(function()
     Wait(3000)
@@ -210,6 +217,16 @@ AddEventHandler('nxn-els:client:syncState', function(netId, stage, muted)
     SetVehicleSiren(vehicle, cfg.sirenActive and not muted)
 end)
 
+AddEventHandler('nxn-els:client:sirenSound', function(netId, tone, _src)
+    -- Csak más játékosok járműveit szinkronizáljuk
+    local vehicle = NetworkGetEntityFromNetworkId(netId)
+    if not DoesEntityExist(vehicle) then return end
+    if vehicle == GetVehiclePedIsIn(PlayerPedId(), false) then return end
+    if tone and tone > 0 then
+        SetVehicleSiren(vehicle, true)
+    end
+end)
+
 -- ── Irányjelzők ───────────────────────────────────────────────
 
 local function SetIndicators(mode)
@@ -305,13 +322,13 @@ end)
 
 -- ── Client Export API ─────────────────────────────────────────
 
-exports('getStage',         function() return currentStage end)
-exports('isElsActive',      function() return currentStage > 0 end)
-exports('isAdmin',          function() return isAdmin end)
-exports('hasPermission',    function() return elsEnabled end)
-exports('getIndicatorState',function() return indicatorState end)
-exports('isPatternRunning', function() return patternActive end)
-exports('getCurrentPattern',function() return patternName end)
+exports('getStage',          function() return currentStage end)
+exports('isElsActive',       function() return currentStage > 0 end)
+exports('isAdmin',           function() return isAdmin end)
+exports('hasPermission',     function() return elsEnabled end)
+exports('getIndicatorState', function() return indicatorState end)
+exports('isPatternRunning',  function() return patternActive end)
+exports('getCurrentPattern', function() return patternName end)
 
 exports('isSirenActive', function()
     local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
