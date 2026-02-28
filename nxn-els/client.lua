@@ -8,6 +8,7 @@
 
 local elsEnabled     = false
 local isAdmin        = false
+local jobAllowed     = false   -- FIX: külön nyomon követjük a job alapú engedélyt
 local currentStage   = 0
 local sirenMuted     = false
 local indicatorState = 'none'
@@ -17,6 +18,13 @@ local currentJob     = ''
 local patternActive  = false
 local patternName    = nil
 local patternThread  = nil
+
+-- ── Segéd: elsEnabled újraszámítása ──────────────────────────
+-- FIX: az isAdmin és jobAllowed MINDIG OR-al kombináljuk,
+-- így egyik sem tudja felülírni a másikat.
+local function RecalcElsEnabled()
+    elsEnabled = isAdmin or jobAllowed
+end
 
 -- ── Net event regisztrációk ───────────────────────────────────────
 -- FIX: minden szerver→kliens event előtt RegisterNetEvent szükséges,
@@ -63,29 +71,33 @@ local function GetStageConfig(vehicle, stage)
 end
 
 -- ── Admin állapot fogadása ─────────────────────────────────────
+-- FIX: RecalcElsEnabled()-et hívunk, nem direktben állítjuk az elsEnabled-et.
 
 AddEventHandler('nxn-els:client:setAdminState', function(adminState)
-    isAdmin    = adminState == true
-    if isAdmin then
-        elsEnabled = true
-    end
-    NXN.ELS.Log(('setAdminState: isAdmin=%s elsEnabled=%s'):format(
-        tostring(isAdmin), tostring(elsEnabled)))
+    isAdmin = adminState == true
+    RecalcElsEnabled()
+    NXN.ELS.Log(('setAdminState: isAdmin=%s jobAllowed=%s -> elsEnabled=%s'):format(
+        tostring(isAdmin), tostring(jobAllowed), tostring(elsEnabled)))
 end)
 
 -- ── Job jogosultság fogadása ───────────────────────────────────
+-- FIX: jobAllowed-ot állítjuk külön, majd RecalcElsEnabled()-et hívunk.
+-- Korábban `elsEnabled = allowed or isAdmin` volt, ami felülírhatta
+-- az admin státuszt, ha az `allowed` hamis volt és az isAdmin még nem érkezett meg.
 
 AddEventHandler('nxn-els:client:setJobPermission', function(job, allowed)
     currentJob = job or ''
-    elsEnabled = allowed or isAdmin
+    jobAllowed = allowed == true
+    RecalcElsEnabled()
     NXN.ELS.Log(('setJobPermission: job=%s jobAllowed=%s isAdmin=%s -> elsEnabled=%s'):format(
-        currentJob, tostring(allowed), tostring(isAdmin), tostring(elsEnabled)))
+        currentJob, tostring(jobAllowed), tostring(isAdmin), tostring(elsEnabled)))
 end)
 
 -- ── Admin check kérése indításkor ─────────────────────────────
+-- FIX: 3s helyett 1s várakozás, hogy az admin mielőbb megkapja a státuszt.
 
 CreateThread(function()
-    Wait(3000)
+    Wait(1000)
     TriggerServerEvent('nxn-els:server:requestAdminCheck')
 end)
 
