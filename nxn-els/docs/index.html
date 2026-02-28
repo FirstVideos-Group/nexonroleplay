@@ -32,7 +32,7 @@
         .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; font-weight: 700; }
         .badge-client { background: rgba(91,106,240,.18); color: var(--accent); }
         .badge-server { background: rgba(62,207,142,.18); color: var(--success); }
-        .badge-shared { background: rgba(240,181,91,.18); color: var(--warning); }
+        .badge-admin  { background: rgba(240,91,91,.18);  color: var(--danger); }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
         th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
         td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
@@ -47,23 +47,33 @@
         .stage-card .stage-num { font-size: 28px; font-weight: 800; color: var(--accent); line-height: 1; }
         .stage-card .stage-label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
         .stage-card p { font-size: 12px; margin: 0; }
-        .alert { background: rgba(91,106,240,.1); border: 1px solid rgba(91,106,240,.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--text); display: flex; gap: 10px; align-items: flex-start; }
-        .alert i { color: var(--accent); font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        .alert { border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--text); display: flex; gap: 10px; align-items: flex-start; }
+        .alert-info    { background: rgba(91,106,240,.1);  border: 1px solid rgba(91,106,240,.3); }
+        .alert-warning { background: rgba(240,181,91,.1);  border: 1px solid rgba(240,181,91,.3); }
+        .alert-danger  { background: rgba(240,91,91,.1);   border: 1px solid rgba(240,91,91,.3); }
+        .alert i { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        .alert-info    i { color: var(--accent); }
+        .alert-warning i { color: var(--warning); }
+        .alert-danger  i { color: var(--danger); }
+        .pattern-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .pattern-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+        .pattern-card .pname { font-size: 13px; font-weight: 700; color: var(--text); font-family: monospace; margin-bottom: 4px; }
+        .pattern-card p { font-size: 12px; margin: 0; }
     </style>
 </head>
 <body>
 <header>
     <i class="hgi hgi-stroke hgi-police-badge"></i>
     <div>
-        <h1>nxn-els <span>v1.0.0</span></h1>
+        <h1>nxn-els <span>v1.2.0</span></h1>
         <p style="color:var(--muted);font-size:12px;margin:0">Emergency Lighting System – Nexon FiveM</p>
     </div>
 </header>
 <main>
-    <p>Az <strong>nxn-els</strong> a Nexon szerverszinkronizált vészjelző rendszere. Fényfokozatok (stage), sziréna hang, irányjelzők, jogosultságkezelés és teljes export API – teljesen standalone, framework-függés nélkül.</p>
+    <p>Az <strong>nxn-els</strong> a Nexon szerverszinkronizált vészjelző rendszere. Fényfokozatok (stage), villogási pattern motor, környezeti fényreflexió, misc fények (0–25), sziréna hang, irányjelzők, jogosultságkezelés (job + admin ace) és teljes export API – teljesen standalone, framework-függés nélkül.</p>
 
-    <div class="alert"><i class="hgi hgi-stroke hgi-information-circle"></i>
-        Az ELS-t csak azok a játékosok használhatják, akiknek a <code>Config.AllowedJobs</code> listában szereplő jobja van, és azt az <strong>nxn-police</strong> / <strong>nxn-ems</strong> exporton keresztül beállítják.
+    <div class="alert alert-info"><i class="hgi hgi-stroke hgi-information-circle"></i>
+        <span>ELS jogosultság kétféleképpen adható: <strong>job alapján</strong> (nxn-police / nxn-ems hívja az exportot) vagy <strong>admin ace jogosultsággal</strong> (<code>nxn.els.admin</code>) – utóbbi esetén job és jármű-whitelist sem szükséges.</span>
     </div>
 
     <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
@@ -71,63 +81,133 @@
 ├── fxmanifest.lua
 ├── config.lua          ← minden beállítás itt
 ├── shared.lua          ← közös segédfüggvények
-├── client.lua          ← billentyűk, extras, NUI integráció
-├── server.lua          ← szinkron, jogosultság, szerver exportok
+├── client.lua          ← billentyűk, pattern motor, env reflexió, export API
+├── server.lua          ← szinkron, jogosultság (job + admin), szerver exportok
 └── docs/
     └── index.html      ← ez a dokumentáció</code></pre>
 
+    <!-- ── Fényfokozatok ──────────────────────────────────────── -->
     <h2><i class="hgi hgi-stroke hgi-flash"></i> Fényfokozatok (Stage)</h2>
     <div class="stage-grid">
         <div class="stage-card"><div class="stage-num">0</div><div class="stage-label">Kikapcsolt</div><p style="color:var(--muted)">Nincs fény, nincs hang. Alapállapot.</p></div>
-        <div class="stage-card"><div class="stage-num" style="color:#e0e840">1</div><div class="stage-label">CODE 1</div><p style="color:var(--muted)">Csendes szolgálat – csak villogók, sziréna hang nélkül.</p></div>
-        <div class="stage-card"><div class="stage-num" style="color:var(--warning)">2</div><div class="stage-label">CODE 2</div><p style="color:var(--muted)">Fény + sziréna – normál vészjelzés.</p></div>
-        <div class="stage-card"><div class="stage-num" style="color:var(--danger)">3</div><div class="stage-label">CODE 3</div><p style="color:var(--muted)">Teljes riasztás – minden extra + magas prioritású hang.</p></div>
+        <div class="stage-card"><div class="stage-num" style="color:#e0e840">1</div><div class="stage-label">CODE 1</div><p style="color:var(--muted)">Csendes szolgálat – <code>steady</code> pattern, sziréna hang nélkül.</p></div>
+        <div class="stage-card"><div class="stage-num" style="color:var(--warning)">2</div><div class="stage-label">CODE 2</div><p style="color:var(--muted)">Fény + sziréna – <code>alternating</code> pattern.</p></div>
+        <div class="stage-card"><div class="stage-num" style="color:var(--danger)">3</div><div class="stage-label">CODE 3</div><p style="color:var(--muted)">Teljes riasztás – <code>wigwag</code> pattern, magas prioritású hang.</p></div>
     </div>
 
+    <!-- ── Pattern rendszer ──────────────────────────────────── -->
+    <h2><i class="hgi hgi-stroke hgi-blinking-eye"></i> Villogási Pattern Rendszer</h2>
+    <p>Minden stage egy pattern-t futtat, amely lépéssorozatként van definiálva a <code>Config.Patterns</code>-ben. Minden lépés megadja, melyik <strong>extra</strong> (0–14) és <strong>misc fény</strong> (0–25) legyen be/ki, és mennyi ideig tartson.</p>
+
+    <div class="pattern-grid">
+        <div class="pattern-card"><div class="pname">steady</div><p style="color:var(--muted)">Nem villog, folyamatosan be van kapcsolva. CODE 1-hez.</p></div>
+        <div class="pattern-card"><div class="pname">alternating</div><p style="color:var(--muted)">Bal/jobb felváltva 120ms-onként. CODE 2 alapértelmezett.</p></div>
+        <div class="pattern-card"><div class="pname">wigwag</div><p style="color:var(--muted)">Gyors alternating 80ms-onként. CODE 3 alapértelmezett.</p></div>
+        <div class="pattern-card"><div class="pname">pileon</div><p style="color:var(--muted)">Minden egyszerre villog. Mentő (ambulance) CODE 2/3-hoz.</p></div>
+    </div>
+
+    <p>Saját pattern hozzáadása <code>config.lua</code>-ban:</p>
+    <pre><code>Config.Patterns['sajat'] = {
+    { extras = {[1]=true, [2]=false, [3]=true }, miscs = {[0]=true},  dur = 100 },
+    { extras = {[1]=false,[2]=true,  [3]=false}, miscs = {[0]=false}, dur = 100 },
+}</code></pre>
+    <p>A pattern automatikusan körkörösen ismétlődik, amíg az adott stage aktív. Stage váltáskor azonnal átáll az új pattern-re.</p>
+
+    <!-- ── Környezeti reflexió ───────────────────────────────── -->
+    <h2><i class="hgi hgi-stroke hgi-sun-03"></i> Környezeti Fényreflexió</h2>
+    <p>A <code>SetVehicleLightMultiplier</code> natív segítségével a villogó fények ritmikusan „visszaverődnek" a padlóra, falakra és közeli járművekre – ugyanúgy, ahogyan a MISS-ELS is működik.</p>
+    <pre><code>Config.EnvLight = {
+    enabled    = true,
+    multiplier = 3.5,   -- minél nagyobb, annál erősebb visszaverődés (alap: 1.0)
+    tickMs     = 80,    -- frissítési sűrűség ms-ban
+}</code></pre>
+    <p>A rendszer az aktív extra-k állapotát figyeli, és a multiplier-t szinkronban pulzáltatja a pattern lépéseivel. Kikapcsolt ELS-nél automatikusan visszaáll <code>1.0</code>-ra.</p>
+
+    <!-- ── Admin ─────────────────────────────────────────────── -->
+    <h2><i class="hgi hgi-stroke hgi-shield-user"></i> Admin Jogosultság</h2>
+
+    <div class="alert alert-warning"><i class="hgi hgi-stroke hgi-alert-triangle"></i>
+        <span>Az admin jogosultság <strong>szerver-oldalon</strong> van ellenőrizve (<code>IsPlayerAceAllowed</code>) – a kliens nem tudja hamisítani.</span>
+    </div>
+
+    <p>Adminként az ELS job és jármű-whitelist nélkül is használható bármely járművön. Egyetlen sor szükséges a <code>server.cfg</code>-ben:</p>
+    <pre><code>add_ace group.admin nxn.els.admin allow</code></pre>
+
+    <p>Az ace neve módosítható a <code>config.lua</code>-ban:</p>
+    <pre><code>Config.AdminAce = 'nxn.els.admin'  -- tetszőleges ace név</code></pre>
+
+    <h3>Admin vs. normál játékos</h3>
+    <table>
+        <tr><th>Feltétel</th><th>Normál játékos</th><th>Admin</th></tr>
+        <tr><td>Job szükséges</td><td>✅ igen (AllowedJobs)</td><td>❌ nem</td></tr>
+        <tr><td>Jármű whitelist</td><td>✅ kötelező</td><td>❌ bypass</td></tr>
+        <tr><td>Szerver ellenőrzés</td><td>job + IsJobAllowed</td><td>IsPlayerAceAllowed</td></tr>
+        <tr><td>isAdmin() export</td><td>false</td><td>true</td></tr>
+        <tr><td>Jogosultság megszerzése</td><td>setJobPermission() hívásra</td><td>Csatlakozáskor automatikusan</td></tr>
+    </table>
+
+    <p>Az admin jogosultság <strong>csatlakozáskor</strong> (<code>playerJoining</code>) és <strong>resource induláskor</strong> (2 mp-es késleltetéssel) is ellenőrzésre kerül, így resource restart után sem vész el.</p>
+
+    <!-- ── Konfiguráció ──────────────────────────────────────── -->
     <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
     <table>
         <tr><th>Kulcs</th><th>Alap</th><th>Leírás</th></tr>
         <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.AdminAce</td><td>'nxn.els.admin'</td><td>Ace jogosultság neve admin bypass-hoz</td></tr>
         <tr><td>Config.AllowedJobs</td><td>[ 'police', … ]</td><td>Ezeknek a joboknak van ELS-engedélye</td></tr>
-        <tr><td>Config.UseVehicleWhitelist</td><td>true</td><td>Csak fehérlistás járműveken működik az ELS</td></tr>
+        <tr><td>Config.UseVehicleWhitelist</td><td>true</td><td>Csak fehérlistás járműveken működik (admin bypass-olja)</td></tr>
         <tr><td>Config.AllowedVehicles</td><td>[ 'police', … ]</td><td>ELS-kompatibilis jármű modellek</td></tr>
-        <tr><td>Config.VehicleConfigs</td><td>{ police = … }</td><td>Jármű-specifikus extra és sziréna konfig stage-enként</td></tr>
-        <tr><td>Config.Keys.*</td><td>Q, R, …</td><td>Billentyűkötések (RegisterKeyMapping alapú, játékonként override-olható)</td></tr>
+        <tr><td>Config.Patterns</td><td>{ alternating, wigwag, … }</td><td>Villogási pattern definíciók (steps tömb)</td></tr>
+        <tr><td>Config.Stages[n].pattern</td><td>'alternating'</td><td>Melyik pattern fusson az adott stage-ben</td></tr>
+        <tr><td>Config.VehicleConfigs</td><td>{ police = … }</td><td>Jármű-specifikus pattern és sziréna konfig stage-enként</td></tr>
+        <tr><td>Config.EnvLight.enabled</td><td>true</td><td>Környezeti fényreflexió be/ki</td></tr>
+        <tr><td>Config.EnvLight.multiplier</td><td>3.5</td><td>Visszaverődés erőssége (1.0 = alap)</td></tr>
+        <tr><td>Config.EnvLight.tickMs</td><td>80</td><td>Reflexió frissítési sűrűség ms-ban</td></tr>
+        <tr><td>Config.Keys.*</td><td>Q, R, …</td><td>Billentyűkötések (játékonként override-olható)</td></tr>
         <tr><td>Config.IntegrateVehicleHud</td><td>true</td><td>nxn-vehicle-hud szirénastátusz panel frissítése</td></tr>
         <tr><td>Config.SyncInterval</td><td>1000</td><td>Szinkron tickidő ms-ban</td></tr>
     </table>
 
+    <!-- ── Client Exportok ──────────────────────────────────── -->
     <h2><i class="hgi hgi-stroke hgi-export-01"></i> Client Exportok</h2>
     <table>
         <tr><th>Export</th><th>Visszatér</th><th>Leírás</th></tr>
-        <tr><td>getStage()</td><td>number (0-3)</td><td>Aktuális fényfokozat</td></tr>
+        <tr><td>getStage()</td><td>number (0–3)</td><td>Aktuális fényfokozat</td></tr>
         <tr><td>isElsActive()</td><td>boolean</td><td>ELS be van-e kapcsolva (stage &gt; 0)</td></tr>
         <tr><td>isSirenActive()</td><td>boolean</td><td>Sziréna hang szól-e</td></tr>
         <tr><td>setStage(stage)</td><td>boolean</td><td>Fokozat állítása kívülről (jogosultság szükséges)</td></tr>
         <tr><td>getStageLabel()</td><td>string</td><td>Pl. 'CODE 2'</td></tr>
-        <tr><td>setJobPermission(job, allowed)</td><td>–</td><td>Jogosultság megadása (nxn-police / nxn-ems hívja)</td></tr>
-        <tr><td>hasPermission()</td><td>boolean</td><td>Van-e ELS jogosultsága</td></tr>
+        <tr><td>setJobPermission(job, allowed)</td><td>–</td><td>Job jogosultság megadása (nxn-police / nxn-ems hívja)</td></tr>
+        <tr><td>hasPermission()</td><td>boolean</td><td>Van-e ELS jogosultsága (job VAGY admin)</td></tr>
+        <tr><td>isAdmin()</td><td>boolean</td><td>Szerver által megerősített admin státusz</td></tr>
         <tr><td>getIndicatorState()</td><td>string</td><td>'none' | 'left' | 'right' | 'hazard'</td></tr>
+        <tr><td>isPatternRunning()</td><td>boolean</td><td>Fut-e éppen villogási pattern</td></tr>
+        <tr><td>getCurrentPattern()</td><td>string|nil</td><td>Aktuálisan futó pattern neve</td></tr>
     </table>
 
+    <!-- ── Server Exportok ──────────────────────────────────── -->
     <h2><i class="hgi hgi-stroke hgi-export-01"></i> Server Exportok</h2>
     <table>
         <tr><th>Export</th><th>Visszatér</th><th>Leírás</th></tr>
         <tr><td>getVehicleState(netId)</td><td>table|nil</td><td>Jármű ELS állapota: { stage, muted, owner }</td></tr>
         <tr><td>isElsActive(netId)</td><td>boolean</td><td>Jármű ELS-e aktív-e</td></tr>
-        <tr><td>playerHasPermission(src)</td><td>boolean</td><td>Játékos jogosult-e</td></tr>
-        <tr><td>setPlayerJobPermission(src, job, allowed)</td><td>–</td><td>Jogosultság megadása szerver-oldalról</td></tr>
+        <tr><td>playerHasPermission(src)</td><td>boolean</td><td>Játékos jogosult-e (job VAGY admin)</td></tr>
+        <tr><td>isPlayerAdmin(src)</td><td>boolean</td><td>Játékos rendelkezik-e admin ace-szel</td></tr>
+        <tr><td>setPlayerJobPermission(src, job, allowed)</td><td>–</td><td>Job jogosultság megadása szerver-oldalról</td></tr>
         <tr><td>getAllVehicleStates()</td><td>table</td><td>Összes aktív ELS állapot</td></tr>
-        <tr><td>forceStage(netId, stage)</td><td>–</td><td>Stage kényszerítése szerver-oldalról</td></tr>
+        <tr><td>forceStage(netId, stage)</td><td>–</td><td>Stage kényszerítése szerver-oldalról (pl. adminpanel)</td></tr>
     </table>
 
-    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Használati példák</h2>
+    <!-- ── Használati példák ─────────────────────────────────── -->
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Használati Példák</h2>
 
     <div class="tabs">
         <div class="tab active" onclick="switchTab(this,'t1')">nxn-police (kliens)</div>
         <div class="tab" onclick="switchTab(this,'t2')">nxn-police (szerver)</div>
-        <div class="tab" onclick="switchTab(this,'t3')">Dispatch / külső script</div>
-        <div class="tab" onclick="switchTab(this,'t4')">nxn-vehicle-hud integráció</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Admin ellenőrzés</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Dispatch / külső script</div>
+        <div class="tab" onclick="switchTab(this,'t5')">nxn-vehicle-hud</div>
+        <div class="tab" onclick="switchTab(this,'t6')">Egyéni pattern</div>
     </div>
 
     <div class="tab-content active" id="t1"><pre><code>-- nxn-police client.lua – bejelentkezéskor
@@ -140,9 +220,10 @@ AddEventHandler('nxn-police:client:offDuty', function()
 end)
 
 -- ELS állapot lekérdezése
-local stage = exports['nxn-els']:getStage()      -- 0..3
-local label = exports['nxn-els']:getStageLabel() -- 'CODE 2'
-local active = exports['nxn-els']:isElsActive()  -- true/false</code></pre></div>
+local stage   = exports['nxn-els']:getStage()        -- 0..3
+local label   = exports['nxn-els']:getStageLabel()   -- 'CODE 2'
+local active  = exports['nxn-els']:isElsActive()     -- true/false
+local pattern = exports['nxn-els']:getCurrentPattern() -- 'wigwag'</code></pre></div>
 
     <div class="tab-content" id="t2"><pre><code>-- nxn-police server.lua – jogosultság megadása
 RegisterServerEvent('nxn-police:server:onDuty', function(job)
@@ -155,52 +236,91 @@ RegisterServerEvent('nxn-police:server:offDuty', function()
     exports['nxn-els']:setPlayerJobPermission(src, '', false)
 end)
 
--- Ellenőrzés
+-- Ellenőrzés (job VAGY admin egyaránt true-t ad)
 if exports['nxn-els']:playerHasPermission(src) then
     -- játékos ELS-t használhat
 end</code></pre></div>
 
-    <div class="tab-content" id="t3"><pre><code>-- Dispatch / CAD script – szerver-oldalon lekéri az összes aktív ELS-t
+    <div class="tab-content" id="t3"><pre><code>-- Admin státusz ellenőrzése szerver-oldalon
+local isAdm = exports['nxn-els']:isPlayerAdmin(src)
+if isAdm then
+    print('Ez a játékos admin – ELS whitelist bypass aktív')
+end
+
+-- server.cfg beállítás (egyszer kell):
+-- add_ace group.admin nxn.els.admin allow
+
+-- Ha más ace nevet szeretnél (config.lua):
+-- Config.AdminAce = 'nxn.els.admin'
+
+-- Kliens oldalon is lekérdezhető:
+local amIAdmin = exports['nxn-els']:isAdmin()</code></pre></div>
+
+    <div class="tab-content" id="t4"><pre><code>-- Dispatch / CAD – összes aktív ELS jármű lekérése
 local states = exports['nxn-els']:getAllVehicleStates()
 for netId, state in pairs(states) do
     if state.stage >= 2 then
-        print(('Jármű %d CODE %d-ben jár'):format(netId, state.stage))
+        print(('Jármű %d CODE %d-ben jár (owner: %d)'):format(
+            netId, state.stage, state.owner))
     end
 end
 
--- Stage kényszerítése (pl. adminpanel)
-exports['nxn-els']:forceStage(netId, 0) -- kikapcs
-exports['nxn-els']:forceStage(netId, 3) -- CODE 3</code></pre></div>
+-- Stage kényszerítése (pl. adminpanel, dispatch)
+exports['nxn-els']:forceStage(netId, 0)  -- kikapcs
+exports['nxn-els']:forceStage(netId, 3)  -- CODE 3</code></pre></div>
 
-    <div class="tab-content" id="t4"><pre><code>-- Az nxn-els automatikusan frissíti az nxn-vehicle-hud
+    <div class="tab-content" id="t5"><pre><code>-- Az nxn-els automatikusan frissíti az nxn-vehicle-hud
 -- siren modulját, ha Config.IntegrateVehicleHud = true.
 -- Manuálisan is hívható:
-exports['nxn-vehicle-hud']:setSiren(true, 'CODE 2')
+exports['nxn-vehicle-hud']:setSiren(true,  'CODE 2')
 exports['nxn-vehicle-hud']:setSiren(false, nil)
 
--- A vehicle-hud config.lua-ban engedélyezd:
+-- A vehicle-hud config.lua-ban engedélyezd a siren modult:
 -- siren = { enabled = true, alwaysVisible = false, order = 8 }</code></pre></div>
 
+    <div class="tab-content" id="t6"><pre><code>-- Egyéni pattern definiálása config.lua-ban
+Config.Patterns['sajat_minta'] = {
+    -- 1. lépés: extra 1+3 be, extra 2 ki, misc 0 be
+    { extras = {[1]=true, [2]=false, [3]=true}, miscs = {[0]=true},  dur = 90  },
+    -- 2. lépés: extra 2 be, extra 1+3 ki, misc 0 ki
+    { extras = {[1]=false,[2]=true,  [3]=false}, miscs = {[0]=false}, dur = 90  },
+    -- 3. lépés: szünet
+    { extras = {[1]=false,[2]=false, [3]=false}, miscs = {[0]=false}, dur = 150 },
+}
+
+-- Pattern hozzárendelése egy stage-hez (pl. CODE 3):
+Config.Stages[3].pattern = 'sajat_minta'
+
+-- Vagy csak egy adott modellnél:
+Config.VehicleConfigs['sheriff2'][3] = {
+    pattern   = 'sajat_minta',
+    sirenTone = 2,
+}</code></pre></div>
+
+    <!-- ── Billentyűkötések ──────────────────────────────────── -->
     <h2><i class="hgi hgi-stroke hgi-keyboard"></i> Billentyűkötések</h2>
     <table>
         <tr><th>Alapértelmezett</th><th>Funkció</th><th>Config kulcs</th></tr>
         <tr><td>Q</td><td>Fokozat váltás (0→1→2→3→0)</td><td>Config.Keys.cycleStage</td></tr>
         <tr><td>R</td><td>Sziréna hang némítás (stage 2/3-on belül)</td><td>Config.Keys.toggleSiren</td></tr>
-        <tr><td>← BAL</td><td>Bal irányjelző</td><td>Config.Keys.indicatorL</td></tr>
-        <tr><td>→ JOBB</td><td>Jobb irányjelző</td><td>Config.Keys.indicatorR</td></tr>
-        <tr><td>H</td><td>Vészvillogó</td><td>Config.Keys.hazard</td></tr>
+        <tr><td>← BAL</td><td>Bal irányjelző (toggle)</td><td>Config.Keys.indicatorL</td></tr>
+        <tr><td>→ JOBB</td><td>Jobb irányjelző (toggle)</td><td>Config.Keys.indicatorR</td></tr>
+        <tr><td>H</td><td>Vészvillogó (toggle)</td><td>Config.Keys.hazard</td></tr>
     </table>
-    <p>A játékosok a GTA beállítások / FiveM key bindings menüjében egyedileg átállíthatják a billentyűket.</p>
+    <p>A játékosok a GTA beállítások / FiveM key bindings menüjében egyedileg átállíthatják a billentyűket (<code>RegisterKeyMapping</code> alapú).</p>
 
+    <!-- ── Net Events ────────────────────────────────────────── -->
     <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
     <table>
         <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
-        <tr><td>nxn-els:server:updateState</td><td>Client → Server</td><td>Stage változás szinkronizálása</td></tr>
-        <tr><td>nxn-els:server:setSirenSound</td><td>Client → Server</td><td>Sziréna hang szinkron</td></tr>
-        <tr><td>nxn-els:server:setJobPermission</td><td>Client → Server</td><td>Jogosultság kérése (job alapján)</td></tr>
-        <tr><td>nxn-els:client:syncState</td><td>Server → Client (-1)</td><td>Broadcast: jármű ELS állapota</td></tr>
+        <tr><td>nxn-els:server:updateState</td><td>Client → Server</td><td>Stage változás szinkronizálása (jogosultság ellenőrzéssel)</td></tr>
+        <tr><td>nxn-els:server:setSirenSound</td><td>Client → Server</td><td>Sziréna hang szinkron broadcast</td></tr>
+        <tr><td>nxn-els:server:setJobPermission</td><td>Client → Server</td><td>Job jogosultság kérése</td></tr>
+        <tr><td>nxn-els:server:requestAdminCheck</td><td>Client → Server</td><td>Admin státusz lekérése (induláskor)</td></tr>
+        <tr><td>nxn-els:client:syncState</td><td>Server → Client (-1)</td><td>Broadcast: jármű ELS állapota minden kliensnek</td></tr>
         <tr><td>nxn-els:client:sirenSound</td><td>Server → Client (-1)</td><td>Sziréna hang broadcast</td></tr>
-        <tr><td>nxn-els:client:setJobPermission</td><td>Server → Client</td><td>Jogosultság visszajelzés</td></tr>
+        <tr><td>nxn-els:client:setJobPermission</td><td>Server → Client</td><td>Job jogosultság visszajelzés</td></tr>
+        <tr><td>nxn-els:client:setAdminState</td><td>Server → Client</td><td>Admin státusz push (csatlakozáskor + requestre)</td></tr>
     </table>
 </main>
 <script>
