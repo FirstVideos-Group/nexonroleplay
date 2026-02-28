@@ -6,8 +6,8 @@
 
 -- ── Állapot ──────────────────────────────────────────────────
 
-local elsEnabled     = false   -- job VAGY admin alapján
-local isAdmin        = false   -- szerveroldalról megerősített admin flag
+local elsEnabled     = false
+local isAdmin        = false
 local currentStage   = 0
 local sirenMuted     = false
 local indicatorState = 'none'
@@ -18,12 +18,45 @@ local patternActive  = false
 local patternName    = nil
 local patternThread  = nil
 
--- ── Admin állapot fogadása ───────────────────────────────────
--- A szerver küldi ezt csatlakozáskor és requestAdminCheck válaszként.
+-- ── Kliens-oldali natív segédek (shared.lua-ból ide kerültek) ─
+
+---@param vehicle number
+---@return boolean
+local function IsVehicleAllowed(vehicle)
+    if not Config.UseVehicleWhitelist then return true end
+    local model = GetEntityModel(vehicle)
+    for _, allowed in ipairs(Config.AllowedVehicles) do
+        if GetHashKey(allowed) == model then return true end
+    end
+    return false
+end
+
+--- Stage konfig lekérése jármű-specifikus felülírással
+---@param vehicle number
+---@param stage  number
+---@return table
+local function GetStageConfig(vehicle, stage)
+    local base = NXN.ELS.GetBaseStageConfig(stage)
+    if stage == 0 then return base end
+    local model = GetEntityModel(vehicle)
+    for modelName, vcfg in pairs(Config.VehicleConfigs) do
+        if GetHashKey(modelName) == model and vcfg[stage] then
+            local vc = vcfg[stage]
+            return {
+                label       = base.label,
+                sirenActive = vc.sirenTone ~= nil and vc.sirenTone > 0,
+                pattern     = vc.pattern   or base.pattern,
+                sirenTone   = vc.sirenTone or base.sirenTone,
+            }
+        end
+    end
+    return base
+end
+
+-- ── Admin állapot fogadása ────────────────────────────────────
 
 AddEventHandler('nxn-els:client:setAdminState', function(adminState)
     isAdmin    = adminState == true
-    -- Admin esetén azonnal kap ELS jogosultságot job-tól függetlenül
     if isAdmin then
         elsEnabled = true
     end
@@ -35,20 +68,21 @@ end)
 
 AddEventHandler('nxn-els:client:setJobPermission', function(job, allowed)
     currentJob = job or ''
-    -- Ha admin, a job-állapottól függetlenül engedélyezve marad
     elsEnabled = allowed or isAdmin
     NXN.ELS.Log(('setJobPermission: job=%s jobAllowed=%s isAdmin=%s -> elsEnabled=%s'):format(
         currentJob, tostring(allowed), tostring(isAdmin), tostring(elsEnabled)))
 end)
 
--- ── Admin check kérése indításkor ─────────────────────────────
+-- ── Admin check kérése indításkor ────────────────────────────
+-- 3000ms delay: nxn-database:server:playerLoaded után fut a szerveren,
+-- de a kliens NUI/resource init is igényel némi időt.
 
 CreateThread(function()
-    Wait(2000)  -- bizőnysági várakozás a szerver-sync után
+    Wait(3000)
     TriggerServerEvent('nxn-els:server:requestAdminCheck')
 end)
 
--- ── Misc fények ────────────────────────────────────────────────
+-- ── Misc fények ──────────────────────────────────────────────
 
 ---@param vehicle number
 ---@param miscId number  0..25
@@ -57,7 +91,7 @@ local function SetMisc(vehicle, miscId, state)
     SetVehicleExtra(vehicle, 100 + miscId, not state)
 end
 
--- ── Pattern motor ──────────────────────────────────────────────
+-- ── Pattern motor ─────────────────────────────────────────────
 
 local function ClearAllLights(vehicle)
     for i = 0, 14 do SetVehicleExtra(vehicle, i, true) end
@@ -131,11 +165,11 @@ CreateThread(function()
     end
 end)
 
--- ── Stage alkalmazása ─────────────────────────────────────────────
+-- ── Stage alkalmazása ─────────────────────────────────────────
 
 local function ApplyStage(vehicle, stage)
     if vehicle == 0 then return end
-    local cfg = NXN.ELS.GetStageConfig(vehicle, stage)
+    local cfg = GetStageConfig(vehicle, stage)
     if stage == 0 then
         StopPattern(vehicle)
     else
@@ -145,9 +179,11 @@ local function ApplyStage(vehicle, stage)
     local sirenOn = cfg.sirenActive and not sirenMuted
     SetVehicleSiren(vehicle, sirenOn)
     if sirenOn then
-        TriggerServerEvent('nxn-els:server:setSirenSound', NetworkGetNetworkIdFromEntity(vehicle), cfg.sirenTone)
+        TriggerServerEvent('nxn-els:server:setSirenSound',
+            NetworkGetNetworkIdFromEntity(vehicle), cfg.sirenTone)
     else
-        TriggerServerEvent('nxn-els:server:setSirenSound', NetworkGetNetworkIdFromEntity(vehicle), 0)
+        TriggerServerEvent('nxn-els:server:setSirenSound',
+            NetworkGetNetworkIdFromEntity(vehicle), 0)
     end
     if Config.IntegrateVehicleHud and GetResourceState('nxn-vehicle-hud') == 'started' then
         exports['nxn-vehicle-hud']:setSiren(stage > 0, cfg.label)
@@ -156,13 +192,13 @@ local function ApplyStage(vehicle, stage)
         stage, tostring(cfg.pattern), tostring(sirenOn), tostring(isAdmin)))
 end
 
--- ── Szerver szinkron (más játékosok járművei) ───────────────────
+-- ── Szerver szinkron (más játékosok járművei) ─────────────────
 
 AddEventHandler('nxn-els:client:syncState', function(netId, stage, muted)
     local vehicle = NetworkGetEntityFromNetworkId(netId)
     if not DoesEntityExist(vehicle) then return end
     if vehicle == GetVehiclePedIsIn(PlayerPedId(), false) then return end
-    local cfg = NXN.ELS.GetStageConfig(vehicle, stage)
+    local cfg = GetStageConfig(vehicle, stage)
     ClearAllLights(vehicle)
     if stage > 0 and cfg.pattern then
         local steps = Config.Patterns[cfg.pattern]
@@ -174,7 +210,7 @@ AddEventHandler('nxn-els:client:syncState', function(netId, stage, muted)
     SetVehicleSiren(vehicle, cfg.sirenActive and not muted)
 end)
 
--- ── Irányjelzők ──────────────────────────────────────────────
+-- ── Irányjelzők ───────────────────────────────────────────────
 
 local function SetIndicators(mode)
     indicatorState = mode
@@ -184,7 +220,7 @@ local function SetIndicators(mode)
     SetVehicleIndicatorLights(vehicle, 0, mode == 'right' or mode == 'hazard')
 end
 
--- ── Billentyűkötések ───────────────────────────────────────────
+-- ── Billentyűkötések ──────────────────────────────────────────
 
 CreateThread(function()
     RegisterKeyMapping('+nxnElsCycleStage',  'ELS Fokozat váltás',  'keyboard', Config.Keys.cycleStage)
@@ -200,8 +236,7 @@ CreateThread(function()
             NXN.ELS.Warn('ELS: nincs jogosultsagod! (job vagy admin szukseges)')
             return
         end
-        -- Admin bypass: jármű whitelist-et átugorja
-        if not isAdmin and not NXN.ELS.IsVehicleAllowed(vehicle) then
+        if not isAdmin and not IsVehicleAllowed(vehicle) then
             NXN.ELS.Warn('ELS: ez a jarmu nem ELS-kompatibilis!')
             return
         end
@@ -242,37 +277,46 @@ CreateThread(function()
     RegisterCommand('-nxnElsHazard', function() end, false)
 end)
 
--- ── Kiszállás: reset ──────────────────────────────────────────────
+-- ── Kiszállás: reset ──────────────────────────────────────────
 
 CreateThread(function()
     while true do
-        Wait(500)
-        local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
-        if vehicle == 0 and lastVehicle ~= 0 then
-            if currentStage ~= 0 then
-                StopPattern(lastVehicle)
-                SetVehicleLightMultiplier(lastVehicle, 1.0)
-                TriggerServerEvent('nxn-els:server:updateState',
-                    NetworkGetNetworkIdFromEntity(lastVehicle), 0, false)
+        if lastVehicle ~= 0 then
+            Wait(500)
+            local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+            if vehicle == 0 and lastVehicle ~= 0 then
+                if currentStage ~= 0 then
+                    StopPattern(lastVehicle)
+                    SetVehicleLightMultiplier(lastVehicle, 1.0)
+                    TriggerServerEvent('nxn-els:server:updateState',
+                        NetworkGetNetworkIdFromEntity(lastVehicle), 0, false)
+                end
+                currentStage = 0
+                sirenMuted   = false
+                SetIndicators('none')
             end
-            currentStage = 0
-            sirenMuted   = false
-            SetIndicators('none')
+            lastVehicle = vehicle
+        else
+            Wait(500)
+            lastVehicle = GetVehiclePedIsIn(PlayerPedId(), false)
         end
-        lastVehicle = vehicle
     end
 end)
 
 -- ── Client Export API ─────────────────────────────────────────
 
-exports('getStage', function() return currentStage end)
-exports('isElsActive', function() return currentStage > 0 end)
-exports('isAdmin', function() return isAdmin end)
+exports('getStage',         function() return currentStage end)
+exports('isElsActive',      function() return currentStage > 0 end)
+exports('isAdmin',          function() return isAdmin end)
+exports('hasPermission',    function() return elsEnabled end)
+exports('getIndicatorState',function() return indicatorState end)
+exports('isPatternRunning', function() return patternActive end)
+exports('getCurrentPattern',function() return patternName end)
 
 exports('isSirenActive', function()
     local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
     if vehicle == 0 then return false end
-    local cfg = NXN.ELS.GetStageConfig(vehicle, currentStage)
+    local cfg = GetStageConfig(vehicle, currentStage)
     return cfg.sirenActive and not sirenMuted
 end)
 
@@ -291,14 +335,9 @@ end)
 exports('getStageLabel', function()
     local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
     if vehicle == 0 then return 'KI' end
-    return NXN.ELS.GetStageConfig(vehicle, currentStage).label
+    return GetStageConfig(vehicle, currentStage).label
 end)
 
 exports('setJobPermission', function(job, allowed)
     TriggerEvent('nxn-els:client:setJobPermission', job, allowed)
 end)
-
-exports('hasPermission', function() return elsEnabled end)
-exports('getIndicatorState', function() return indicatorState end)
-exports('isPatternRunning', function() return patternActive end)
-exports('getCurrentPattern', function() return patternName end)
