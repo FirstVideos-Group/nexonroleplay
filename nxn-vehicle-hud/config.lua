@@ -32,30 +32,31 @@ Config.Modules = {
     },
     lights = {
         enabled       = true,
-        alwaysVisible = false,  -- csak ha lampak be vannak kapcsolva
+        alwaysVisible = false,
         order         = 4,
     },
     engine = {
         enabled       = true,
-        alwaysVisible = false,  -- csak ha motor meghibasodott / leall
-        threshold     = 950,    -- engine health, ez alatt figyelmeztet
+        alwaysVisible = false,
+        threshold     = 950,
         order         = 5,
     },
-    -- nxn-fuel toltiheti, ha az fut
     fuel = {
         enabled       = false,
         alwaysVisible = true,
         order         = 6,
     },
-    -- nxn-seatbelt toltiheti: alapbol engedelyezve, de csak kicsatolva latszik
     seatbelt = {
-        enabled       = true,   -- FIX: true, hogy a setSeatbelt export mukodjon
-        alwaysVisible = false,  -- csak ha NINCS bekotve
+        enabled       = true,
+        alwaysVisible = false,
         order         = 7,
     },
+    -- FIX: enabled = true, hogy a setSiren export ne terjen vissza azonnal
+    -- Az nxn-els hivja exports['nxn-vehicle-hud']:setSiren(active, label)
+    -- Ha enabled=false, a moduleStates['siren'] false -> azonnali return
     siren = {
-        enabled       = false,
-        alwaysVisible = false,
+        enabled       = true,
+        alwaysVisible = false,  -- csak aktiv szirena eseten jelenik meg
         order         = 8,
     },
 }

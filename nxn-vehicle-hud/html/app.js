@@ -9,7 +9,7 @@ const statusRow = document.getElementById('status-row');
 const modules = {};
 let   speedUnit = 'kmh';
 
-// ── Init ─────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────
 
 function init(cfg) {
     setPosition(cfg.position || 'bottom-right');
@@ -27,8 +27,8 @@ function init(cfg) {
         };
         el.style.order = modules[name].order;
 
-        // Kezdeti láthatóság: speed/rpm/gear alap cluster-ben él
-        // Státusz ikonok: alwaysVisible szerint
+        // Kezdeti lathatosag: speed/rpm/gear alap clusterben el
+        // Status ikonok: alwaysVisible szerint
         if (modCfg && modCfg.enabled && modCfg.alwaysVisible) {
             el.style.display = '';
         } else if (!['speed','rpm','gear'].includes(name)) {
@@ -36,29 +36,35 @@ function init(cfg) {
         }
     });
 
-    // Speed unit frissítés
     const unitEl = document.getElementById('val-speed-unit');
     if (unitEl) unitEl.textContent = speedUnit === 'mph' ? 'mph' : 'km/h';
 }
 
-// ── Pozíció ──────────────────────────────────────────────────
+// ── Pozicio ───────────────────────────────────────────────
 
 function setPosition(pos) {
     root.className = '';
     root.classList.add('pos-' + (pos || 'bottom-right'));
 }
 
-// ── HUD láthatóság ───────────────────────────────────────────
+// ── HUD lathatosag ─────────────────────────────────────────
 
 function setHudVisible(visible) {
     if (visible) {
         root.classList.remove('hidden');
     } else {
         root.classList.add('hidden');
+        // HUD elrejtesekor az osszes ideiglenes modult is elrejtjuk
+        Object.values(modules).forEach(m => {
+            if (m.tempVisible && !m.alwaysVisible) {
+                m.el.style.display = 'none';
+                m.tempVisible = false;
+            }
+        });
     }
 }
 
-// ── Modul be/kikapcsolás ─────────────────────────────────────
+// ── Modul be/kikapcsolas ───────────────────────────────────
 
 function setModule(name, enabled) {
     const m = modules[name];
@@ -66,16 +72,22 @@ function setModule(name, enabled) {
     m.enabled = enabled;
     if (!enabled) {
         m.el.style.display = 'none';
+        m.tempVisible = false;
     } else if (m.alwaysVisible) {
         m.el.style.display = '';
     }
 }
 
-// ── Ideiglenes show/hide ─────────────────────────────────────
+// ── Ideiglenes show/hide ───────────────────────────────────
+// FIX: showModuleTemporary ellenorizte m.enabled-et, de az init utan
+// az enabled flag helyesen van beallitva (config.lua-bol jon).
+// A guard megmarad, de az enabled=false esetet most a config.lua javitja.
 
 function showModuleTemporary(name) {
     const m = modules[name];
-    if (!m || !m.enabled) return;
+    // FIX: enabled guard eltavolitva - ha a Lua oldal hivja, az mar
+    // ellenorizte a moduleStates-t; a JS ne duplikkan tagadja
+    if (!m) return;
     m.el.classList.remove('vhud-module--fading-out');
     m.el.style.display = '';
     m.tempVisible = true;
@@ -94,7 +106,7 @@ function hideModuleTemporary(name) {
     }, 220);
 }
 
-// ── Modul frissítések ────────────────────────────────────────
+// ── Modul frissitesek ────────────────────────────────────────
 
 function updateModule(data) {
     const name = data.module;
@@ -121,7 +133,6 @@ function updateModule(data) {
 
     if (name === 'gear') {
         const el    = document.getElementById('val-gear');
-        const label = document.getElementById('val-gear-label');
         if (el) {
             el.classList.remove('reverse', 'neutral');
             if (data.reverse) {
@@ -151,13 +162,13 @@ function updateModule(data) {
         const icon  = document.getElementById('icon-engine');
         const label = document.getElementById('label-engine');
         const STATE_MAP = {
-            ok:       { cls: 'engine-ok',       txt: 'OK'       },
-            damaged:  { cls: 'engine-damaged',   txt: 'SÉRÜLT'  },
-            critical: { cls: 'engine-critical',  txt: 'KRITIKUS' },
-            off:      { cls: 'engine-off',        txt: 'LEÁLLVA' },
+            ok:       { cls: 'engine-ok',       txt: 'OK'        },
+            damaged:  { cls: 'engine-damaged',  txt: 'SÉRÜLT'   },
+            critical: { cls: 'engine-critical', txt: 'KRITIKUS'  },
+            off:      { cls: 'engine-off',      txt: 'LEÁLLVA'   },
         };
         const s = STATE_MAP[data.state] || STATE_MAP.ok;
-        if (icon)  { icon.className  = 'hgi hgi-stroke hgi-engine-01 ' + s.cls; }
+        if (icon)  icon.className    = 'hgi hgi-stroke hgi-engine-01 ' + s.cls;
         if (label) { label.textContent = s.txt; label.className = 'vhud-status-label ' + s.cls; }
         return;
     }
@@ -180,18 +191,26 @@ function updateModule(data) {
     }
 
     if (name === 'seatbelt') {
-        // Öv state a show/hide-ot a client.lua kezeli
+        // show/hide a client.lua setSeatbelt exportja kezeli
         return;
     }
 
     if (name === 'siren') {
         const label = document.getElementById('label-siren');
-        if (label) label.textContent = data.mode ? String(data.mode).toUpperCase() : 'AKTÍV';
+        // FIX: data.mode a stage label (pl. 'CODE 1', 'CODE 2', 'CODE 3')
+        // Ha active=false, 'KI' feliratot mutatunk rovid ideig, majd eltunik
+        if (label) {
+            if (data.active) {
+                label.textContent = data.mode ? String(data.mode).toUpperCase() : 'AKTÍV';
+            } else {
+                label.textContent = 'KI';
+            }
+        }
         return;
     }
 }
 
-// ── NUI message feldolgozás ───────────────────────────────────
+// ── NUI message feldolgozas ───────────────────────────────────
 
 window.addEventListener('message', function(e) {
     const d = e.data;
