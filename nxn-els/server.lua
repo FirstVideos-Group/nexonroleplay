@@ -22,9 +22,11 @@ local function HasElsPermission(src)
     return playerJobs[src] ~= nil and playerJobs[src].allowed == true
 end
 
---- Admin flag biztonságos push a kliensnek
+--- Admin flag biztonságos push a kliensnek.
+--- CSAK akkor hívd, ha src egy valódi kliens source-a (nem 0, nem szerver event)!
 ---@param src number
 local function PushAdminState(src)
+    if not src or src == 0 then return end
     if not GetPlayerName(src) then return end
     local isAdm = IsAdmin(src)
     TriggerClientEvent('nxn-els:client:setAdminState', src, isAdm)
@@ -53,9 +55,6 @@ RegisterServerEvent('nxn-els:server:setSirenSound', function(netId, tone)
 end)
 
 -- ── Job jogosultság ───────────────────────────────────────────
--- FIX: a finalAllowed kiszámításakor az IsAdmin() eredménye is beépül,
--- így a kliens helyes jogosultságot kap akkor is, ha az admin check
--- előbb fut le mint a job push.
 
 RegisterServerEvent('nxn-els:server:setJobPermission', function(job, allowed)
     local src = source
@@ -68,36 +67,14 @@ RegisterServerEvent('nxn-els:server:setJobPermission', function(job, allowed)
 end)
 
 -- ── Admin check (kliens kéri) ─────────────────────────────────
+-- FIX: ez az EGYETLEN belépési pont az admin állapot pushhoz.
+-- A nxn-database playerLoaded eventje TriggerEvent-tel tüzel (lokális
+-- szerver event), így ott a source=0 lenne, ami IsPlayerAceAllowed-nál
+-- mindig false-t adna vissza. A kliens 1mp után maga kéri a checket,
+-- ahol a source garantáltan a valódi játékos slot ID-ja.
 
 RegisterServerEvent('nxn-els:server:requestAdminCheck', function()
     PushAdminState(source)
-end)
-
--- ── Játékos betöltés: admin push ─────────────────────────────
--- FIX: az event handler a `src` paramétert használja, nem a `source` globálist,
--- mert a playerLoaded event kontextusában a `source` nem megbízható.
-
-AddEventHandler('nxn-database:server:playerLoaded', function(src, _playerData)
-    -- src paraméterként érkezik, nem source-ként
-    if not src or not GetPlayerName(src) then return end
-    CreateThread(function()
-        Wait(300)  -- ACE scope garantáltan érvényes rövid várakozás után
-        PushAdminState(src)
-    end)
-end)
-
--- Fallback ha nxn-database nem fut
-AddEventHandler('playerSpawned', function()
-    if GetResourceState('nxn-database') ~= 'started' then
-        -- FIX: source-t a handler tetején mentjük, ne aszinkron kontextusban olvassuk
-        local src = source
-        CreateThread(function()
-            Wait(300)
-            if GetPlayerName(src) then
-                PushAdminState(src)
-            end
-        end)
-    end
 end)
 
 -- ── Játékos kilép ─────────────────────────────────────────────
