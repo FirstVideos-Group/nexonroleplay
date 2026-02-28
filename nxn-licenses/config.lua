@@ -8,103 +8,118 @@ Config.Debug        = false
 Config.ResourceName = GetCurrentResourceName()
 
 -- ── Parancsok ─────────────────────────────────────────
-Config.Command = 'idcard'      -- Inventory megnyitó parancs
+Config.Command = 'idcard'
 
--- ── Igénylés feldolgozási intervallum (másodperc) ─────────────
-Config.ProcessInterval = 30    -- 30 másodpercenként nézi át a függő igényléseket
+-- ── Feldolgozási intervallum (másodperc) ─────────────────────
+Config.ProcessInterval = 30
 
--- ── Igazolvány típusok ──────────────────────────────────
+-- ── Inventory integráció ────────────────────────────────
 --
--- id          : belso azonosító (string, egyedi)
--- label       : megjelenitési név
--- icon        : HugeIcons CSS osztály
--- color       : az igazolvány és lista sor egyedi színe (hex vagy CSS érték)
---               Ha nincs megadva, az alapbázis accent szín érvényesül.
--- processSec  : hány másodperccel a váltás után kerül a játékoshoz
--- validDays   : érvényesség napokban (0 = sosem jár le)
--- cost        : kiváltás ára ($, 0 = ingyenes) – jövőbeli pénzrendszer integrációhoz
--- requiredAge : minimum életkor (0 = nincs korlát)
--- showFields  : milyen mezőket mutat az igazolványon
---   támogatott mezők: name, birthdate, gender, id_number, issued, expires
+-- Ha Config.InventoryCheck = true, a script ellenőrzi, hogy az adott
+-- igazolvány fizikailag megtalálható-e a játékos inventoryában
+-- (nxn-inventory hasItem exportán keresztül) mielőtt:
+--   - megengedi a megtekintést/felmutatást
+--   - a hasLicense export true-val tér vissza
+--
+-- Ha false, a régi viselkedés marad (csak DB-ben kell legyen).
+--
+Config.InventoryCheck = true
+
+-- ── Igazolvány típusok ───────────────────────────────────
+--
+-- Új mező:
+--   inventoryItem : az nxn-inventory-ban lévő item neve.
+--                   Amikor az igazolvány kiadásra kerül (manualis grantLicense
+--                   vagy feldolgozó tick), a script 1 db ezt az itemet adja
+--                   a játékos inventory-jába.
+--                   Ha nil / nem adott és InventoryCheck = true,
+--                   a típus nem elérhető megtekintésre sem.
 Config.LicenseTypes = {
     {
-        id          = 'id_card',
-        label       = 'Személyi igazolvány',
-        icon        = 'hgi-id-verified',
-        color       = '#5b6af0',   -- kek-lila (alap accent)
-        processSec  = 300,
-        validDays   = 3650,
-        cost        = 0,
-        requiredAge = 14,
-        showFields  = { 'name', 'birthdate', 'gender', 'id_number', 'issued', 'expires' },
+        id            = 'id_card',
+        label         = 'Személyi igazolvány',
+        icon          = 'hgi-id-verified',
+        color         = '#5b6af0',
+        processSec    = 300,
+        validDays     = 3650,
+        cost          = 0,
+        requiredAge   = 14,
+        showFields    = { 'name', 'birthdate', 'gender', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_id_card',
     },
     {
-        id          = 'drivers_license',
-        label       = 'Jogosítvány',
-        icon        = 'hgi-steering-wheel',
-        color       = '#4ea8de',   -- ég színső kek
-        processSec  = 600,
-        validDays   = 1825,
-        cost        = 500,
-        requiredAge = 17,
-        showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        id            = 'drivers_license',
+        label         = 'Jogosítvány',
+        icon          = 'hgi-steering-wheel',
+        color         = '#4ea8de',
+        processSec    = 600,
+        validDays     = 1825,
+        cost          = 500,
+        requiredAge   = 17,
+        showFields    = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_drivers',
     },
     {
-        id          = 'weapon_license',
-        label       = 'Fegyverengedély',
-        icon        = 'hgi-gun-01',
-        color       = '#f05b5b',   -- piros
-        processSec  = 1800,
-        validDays   = 730,
-        cost        = 2000,
-        requiredAge = 21,
-        showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        id            = 'weapon_license',
+        label         = 'Fegyverengedély',
+        icon          = 'hgi-gun-01',
+        color         = '#f05b5b',
+        processSec    = 1800,
+        validDays     = 730,
+        cost          = 2000,
+        requiredAge   = 21,
+        showFields    = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_weapon',
     },
     {
-        id          = 'pilot_license',
-        label       = 'Repülő engedély',
-        icon        = 'hgi-airplane-01',
-        color       = '#a78bfa',   -- lila
-        processSec  = 3600,
-        validDays   = 1095,
-        cost        = 5000,
-        requiredAge = 18,
-        showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        id            = 'pilot_license',
+        label         = 'Repülő engedély',
+        icon          = 'hgi-airplane-01',
+        color         = '#a78bfa',
+        processSec    = 3600,
+        validDays     = 1095,
+        cost          = 5000,
+        requiredAge   = 18,
+        showFields    = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_pilot',
     },
     {
-        id          = 'medical_card',
-        label       = 'Mentős Szolgálati Kártya',
-        icon        = 'hgi-first-aid-kit',
-        color       = '#3ecf8e',   -- zöld
-        processSec  = 60,
-        validDays   = 365,
-        cost        = 0,
-        requiredAge = 18,
-        showFields  = { 'name', 'birthdate', 'gender', 'id_number', 'issued', 'expires' },
+        id            = 'medical_card',
+        label         = 'Mentős Szolgálati Kártya',
+        icon          = 'hgi-first-aid-kit',
+        color         = '#3ecf8e',
+        processSec    = 60,
+        validDays     = 365,
+        cost          = 0,
+        requiredAge   = 18,
+        showFields    = { 'name', 'birthdate', 'gender', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_medical',
     },
     {
-        id          = 'police_badge',
-        label       = 'Rendőrségi Szolgálati Kártya',
-        icon        = 'hgi-police-badge',
-        color       = '#60a5fa',   -- világos kek
-        processSec  = 60,
-        validDays   = 365,
-        cost        = 0,
-        requiredAge = 21,
-        showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        id            = 'police_badge',
+        label         = 'Rendőrségi Szolgálati Kártya',
+        icon          = 'hgi-police-badge',
+        color         = '#60a5fa',
+        processSec    = 60,
+        validDays     = 365,
+        cost          = 0,
+        requiredAge   = 21,
+        showFields    = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_police_badge',
     },
     {
-        id          = 'boat_license',
-        label       = 'Hajó Engedély',
-        icon        = 'hgi-anchor-01',
-        color       = '#22d3ee',   -- cian
-        processSec  = 900,
-        validDays   = 1825,
-        cost        = 1200,
-        requiredAge = 16,
-        showFields  = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        id            = 'boat_license',
+        label         = 'Hajó Engedély',
+        icon          = 'hgi-anchor-01',
+        color         = '#22d3ee',
+        processSec    = 900,
+        validDays     = 1825,
+        cost          = 1200,
+        requiredAge   = 16,
+        showFields    = { 'name', 'birthdate', 'id_number', 'issued', 'expires' },
+        inventoryItem = 'license_boat',
     },
 }
 
--- ── Névtelen ID szám prefix ─────────────────────────────────
+-- ── ID szám prefix ────────────────────────────────────────
 Config.IdPrefix = 'NXN'

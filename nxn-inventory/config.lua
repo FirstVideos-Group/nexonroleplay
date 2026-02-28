@@ -7,30 +7,22 @@ Config = {}
 Config.Debug        = false
 Config.ResourceName = GetCurrentResourceName()
 
--- ── Billentyűk ───────────────────────────────────────────────
-Config.OpenKey = 'F1'   -- Inventory megnyitó gomb
+-- ── Billentyűk ────────────────────────────────────────────
+Config.OpenKey = 'F1'
 
--- ── Súlyrendszer ────────────────────────────────────────────
-Config.MaxWeight = 30.0     -- kg, max súlya az inventorynak
+-- ── Súlyrendszer ──────────────────────────────────────────
+Config.MaxWeight = 30.0
 
--- ── Hotbar ─────────────────────────────────────────────────
-Config.HotbarSlots = 5      -- Hotbar helyek száma (1-8)
+-- ── Hotbar ──────────────────────────────────────────────
+Config.HotbarSlots = 5
 
--- ── Adatbázis ──────────────────────────────────────────────
+-- ── Adatbázis ───────────────────────────────────────────
 Config.InventoryTable = 'nxn_inventories'
-Config.SaveInterval   = 120  -- másodperc – periodikális DB-mentés
+Config.SaveInterval   = 120
 
--- ── Itemek ─────────────────────────────────────────────────
--- icon: HugeIcons osztálynév (hgi-*)
--- weight: kg/darab
--- stackable: több darab egybe számolhat-e
--- usable: használható-e (hasznala eseten csokken)
--- useAction: milyen eseményt triggerel használatkor
--- maxStack: maximalis kupác méret (stackable = true esetén)
--- needs: mit növel használatra (nxn-needs integráció)
---   formátuma: { hunger = 20, thirst = 0, stress = -5 }
+-- ── Itemek ──────────────────────────────────────────────
 Config.Items = {
-    -- Étel/ital
+    -- ── Étel/ital ──
     water_bottle = {
         label    = 'Vízespohár',
         icon     = 'hgi-water-polo',
@@ -54,7 +46,7 @@ Config.Items = {
         category = 'food',
     },
     energy_drink = {
-        label    = 'Energiaéital',
+        label    = 'Energiaiþtal',
         icon     = 'hgi-drink',
         weight   = 0.4,
         stackable = true,
@@ -75,7 +67,7 @@ Config.Items = {
         needs    = { hunger = 40 },
         category = 'food',
     },
-    -- Gyógyszerek
+    -- ── Gyógyszerek ──
     bandage = {
         label    = 'Kötöszer',
         icon     = 'hgi-first-aid-kit',
@@ -89,7 +81,7 @@ Config.Items = {
         category = 'medical',
     },
     painkiller = {
-        label    = 'Fájdalomcsillapító',
+        label    = 'Fájdalomcsillapitó',
         icon     = 'hgi-medicine-01',
         weight   = 0.1,
         stackable = true,
@@ -99,7 +91,7 @@ Config.Items = {
         needs    = { stress = -20 },
         category = 'medical',
     },
-    -- Egyebek
+    -- ── Egyébek ──
     phone = {
         label    = 'Mobiltelefon',
         icon     = 'hgi-smart-phone-01',
@@ -125,10 +117,72 @@ Config.Items = {
         usable   = false,
         category = 'misc',
     },
+
+    -- ============================================================
+    --  nxn-licenses igazolvány tárgyak
+    --  Ezeket a nxn-licenses automatikusan adja / veszi el.
+    --  usable = false: a játékos nem tudja elővenni/használni,
+    --  de más scriptekben ellenorizhető a jelenléte.
+    -- ============================================================
+    license_id_card = {
+        label     = 'Személyi igazolvány',
+        icon      = 'hgi-id-verified',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
+    license_drivers = {
+        label     = 'Jogosítvány',
+        icon      = 'hgi-steering-wheel',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
+    license_weapon = {
+        label     = 'Fegyverengedély',
+        icon      = 'hgi-gun-01',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
+    license_pilot = {
+        label     = 'Repülő engedély',
+        icon      = 'hgi-airplane-01',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
+    license_medical = {
+        label     = 'Mentős Szolgálati Kártya',
+        icon      = 'hgi-first-aid-kit',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
+    license_police_badge = {
+        label     = 'Rendőrségi Szolgálati Kártya',
+        icon      = 'hgi-police-badge',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
+    license_boat = {
+        label     = 'Hajó Engedély',
+        icon      = 'hgi-anchor-01',
+        weight    = 0.01,
+        stackable = false,
+        usable    = false,
+        category  = 'documents',
+    },
 }
 
 -- ── Jobb klikk menü akciók ─────────────────────────────────
--- Ezeket a NUI-ban is használja a rendszer
 Config.ContextActions = {
     use    = { label = 'Használat',  icon = 'hgi-play-circle-01',  condition = 'usable'  },
     hotbar = { label = 'Hotbar-ra',  icon = 'hgi-arrow-down-01',   condition = 'always'  },
