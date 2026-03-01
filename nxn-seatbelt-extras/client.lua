@@ -3,7 +3,7 @@
 --  Fizikai utkozes-kezeles, kirepules, serules, effektek
 -- ============================================================
 
--- ── Allapot ────────────────────────────────────────────────
+-- ── Allapot ─────────────────────────────────────────────────────
 
 local lastSpeed        = 0.0
 local lastVehicle      = 0
@@ -11,7 +11,12 @@ local inVehicle        = false
 local crashCooldown    = false
 local extrasEnabled    = true
 
--- ── Segéd: seatbelt allapot ──────────────────────────────
+-- #103: Eredeti config ertekek elmentese indulaaskor a resetConfig exporthoz
+local defaultEjectionThreshold = Config.Ejection.speedThreshold
+local defaultEjectionEnabled   = Config.Ejection.enabled
+local defaultDamageEnabled     = Config.Damage.enabled
+
+-- ── Segéd: seatbelt allapot ──────────────────────────────────
 
 local function IsFastened()
     if GetResourceState('nxn-seatbelt') ~= 'started' then
@@ -21,20 +26,23 @@ local function IsFastened()
     return exports['nxn-seatbelt']:isFastened()
 end
 
--- ── Segéd: notify ─────────────────────────────────────────
--- FIX: 'send' export nem létezik az nxn-notify-ban.
--- Elérhető exportok: info | success | danger | warning | notify
--- A 'notify' export általános, típust is fogad – ezt használjuk.
-
+-- ── Segéd: notify ─────────────────────────────────────────────
+-- #105: Típusos export-pattern az nxn-seatbelt mintajára
+-- (nxn-notify 'notify' exportja nem feltetlenül létezik)
 local function Notify(msg, ntype)
-    if GetResourceState('nxn-notify') == 'started' then
-        exports['nxn-notify']:notify(msg, ntype or 'info')
-    else
+    if GetResourceState('nxn-notify') ~= 'started' then
         NXN.SeatbeltExt.Warn(('Notify fallback [%s]: %s'):format(ntype or 'info', msg))
+        return
+    end
+    local t = ntype or 'info'
+    if     t == 'success' then exports['nxn-notify']:success(msg)
+    elseif t == 'danger'  then exports['nxn-notify']:danger(msg)
+    elseif t == 'warning' then exports['nxn-notify']:warning(msg)
+    else                       exports['nxn-notify']:info(msg)
     end
 end
 
--- ── Kirepulés (ejection) ─────────────────────────────────────
+-- ── Kirepulés (ejection) ───────────────────────────────────────
 
 ---@param ped       number
 ---@param vehicle   number
@@ -46,34 +54,44 @@ local function ApplyEjection(ped, vehicle, deltaV)
 
     NXN.SeatbeltExt.Log(('Ejection: deltaV=%.1f km/h'):format(deltaV))
 
-    local coords = GetEntityCoords(ped)
-    SetPedCoordsKeepVehicle(ped, coords.x, coords.y, coords.z)
+    -- #107: SetPedCoordsKeepVehicle eltávolítva – felesleges és potenciálisan
+    -- veszelyes (jármuű pozícióját is átírhatja). TaskLeaveVehicle maga kezeli a kiszallást.
     TaskLeaveVehicle(ped, vehicle, 4160)
 
-    Wait(50)
-    local vehVel = GetEntityVelocity(vehicle)
-    local force  = cfg.forceMultiplier
-    SetEntityVelocity(ped,
-        vehVel.x * force,
-        vehVel.y * force,
-        math.abs(vehVel.z) * force + (deltaV * 0.012)
-    )
+    -- #101: CreateThread-be került – nem blokkolja a hívó szalat,
+    -- és várja a tényleges kiszallást (IsPedInVehicle polling)
+    CreateThread(function()
+        local timeout = 0
+        while IsPedInVehicle(ped, vehicle, false) and timeout < 30 do
+            Wait(50)
+            timeout = timeout + 1
+        end
 
-    SetPedToRagdoll(ped,
-        Config.PostCrash.ragdollDuration * 2,
-        Config.PostCrash.ragdollDuration * 2,
-        0, false, false, false
-    )
+        if not IsPedInVehicle(ped, vehicle, false) then
+            local vehVel = GetEntityVelocity(vehicle)
+            local force  = cfg.forceMultiplier
+            SetEntityVelocity(ped,
+                vehVel.x * force,
+                vehVel.y * force,
+                math.abs(vehVel.z) * force + (deltaV * 0.012)
+            )
+            SetPedToRagdoll(ped,
+                Config.PostCrash.ragdollDuration * 2,
+                Config.PostCrash.ragdollDuration * 2,
+                0, false, false, false
+            )
+        end
 
-    if cfg.notify then
-        Notify(cfg.notifyMsg, 'danger')
-    end
+        if cfg.notify then
+            Notify(cfg.notifyMsg, 'danger')
+        end
 
-    TriggerEvent('nxn-seatbelt-extras:ejected', { deltaV = deltaV })
-    NXN.SeatbeltExt.Info(('Jatekos kirepult: deltaV=%.1f'):format(deltaV))
+        TriggerEvent('nxn-seatbelt-extras:ejected', { deltaV = deltaV })
+        NXN.SeatbeltExt.Info(('Jatekos kirepult: deltaV=%.1f'):format(deltaV))
+    end)
 end
 
--- ── Serules alkalmazása ──────────────────────────────────────
+-- ── Serules alkalmazasa ───────────────────────────────────────
 
 ---@param ped      number
 ---@param fastened boolean
@@ -96,7 +114,11 @@ local function ApplyDamage(ped, fastened, deltaV)
     ))
 
     local currentHealth = GetEntityHealth(ped)
-    SetEntityHealth(ped, math.floor(math.max(currentHealth - rawDamage, 100)))
+    -- #100: GTA HP skala: 0 = halál határa (nem 100!)
+    -- Az eredeti math.max(..., 100) megakadályozta, hogy a játékos balesetben meghaljon
+    local newHealth = math.floor(math.max(currentHealth - rawDamage, 0))
+    SetEntityHealth(ped, newHealth)
+    NXN.SeatbeltExt.Log(('ApplyDamage: HP %d -> %d'):format(currentHealth, newHealth))
 
     if cfg.screenFlash then
         AnimpostfxPlay('DamageFlash', 0, false)
@@ -109,7 +131,7 @@ local function ApplyDamage(ped, fastened, deltaV)
     })
 end
 
--- ── Ragdoll ───────────────────────────────────────────────
+-- ── Ragdoll ───────────────────────────────────────────────────
 
 local function ApplyRagdoll(ped, fastened)
     local cfg = Config.PostCrash
@@ -119,7 +141,7 @@ local function ApplyRagdoll(ped, fastened)
     SetPedToRagdoll(ped, duration, duration, 0, false, false, false)
 end
 
--- ── Kamera + hang effektek ──────────────────────────────────
+-- ── Kamera + hang effektek ──────────────────────────────────────
 
 local function ApplyCrashEffects(fastened, deltaV)
     local cfg = Config.PostCrash
@@ -144,7 +166,7 @@ local function ApplyCrashEffects(fastened, deltaV)
     end
 end
 
--- ── Utkozes-feldolgozó ─────────────────────────────────────────
+-- ── Utkozes-feldolgozo ────────────────────────────────────────────
 
 ---@param ped     number
 ---@param vehicle number
@@ -169,17 +191,20 @@ local function ProcessCollision(ped, vehicle, deltaV)
         NXN.SeatbeltExt.Log('Crash cooldown lejart')
     end)
 
+    -- #104: Minor/Major kizaró else-if lánc + MajorCollision maxSpeed ellenőrzés
     local minCfg = Config.MinorCollision
+    local majCfg = Config.MajorCollision
+
     if minCfg.enabled and deltaV >= minCfg.minSpeed and deltaV < minCfg.maxSpeed then
         NXN.SeatbeltExt.Log('Minor collision')
         if minCfg.notify then
             Notify(minCfg.notifyMsg, 'warning')
         end
         TriggerEvent('nxn-seatbelt-extras:collision', { type = 'minor', deltaV = deltaV, fastened = fastened })
-    end
 
-    local majCfg = Config.MajorCollision
-    if majCfg.enabled and deltaV >= majCfg.minSpeed then
+    elseif majCfg.enabled and deltaV >= majCfg.minSpeed
+        and (not majCfg.maxSpeed or deltaV <= majCfg.maxSpeed) then
+
         NXN.SeatbeltExt.Log(('Major collision: fastened=%s'):format(tostring(fastened)))
 
         if majCfg.notify then
@@ -201,7 +226,7 @@ local function ProcessCollision(ped, vehicle, deltaV)
     end
 end
 
--- ── Fő detectáló loop ──────────────────────────────────────────
+-- ── Fő detectáló loop ──────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -237,7 +262,7 @@ CreateThread(function()
     end
 end)
 
--- ── Exportok ────────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────
 
 exports('setEnabled', function(state)
     extrasEnabled = state
@@ -269,8 +294,16 @@ exports('setEjectionThreshold', function(val)
     NXN.SeatbeltExt.Log(('Ejection threshold: %.1f'):format(val))
 end)
 
+-- #102: getDamageConfig shallow copy – külso resource nem korrumpalhatja a belső configot
 exports('getDamageConfig', function()
-    return Config.Damage
+    return {
+        enabled                     = Config.Damage.enabled,
+        unfasteningSpeedThreshold   = Config.Damage.unfasteningSpeedThreshold,
+        fasteningSpeedThreshold     = Config.Damage.fasteningSpeedThreshold,
+        unfasteningDamageMultiplier = Config.Damage.unfasteningDamageMultiplier,
+        fasteningDamageMultiplier   = Config.Damage.fasteningDamageMultiplier,
+        screenFlash                 = Config.Damage.screenFlash,
+    }
 end)
 
 exports('setEjectionEnabled', function(state)
@@ -283,6 +316,10 @@ exports('setDamageEnabled', function(state)
     NXN.SeatbeltExt.Log(('Damage enabled: %s'):format(tostring(state)))
 end)
 
+-- #103: resetConfig valóban visszaallítja az induláskor elmentett értékeket
 exports('resetConfig', function()
+    Config.Ejection.speedThreshold = defaultEjectionThreshold
+    Config.Ejection.enabled        = defaultEjectionEnabled
+    Config.Damage.enabled          = defaultDamageEnabled
     NXN.SeatbeltExt.Log('Config visszaallitva alapertekekre')
 end)

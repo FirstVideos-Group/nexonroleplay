@@ -18,8 +18,7 @@ client_scripts {
     'client.lua'
 }
 
-files {
-    'docs/index.html'
-}
+-- #106: files szekció teljeségében eltávolítva
+-- (docs/index.html felesleges, nincs NUI/ui_page ebben a resourceban)
 
 lua54 'yes'
