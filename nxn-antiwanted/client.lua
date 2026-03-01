@@ -20,12 +20,17 @@ end
 
 local function ClearWanted()
     if allowWanted then return end
-    local ped = PlayerPedId()
     if GetPlayerWantedLevel(PlayerId()) > 0 then
         SetPlayerWantedLevel(PlayerId(), 0, false)
         SetPlayerWantedLevelNow(PlayerId(), false)
         NXN.AntiWanted.Log('Wanted level cleared')
     end
+end
+
+-- ── Állapot szinkronizálás a szerverrel ──────────────────────
+
+local function ReportStateToServer()
+    TriggerServerEvent('nxn-antiwanted:server:reportState', allowWanted)
 end
 
 -- ── Rendőrségi járőrök letiltása ─────────────────────────────
@@ -67,6 +72,11 @@ Citizen.CreateThread(function()
         NXN.AntiWanted.Log('Initial wanted clear done')
     end
 
+    -- Szerver értesítése a kezdeti állapotról
+    ReportStateToServer()
+    -- Szerver jelzése hogy a játékos készen áll
+    TriggerServerEvent('nxn-antiwanted:server:playerReady')
+
     -- Folyamatos körözés törlő loop
     while true do
         Citizen.Wait(Config.ClearInterval)
@@ -94,6 +104,38 @@ AddEventHandler('baseevents:onPlayerDied', function()
     end)
 end)
 
+-- ── Szerver által küldött event handlerek ─────────────────────
+
+--- Szerver kéri a körözési szint azonnali nullázását
+AddEventHandler('nxn-antiwanted:client:clearWanted', function()
+    SetPlayerWantedLevel(PlayerId(), 0, false)
+    SetPlayerWantedLevelNow(PlayerId(), false)
+    NXN.AntiWanted.Log('Wanted cleared by server')
+end)
+
+--- Szerver állítja be a körözési rendszer állapotát
+AddEventHandler('nxn-antiwanted:client:setWantedState', function(allow)
+    allowWanted = allow
+    if allow then
+        local playerId = PlayerId()
+        SetMaxWantedLevel(5)
+        SetPoliceIgnorePlayer(playerId, false)
+        SetPoliceRadarBlips(true)
+        for _, id in ipairs(Config.DispatchServices) do
+            EnableDispatchService(id, true)
+        end
+        NXN.AntiWanted.Log('Wanted state set to: ENABLED by server')
+    else
+        DisableAllDispatch()
+        DisableCopBehaviour()
+        BlockWantedSystem()
+        ClearWanted()
+        NXN.AntiWanted.Log('Wanted state set to: DISABLED by server')
+    end
+    -- Állapot visszajelzése a szervernek
+    ReportStateToServer()
+end)
+
 -- ── Exports ───────────────────────────────────────────────────
 
 --- Visszaadja, hogy a körözési rendszer jelenleg engedélyezett-e
@@ -114,6 +156,7 @@ exports('enableWanted', function()
         EnableDispatchService(id, true)
     end
     NXN.AntiWanted.Log('Wanted system ENABLED (by export)')
+    ReportStateToServer()
 end)
 
 --- Visszaállítja a körözési tiltást
@@ -125,6 +168,7 @@ exports('disableWanted', function()
     BlockWantedSystem()
     ClearWanted()
     NXN.AntiWanted.Log('Wanted system DISABLED (by export)')
+    ReportStateToServer()
 end)
 
 --- Azonnal nullázza a körözési szintet (egyszer)
