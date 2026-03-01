@@ -25,6 +25,26 @@ local function EmptyInventory()
     return { items = {}, hotbar = {} }
 end
 
+-- #40 – DeductItem: közös segédfüggvény dropItem és deleteItem számára
+-- Eltávolít egy itemet a cache-ből (nem menti DB-be), hotbart is tisztítja.
+---@return boolean siker
+local function DeductItem(src, itemName, count)
+    local inv = invCache[src]
+    if not inv or not inv.items[itemName] then return false end
+    local have = inv.items[itemName].count or 1
+    if count >= have then
+        inv.items[itemName] = nil
+        -- Hotbar tisztítás
+        for slot, name in pairs(inv.hotbar or {}) do
+            if name == itemName then inv.hotbar[slot] = nil end
+        end
+    else
+        inv.items[itemName].count = have - count
+    end
+    invCache[src] = inv
+    return true
+end
+
 -- ── DB tábla ──────────────────────────────────────────────────
 
 local function RegisterTable()
@@ -99,7 +119,7 @@ local function SaveInventory(src)
     NXN.Inventory.Log(('Elmentve: src=%d'):format(src))
 end
 
--- ── Nétwork események ───────────────────────────────────────────
+-- ── Hálózati események ───────────────────────────────────────────
 
 AddEventHandler('nxn-database:server:playerLoaded', function(src, playerData)
     NXN.Inventory.Log(('playerLoaded: src=%d'):format(src))
@@ -108,12 +128,23 @@ AddEventHandler('nxn-database:server:playerLoaded', function(src, playerData)
     end)
 end)
 
+-- #42 – playerDropped: CreateThread eltávolítva, MySQL.update.await,
+--        cache nil-lése CSAK a mentés után
 AddEventHandler('playerDropped', function()
-    local src = source
-    CreateThread(function()
-        SaveInventory(src)
-        invCache[src] = nil
-    end)
+    local src  = source
+    local data = invCache[src]
+    if not data then return end
+
+    local identifier = GetIdentifier(src)
+    if identifier then
+        local ok1, itemsJson  = pcall(json.encode, data.items  or {})
+        local ok2, hotbarJson = pcall(json.encode, data.hotbar or {})
+        MySQL.update.await(
+            'UPDATE `' .. Config.InventoryTable .. '` SET items=?, hotbar=? WHERE identifier=?',
+            { ok1 and itemsJson or '{}', ok2 and hotbarJson or '{}', identifier }
+        )
+    end
+    invCache[src] = nil
 end)
 
 -- Kliens kér szinkronizációt
@@ -125,7 +156,6 @@ end)
 RegisterNetEvent('nxn-inventory:server:updateHotbar', function(hotbar)
     local src = source
     if not invCache[src] then return end
-    -- Validació: csak létező slotokba mehet
     local clean = {}
     for slot, itemName in pairs(hotbar) do
         local s = tonumber(slot)
@@ -172,16 +202,14 @@ RegisterNetEvent('nxn-inventory:server:useItem', function(itemName)
         end
     end
 
-    -- HP gyógyítás (bandage stb.)
+    -- HP gyógyítás
     if def.heal and def.heal > 0 then
         TriggerClientEvent('nxn-inventory:client:applyHeal', src, def.heal)
     end
 
-    -- Szinkronizálás + értesítés
     SyncClient(src)
     TriggerClientEvent('nxn-inventory:client:useResult', src, true, itemName, nil)
 
-    -- Egyedi use event trigger (más resourceok figyelhetik)
     TriggerEvent('nxn-inventory:server:itemUsed', src, itemName, def)
     if def.useAction then
         TriggerEvent(def.useAction, src)
@@ -190,45 +218,31 @@ RegisterNetEvent('nxn-inventory:server:useItem', function(itemName)
     NXN.Inventory.Log(('useItem DONE: src=%d item=%s'):format(src, itemName))
 end)
 
--- Eldobás
+-- #39 / #40 – dropItem: DeductItem segédfüggvény + szerver visszaigazolás (dropResult)
 RegisterNetEvent('nxn-inventory:server:dropItem', function(itemName, count)
     local src   = source
     local count = math.max(1, tonumber(count) or 1)
     NXN.Inventory.Log(('dropItem: src=%d item=%s cnt=%d'):format(src, itemName, count))
 
-    local inv = invCache[src]
-    if not inv or not inv.items[itemName] then return end
-
-    local slot = inv.items[itemName]
-    local have = slot.count or 1
-    if count >= have then
-        inv.items[itemName] = nil
-    else
-        inv.items[itemName].count = have - count
+    local ok = DeductItem(src, itemName, count)
+    if not ok then
+        TriggerClientEvent('nxn-inventory:client:dropResult', src, false, itemName)
+        return
     end
-    invCache[src] = inv
+
     SyncClient(src)
-    -- Dropped event (más script reaghat rá, pl. ground items)
+    -- #39 – visszaigazolás: kliens csak most kap értesítést
+    TriggerClientEvent('nxn-inventory:client:dropResult', src, true, itemName)
     TriggerEvent('nxn-inventory:server:itemDropped', src, itemName, count)
 end)
 
--- Törlés
+-- #40 – deleteItem: DeductItem segédfüggvény használata (duplikált kód eltávolítva)
 RegisterNetEvent('nxn-inventory:server:deleteItem', function(itemName, count)
     local src   = source
     local count = math.max(1, tonumber(count) or 1)
     NXN.Inventory.Log(('deleteItem: src=%d item=%s cnt=%d'):format(src, itemName, count))
 
-    local inv = invCache[src]
-    if not inv or not inv.items[itemName] then return end
-
-    local slot = inv.items[itemName]
-    local have = slot.count or 1
-    if count >= have then
-        inv.items[itemName] = nil
-    else
-        inv.items[itemName].count = have - count
-    end
-    invCache[src] = inv
+    if not DeductItem(src, itemName, count) then return end
     SyncClient(src)
 end)
 
@@ -259,12 +273,14 @@ end)
 
 -- ── Exportok ───────────────────────────────────────────────
 
---- Visszaadja egy játékos teljes inventory-ját
+--- #43 – getInventory: shallow copy visszaadása belső referencia helyett
 ---@param src integer
 ---@return table|nil  { items={}, hotbar={} }
 exports('getInventory', function(src)
     NXN.Inventory.Log(('getInventory export: src=%d'):format(src))
-    return invCache[src]
+    local data = invCache[src]
+    if not data then return nil end
+    return { items = data.items, hotbar = data.hotbar }
 end)
 
 --- Visszaadja, van-e egy itemből megadott mennyiség
@@ -278,12 +294,12 @@ exports('hasItem', function(src, itemName, amount)
     return (inv.items[itemName].count or 1) >= (amount or 1)
 end)
 
---- Item hozzáadása (más resource hívhatja)
+--- #41 – addItem: azonnali SaveInventory hívás szerver crash ellen
 ---@param src integer
 ---@param itemName string
 ---@param amount integer
----@return boolean ok -- Sikeres volt-e a művelet
----@return string errmsg -- Hibaüzenet (sikernél üres string)
+---@return boolean ok
+---@return string errmsg
 exports('addItem', function(src, itemName, amount)
     local amount = math.max(1, tonumber(amount) or 1)
     local inv    = invCache[src]
@@ -292,14 +308,12 @@ exports('addItem', function(src, itemName, amount)
     local def = NXN.Inventory.GetItemDef(itemName)
     if not def then return false, ('Ismeretlen item: %s'):format(itemName) end
 
-    -- Súlyellenőrzés
     local currentWeight = NXN.Inventory.CalcWeight(inv.items)
     local addWeight     = def.weight * amount
     if currentWeight + addWeight > Config.MaxWeight then
         return false, 'Túl nehéz – nincs elég hely'
     end
 
-    -- Stack vagy új slot
     if inv.items[itemName] then
         local current = inv.items[itemName].count or 1
         local max     = def.stackable and (def.maxStack or 99) or 1
@@ -313,42 +327,26 @@ exports('addItem', function(src, itemName, amount)
 
     invCache[src] = inv
     SyncClient(src)
+    SaveInventory(src)  -- #41 azonnali mentés
     NXN.Inventory.Log(('addItem: src=%d item=%s cnt=%d'):format(src, itemName, amount))
     return true, ''
 end)
 
-
---- Item eltávolítása
+--- #41 – removeItem: azonnali SaveInventory hívás szerver crash ellen
 ---@param src integer
 ---@param itemName string
 ---@param amount integer
 ---@return boolean
 exports('removeItem', function(src, itemName, amount)
     local amount = math.max(1, tonumber(amount) or 1)
-    local inv    = invCache[src]
-    if not inv or not inv.items[itemName] then return false end
-
-    local have = inv.items[itemName].count or 1
-    if amount >= have then
-        inv.items[itemName] = nil
-    else
-        inv.items[itemName].count = have - amount
-    end
-
-    -- Hotbar tisztitás ha nincs több
-    if not inv.items[itemName] then
-        for slot, name in pairs(inv.hotbar) do
-            if name == itemName then inv.hotbar[slot] = nil end
-        end
-    end
-
-    invCache[src] = inv
+    if not DeductItem(src, itemName, amount) then return false end
     SyncClient(src)
+    SaveInventory(src)  -- #41 azonnali mentés
     NXN.Inventory.Log(('removeItem: src=%d item=%s cnt=%d'):format(src, itemName, amount))
     return true
 end)
 
---- Item menű az inventoryban (más resource is kérhet frissítést)
+--- Szinkronizálás kérése más resource-tól
 ---@param src integer
 exports('syncInventory', function(src)
     SyncClient(src)

@@ -5,6 +5,12 @@ author      'Nexon Dev Team <nexondev@firstvideosgroup.eu>'
 description 'nxn-inventory – Játékos inventory és itemkezelő rendszer'
 version     '1.0.0'
 
+dependencies {
+    'nxn-database',
+    'nxn-notify',
+    'nxn-needs',
+}
+
 shared_scripts {
     'config.lua',
     'shared.lua'

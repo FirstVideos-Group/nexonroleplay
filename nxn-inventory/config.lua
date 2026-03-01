@@ -46,7 +46,7 @@ Config.Items = {
         category = 'food',
     },
     energy_drink = {
-        label    = 'Energiaiþtal',
+        label    = 'Energiaital',
         icon     = 'hgi-drink',
         weight   = 0.4,
         stackable = true,

@@ -5,6 +5,19 @@
 local isOpen    = false
 local inventory = { items = {}, hotbar = {} }
 
+-- ── Notify helper (#38) ──────────────────────────────────────
+-- GetResourceState guard véd a runtime hiba ellen ha nxn-notify még nem fut
+
+local function Notify(msg, ntype)
+    if GetResourceState('nxn-notify') ~= 'started' then return end
+    local t = ntype or 'info'
+    if     t == 'success' then exports['nxn-notify']:success(msg)
+    elseif t == 'danger'  then exports['nxn-notify']:danger(msg)
+    elseif t == 'warning' then exports['nxn-notify']:warning(msg)
+    else                       exports['nxn-notify']:info(msg)
+    end
+end
+
 -- ── UI küldés ─────────────────────────────────────────────────
 
 local function SendUI(data)
@@ -66,7 +79,6 @@ local function PushToUI(inv)
         itemDefs    = itemDefs,
     })
 
-    -- FIX: countMap() használata a # operátor helyett (string-kulcsú map-en # hibát dobna)
     NXN.Inventory.Log(('PushToUI: %d item, súly=%.2f/%.2f'):format(
         countMap(inv.items or {}),
         weight, Config.MaxWeight
@@ -85,10 +97,18 @@ RegisterNetEvent('nxn-inventory:client:useResult', function(ok, itemName, errMsg
     local def   = NXN.Inventory.GetItemDef(itemName)
     local label = def and def.label or itemName
     if ok then
-        exports['nxn-notify']:success(('Használtad: %s'):format(label))
+        Notify(('Használtad: %s'):format(label), 'success')
     else
-        exports['nxn-notify']:warning(errMsg or 'Nem használható.')
+        Notify(errMsg or 'Nem használható.', 'warning')
     end
+end)
+
+-- #39 – dropResult: szerver visszaigazolás után értesítés
+RegisterNetEvent('nxn-inventory:client:dropResult', function(ok, itemName)
+    if not ok then return end
+    local def   = NXN.Inventory.GetItemDef(itemName)
+    local label = def and def.label or itemName
+    Notify(('Eldobtad: %s'):format(label), 'info')
 end)
 
 RegisterNetEvent('nxn-inventory:client:applyHeal', function(amount)
@@ -111,21 +131,20 @@ RegisterNUICallback('useItem', function(data, cb)
     cb('ok')
 end)
 
+-- #39 – dropItem: értesítés csak szerver visszaigazolás után (dropResult event)
 RegisterNUICallback('dropItem', function(data, cb)
     NXN.Inventory.Log(('NUI dropItem: %s x%d'):format(tostring(data.item), data.count or 1))
     TriggerServerEvent('nxn-inventory:server:dropItem', data.item, data.count or 1)
-    exports['nxn-notify']:info(('Eldobtad: %s'):format(
-        (NXN.Inventory.GetItemDef(data.item) or {}).label or data.item
-    ))
     cb('ok')
 end)
 
+-- #38 – deleteItem: Notify helper használata guard-dal
 RegisterNUICallback('deleteItem', function(data, cb)
     NXN.Inventory.Log(('NUI deleteItem: %s x%d'):format(tostring(data.item), data.count or 1))
     TriggerServerEvent('nxn-inventory:server:deleteItem', data.item, data.count or 1)
-    exports['nxn-notify']:warning(('Törölted: %s'):format(
+    Notify(('Törölted: %s'):format(
         (NXN.Inventory.GetItemDef(data.item) or {}).label or data.item
-    ))
+    ), 'warning')
     cb('ok')
 end)
 
@@ -147,8 +166,6 @@ RegisterCommand('inventory', function()
     end
 end, false)
 
--- FIX: Citizen.Wait(0) helyett isOpen guard + Wait(100) amikor UI zárva
--- – megakadályozza a folyamatos CPU terhelést bezzárt UI mellett
 Citizen.CreateThread(function()
     while true do
         if isOpen then
@@ -168,10 +185,18 @@ end)
 
 -- ── Exportok ─────────────────────────────────────────────────
 
-exports('openInventory',     function() if not isOpen then SetUIVisible(true)  end end)
-exports('closeInventory',    function() if isOpen     then SetUIVisible(false) end end)
-exports('isOpen',            function() return isOpen end)
-exports('getLocalInventory', function() return inventory end)
-exports('getLocalWeight',    function()
+exports('openInventory',  function() if not isOpen then SetUIVisible(true)  end end)
+exports('closeInventory', function() if isOpen     then SetUIVisible(false) end end)
+exports('isOpen',         function() return isOpen end)
+
+-- #43 (kliens oldal) – getLocalInventory shallow copy-t ad vissza
+exports('getLocalInventory', function()
+    local copy = { items = {}, hotbar = {} }
+    for k, v in pairs(inventory.items  or {}) do copy.items[k]  = v end
+    for k, v in pairs(inventory.hotbar or {}) do copy.hotbar[k] = v end
+    return copy
+end)
+
+exports('getLocalWeight', function()
     return NXN.Inventory.CalcWeight(inventory.items or {})
 end)
