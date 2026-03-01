@@ -21,11 +21,12 @@ client_scripts {
     'modules/playerstatus.lua',
 }
 
+-- #69: docs/index.html eltavolitva – nem NUI-ban hasznalt fajl,
+-- FiveM csak NUI renderer szamara szolgalja ki a files szekciót
 files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
-    'docs/index.html'
 }
 
 ui_page 'html/index.html'

@@ -14,8 +14,9 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval * 2)
 
-        if not hudVisible then goto continue end
-        if not moduleStates['minimap'] then goto continue end
+        -- #63/#67: NXN.LocHUD nevter, == true nil-safe ellenorzés
+        if NXN.LocHUD.hudVisible ~= true then goto continue end
+        if NXN.LocHUD.moduleStates['minimap'] ~= true then goto continue end
 
         local ped    = PlayerPedId()
         local coords = GetEntityCoords(ped)

@@ -1,7 +1,6 @@
 -- ============================================================
 --  nxn-location-hud | modules/playerstatus.lua
 --  Jatekos statusz (gyalog, auto, fut, uszo, ejtoernyo)
---  FIX: repulo osztaly (15=boat, 16=plane) duplikat javitva
 -- ============================================================
 
 CreateThread(function()
@@ -10,8 +9,9 @@ CreateThread(function()
     while true do
         Wait(Config.StatusPollInterval)
 
-        if not hudVisible then goto continue end
-        if not moduleStates['playerstatus'] then goto continue end
+        -- #63/#67: NXN.LocHUD nevter, == true nil-safe ellenorzés
+        if NXN.LocHUD.hudVisible ~= true then goto continue end
+        if NXN.LocHUD.moduleStates['playerstatus'] ~= true then goto continue end
 
         local ped    = PlayerPedId()
         local status
@@ -19,12 +19,14 @@ CreateThread(function()
         if IsPedInAnyVehicle(ped, false) then
             local veh      = GetVehiclePedIsIn(ped, false)
             local vehClass = GetVehicleClass(veh)
-            -- GTA jarmű osztalyok:
-            -- 8  = motorcycle, 13 = cycle (bicikli), 14 = boat,
-            -- 15 = helicopter, 16 = plane, 17 = blimp
+            -- GTA5 jarmű osztalyok:
+            -- 8=Motorcycle, 13=Cycle (bicikli), 14=Boat,
+            -- 15=Helicopter, 16=Plane, 17=Blimp
             if vehClass == 8 then
                 status = 'on_bike'
-            elseif vehClass == 14 then
+            elseif vehClass == 13 then   -- #68: bicikli hozzaadva
+                status = 'on_bicycle'
+            elseif vehClass == 14 then   -- #68: hajo explicit ag (korabban hianyzott)
                 status = 'on_boat'
             elseif vehClass == 15 then
                 status = 'in_helicopter'

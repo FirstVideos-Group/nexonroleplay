@@ -10,8 +10,9 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval)
 
-        if not hudVisible then goto continue end
-        if not moduleStates['street'] then goto continue end
+        -- #63/#67: NXN.LocHUD nevter, == true nil-safe ellenorzés
+        if NXN.LocHUD.hudVisible ~= true then goto continue end
+        if NXN.LocHUD.moduleStates['street'] ~= true then goto continue end
 
         local ped = PlayerPedId()
         local x, y, z = table.unpack(GetEntityCoords(ped))
@@ -24,7 +25,6 @@ CreateThread(function()
             lastStreet = streetName
             lastCross  = crossName
             NXN.LocHUD.Log(('street: %s / %s'):format(streetName, crossName))
-            -- Kozvetlenul kuldi, nem NXN.LocHUD.Send-en at
             SendNUIMessage({
                 action = 'updateModule',
                 module = 'street',
