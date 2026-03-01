@@ -6,7 +6,8 @@ description 'nxn-autoseatbelt – Automatikus biztonsagi ov kiegeszito'
 version     '1.0.0'
 
 dependencies {
-    'nxn-seatbelt'
+    'nxn-seatbelt',
+    'nxn-notify'
 }
 
 shared_scripts {

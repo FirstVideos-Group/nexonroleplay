@@ -3,12 +3,13 @@
 --  Automatikus biztonsagi ov: jarmutipus-alapu auto-bekotes
 -- ============================================================
 
--- ── Allapot ─────────────────────────────────────────────────
+-- ── Allapot ───────────────────────────────────────────────────
 
-local autoEnabled   = true    -- kulsoleg ki/be kapcsolhato
-local inVehicle     = false
-local lastVehicle   = 0
-local pendingFasten = false   -- varjuk-e meg a kesleltetes letetelere
+local autoEnabled    = true    -- kulsoleg ki/be kapcsolhato
+local inVehicle      = false
+local lastVehicle    = 0
+local pendingFasten  = false   -- varjuk-e meg a kesleltetes letetelere
+local fastenSession  = 0       -- race condition elleni session szamlalo
 
 -- ── Lookup set-ek (gyors ellenorzes) ───────────────────────────
 
@@ -17,18 +18,17 @@ local excludedClassSet = {}
 local autoModelSet     = {}
 local excludedModelSet = {}
 
-for _, c in ipairs(Config.AutoClasses)     do autoClassSet[c]                    = true end
-for _, c in ipairs(Config.ExcludedClasses) do excludedClassSet[c]                = true end
-for _, m in ipairs(Config.AutoModels)      do autoModelSet[m:lower()]            = true end
-for _, m in ipairs(Config.ExcludedModels)  do excludedModelSet[m:lower()]        = true end
+for _, c in ipairs(Config.AutoClasses)     do autoClassSet[c]         = true end
+for _, c in ipairs(Config.ExcludedClasses) do excludedClassSet[c]     = true end
+for _, m in ipairs(Config.AutoModels)      do autoModelSet[m:lower()] = true end
+for _, m in ipairs(Config.ExcludedModels)  do excludedModelSet[m:lower()] = true end
 
--- ── Runtime hozzaadott modellek / osztalyok ──────────────────────
--- exporton keresztul mas resource-ok is hozzaadhatnak
+-- ── Runtime hozzaadott modellek / osztalyok ─────────────────────
 local runtimeAutoModels     = {}  -- { modelName:lower() = true }
 local runtimeExcludedModels = {}  -- { modelName:lower() = true }
 local runtimeAutoClasses    = {}  -- { classId = true }
 
--- ── Dontes: kell-e auto-bekotest ───────────────────────────────
+-- ── Dontes: kell-e auto-bekotest ────────────────────────────────
 
 ---@param vehicle number
 ---@return boolean
@@ -62,7 +62,13 @@ local function ShouldAutoFasten(vehicle)
         return true
     end
 
-    -- 4. Auto-osztaly
+    -- 4. -1 = minden osztaly engedelyezett (config vagy runtime)
+    if autoClassSet[-1] or runtimeAutoClasses[-1] then
+        NXN.AutoSeatbelt.Log('Auto osztaly: -1 (minden osztaly)')
+        return true
+    end
+
+    -- 5. Auto-osztaly
     if autoClassSet[class] or runtimeAutoClasses[class] then
         NXN.AutoSeatbelt.Log(('Auto osztaly: %d'):format(class))
         return true
@@ -72,7 +78,7 @@ local function ShouldAutoFasten(vehicle)
     return false
 end
 
--- ── Segédek ──────────────────────────────────────────────────
+-- ── Segédek ───────────────────────────────────────────────────
 
 local function Notify(msg, ntype)
     if GetResourceState('nxn-notify') == 'started' then
@@ -101,7 +107,7 @@ local function PlayAutoSound()
     NXN.AutoSeatbelt.Log('Auto hang lejatszas inditva')
 end
 
--- ── Auto-bekötés végrehajtása ─────────────────────────────────
+-- ── Auto-bekötés végrehajtása ───────────────────────────────────
 
 local function DoAutoFasten(vehicle)
     -- Ellenorzzes: meg mindig ugyanabban a jarmuben van-e
@@ -109,6 +115,12 @@ local function DoAutoFasten(vehicle)
     local currVeh = GetVehiclePedIsIn(ped, false)
     if currVeh ~= vehicle then
         NXN.AutoSeatbelt.Log('DoAutoFasten: kozben kiszallt, megsem')
+        return
+    end
+
+    -- Ellenorzzes: nxn-seatbelt el van-e indulva
+    if GetResourceState('nxn-seatbelt') ~= 'started' then
+        NXN.AutoSeatbelt.Warn('DoAutoFasten: nxn-seatbelt nincs elindulva!')
         return
     end
 
@@ -137,7 +149,7 @@ local function DoAutoFasten(vehicle)
     pendingFasten = false
 end
 
--- ── Fő loop ──────────────────────────────────────────────────
+-- ── Fő loop ───────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -147,35 +159,40 @@ CreateThread(function()
         local veh = GetVehiclePedIsIn(ped, false)
 
         if veh ~= 0 and not inVehicle then
-            -- ── Jarmube szallas ─────────────────────────────────
+            -- ── Jarmube szallas ───────────────────────────────────
             inVehicle   = true
             lastVehicle = veh
             NXN.AutoSeatbelt.Log(('Jarmube szallt: entId=%d'):format(veh))
 
             if ShouldAutoFasten(veh) then
-                pendingFasten = true
-                local delay   = math.max(0, Config.AutoFastenDelay)
+                -- Session szamlalas: minden uj belulas egyedi session
+                fastenSession = fastenSession + 1
+                local mySession = fastenSession
+                pendingFasten   = true
+                local delay     = math.max(0, Config.AutoFastenDelay)
                 NXN.AutoSeatbelt.Log(('Auto-bekotes kesleltetes: %.1f mp'):format(delay))
 
                 CreateThread(function()
                     Wait(math.floor(delay * 1000))
-                    if pendingFasten then
+                    -- Csak akkor fut, ha meg mindig ugyanaz a session
+                    if pendingFasten and mySession == fastenSession then
                         DoAutoFasten(veh)
                     end
                 end)
             end
 
         elseif veh == 0 and inVehicle then
-            -- ── Kiszallas ──────────────────────────────────────
+            -- ── Kiszallas ───────────────────────────────────────
             inVehicle     = false
             lastVehicle   = 0
             pendingFasten = false
+            fastenSession = fastenSession + 1  -- ervenytelenitj minden folyamatban levo szalat
             NXN.AutoSeatbelt.Log('Kiszallt, pending reset')
         end
     end
 end)
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ───────────────────────────────────────────────────
 
 --- Auto-ovbekotes rendszer ki/be kapcsolasa
 ---@param state boolean
@@ -190,12 +207,16 @@ exports('isEnabled', function()
     return autoEnabled
 end)
 
---- Azonnal es kesleltetes nelkul bekoti az ovet az aktualis jarmuben (ha a feltetelek teljesulnek)
+--- Azonnal es kesleltetes nelkul bekoti az ovet, ha a jarmufeltetelek teljesulnek (ShouldAutoFasten ellenorzesevel)
 exports('triggerNow', function()
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
     if veh == 0 then
         NXN.AutoSeatbelt.Warn('triggerNow: nincs jarmube')
+        return false
+    end
+    if not ShouldAutoFasten(veh) then
+        NXN.AutoSeatbelt.Log('triggerNow: ShouldAutoFasten = false, kihagyjuk')
         return false
     end
     pendingFasten = false
@@ -204,7 +225,7 @@ exports('triggerNow', function()
 end)
 
 --- Kenyszer auto-bekotes FUGGETLEN a jarmue-lista ellenorzestol
---- (pl. tesztvezetesnel mindig be kell kerni)
+--- (pl. tesztvezetesnel, rendorsegi scriptenel mindig be kell kerni)
 exports('forceAutoFasten', function()
     local ped = PlayerPedId()
     local veh = GetVehiclePedIsIn(ped, false)
@@ -212,7 +233,7 @@ exports('forceAutoFasten', function()
         NXN.AutoSeatbelt.Warn('forceAutoFasten: nincs jarmube')
         return false
     end
-    NXN.AutoSeatbelt.Log('forceAutoFasten: kenyszer bekotes')
+    NXN.AutoSeatbelt.Log('forceAutoFasten: kenyszer bekotes (ShouldAutoFasten kihagyva)')
     pendingFasten = false
     DoAutoFasten(veh)
     return true
@@ -232,7 +253,7 @@ exports('removeAutoModel', function(modelName)
     NXN.AutoSeatbelt.Log(('removeAutoModel: %s'):format(modelName))
 end)
 
---- Runtime osztaly hozzaadasa az auto-listara
+--- Runtime osztaly hozzaadasa az auto-listara (-1 = minden osztaly)
 ---@param classId number
 exports('addAutoClass', function(classId)
     runtimeAutoClasses[classId] = true
@@ -269,5 +290,6 @@ end)
 --- Varo bekotes megszakitasa (pl. jatekos manualis kicsatolasa elotti ablakban)
 exports('cancelPending', function()
     pendingFasten = false
+    fastenSession = fastenSession + 1
     NXN.AutoSeatbelt.Log('cancelPending: pending torolt')
 end)
