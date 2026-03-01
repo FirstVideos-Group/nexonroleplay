@@ -2,13 +2,17 @@
 --  nxn-needs | server.lua
 -- ============================================================
 
--- ── Belső cache ──────────────────────────────────────────────
+-- ── Belső cache ─────────────────────────────────────────────
 --- { [src] = { hunger=N, thirst=N, stress=N, fatigue=N } }
 local needsCache = {}
 
+-- #78: session version token – reconnect race condition védelme
+-- playerDropped async thread csak akkor törli a cache-t, ha közben
+-- nem történt új playerLoaded (reconnect) az ugyanolyan src-re
+local sessionVersion = {}
+
 -- ── Segédfüggvények ──────────────────────────────────────────
 
---- Identifier lekérése az nxn-database exporton keresztül
 ---@param src number
 ---@return string|nil
 local function GetIdentifier(src)
@@ -19,7 +23,6 @@ local function GetIdentifier(src)
     return id
 end
 
---- Alapértelmezett needs tábla generálása Config alapján
 ---@return table
 local function DefaultNeeds()
     local t = {}
@@ -29,7 +32,6 @@ local function DefaultNeeds()
     return t
 end
 
---- Needs cache-t küld a kliensnek
 ---@param src number
 local function SyncClient(src)
     local data = needsCache[src]
@@ -38,7 +40,30 @@ local function SyncClient(src)
     TriggerClientEvent('nxn-needs:client:sync', src, data)
 end
 
--- ── Tábla regisztráció nxn-database-n keresztül ──────────────
+-- #82: GetItemEffects áthelyezve ide (server.lua) a shared.lua-ból
+-- – kizárólag szerver kontextusban fut, nincs többé felesleges
+-- kliens oldali pcall overhead sem potenciális félrevezetés
+---@param itemName string
+---@return table
+local function GetItemEffects(itemName)
+    local effects = {}
+    local invOk, invConfig = pcall(function()
+        return exports['nxn-inventory']:getItemDef(itemName)
+    end)
+    if invOk and invConfig and invConfig.needs then
+        for need, val in pairs(invConfig.needs) do
+            effects[need] = val
+        end
+    end
+    if Config.ItemOverrides and Config.ItemOverrides[itemName] then
+        for need, val in pairs(Config.ItemOverrides[itemName]) do
+            effects[need] = val
+        end
+    end
+    return effects
+end
+
+-- ── Tábla regisztráció ─────────────────────────────────────────
 
 local function RegisterNeedsTable()
     NXN.Needs.Info('nxn_needs tábla regisztrálása az nxn-database-n keresztül...')
@@ -65,12 +90,15 @@ local function RegisterNeedsTable()
     end
 end
 
--- ── Betöltés / mentés ────────────────────────────────────────
+-- ── Betöltés / mentés ──────────────────────────────────────────
 
 ---@param src number
 ---@param identifier string
 local function LoadNeeds(src, identifier)
     NXN.Needs.Log(('LoadNeeds: src=%d ident=%s'):format(src, identifier))
+
+    -- #78: session verzio növelése minden betöltésnél
+    sessionVersion[src] = (sessionVersion[src] or 0) + 1
 
     local row = MySQL.single.await(
         'SELECT * FROM `' .. Config.NeedsTable .. '` WHERE identifier = ?',
@@ -86,7 +114,6 @@ local function LoadNeeds(src, identifier)
         }
         NXN.Needs.Log(('LoadNeeds: betöltve DB-ből src=%d'):format(src))
     else
-        -- Első alkalommal: defaults alapján
         local defaults = DefaultNeeds()
         MySQL.insert.await(
             'INSERT INTO `' .. Config.NeedsTable .. '` (`identifier`, `hunger`, `thirst`, `stress`, `fatigue`) VALUES (?, ?, ?, ?, ?)',
@@ -100,6 +127,8 @@ local function LoadNeeds(src, identifier)
     TriggerEvent('nxn-needs:server:needsLoaded', src, needsCache[src])
 end
 
+-- #77: MySQL.update -> MySQL.update.await
+-- Disconnect / szerver crash esetén az adatok nem vesznek el
 ---@param src number
 local function SaveNeeds(src)
     local data = needsCache[src]
@@ -110,22 +139,15 @@ local function SaveNeeds(src)
     local identifier = GetIdentifier(src)
     if not identifier then return end
 
-    MySQL.update(
+    MySQL.update.await(
         'UPDATE `' .. Config.NeedsTable .. '` SET `hunger`=?, `thirst`=?, `stress`=?, `fatigue`=? WHERE `identifier`=?',
         { data.hunger, data.thirst, data.stress, data.fatigue, identifier }
     )
     NXN.Needs.Log(('SaveNeeds: elmentve src=%d'):format(src))
 end
 
----@param src number
-local function SaveAndClearNeeds(src)
-    SaveNeeds(src)
-    needsCache[src] = nil
-end
+-- ── Eseménykezelők ───────────────────────────────────────────────
 
--- ── Eseménykezelők (nxn-database kapcsolat) ──────────────────
-
---- Amikor az nxn-database betöltötte a játékost, mi is betöltjük a needs-t
 AddEventHandler('nxn-database:server:playerLoaded', function(src, playerData)
     NXN.Needs.Log(('playerLoaded event fogadva: src=%d ident=%s'):format(src, playerData.identifier))
     CreateThread(function()
@@ -133,20 +155,25 @@ AddEventHandler('nxn-database:server:playerLoaded', function(src, playerData)
     end)
 end)
 
+-- #78: session token-alapú guard a reconnect race condition ellen
+-- Ha a játékos gyorsan reconnect-el, a régi thread nem törli az új session cache-ét
 AddEventHandler('playerDropped', function()
-    local src = source
-    NXN.Needs.Log(('playerDropped: src=%d – needs mentése'):format(src))
+    local src    = source
+    local ver    = (sessionVersion[src] or 0) + 1
+    sessionVersion[src] = ver
+    NXN.Needs.Log(('playerDropped: src=%d ver=%d – needs mentése'):format(src, ver))
     CreateThread(function()
-        SaveAndClearNeeds(src)
+        SaveNeeds(src)
+        -- Csak töröljük a cache-t, ha közben nem reconnectalt (sessionVersion nem változott)
+        if sessionVersion[src] == ver then
+            needsCache[src]     = nil
+            sessionVersion[src] = nil
+            NXN.Needs.Log(('playerDropped: src=%d cache törölve'):format(src))
+        else
+            NXN.Needs.Log(('playerDropped: src=%d reconnect észlelve, cache megőrizve'):format(src))
+        end
     end)
 end)
-
--- ── nxn-inventory itemUsed esemény figyelése ─────────────────
--- Az nxn-inventory server.lua a 'nxn-inventory:server:itemUsed' eventet
--- triggereli minden item használat után (src, itemName, def).
--- Ha a def.needs mező ki van töltve, az nxn-inventory már elvégezte
--- a modifyNeed hívást. Ez az eseménykezelő csak logolásra / kiterjesztésre
--- való, hogy az nxn-needs is tudjon róla.
 
 AddEventHandler('nxn-inventory:server:itemUsed', function(src, itemName, def)
     if not def then return end
@@ -155,7 +182,7 @@ AddEventHandler('nxn-inventory:server:itemUsed', function(src, itemName, def)
     end
 end)
 
--- ── Auto-decay (szükségletek automatikus változása) ───────────
+-- ── Auto-decay ────────────────────────────────────────────────
 
 if Config.AutoDecay and Config.AutoDecay.enabled then
     CreateThread(function()
@@ -187,7 +214,7 @@ if Config.AutoDecay and Config.AutoDecay.enabled then
     end)
 end
 
--- ── Periódikus DB-mentés ──────────────────────────────────────
+-- ── Periódikus DB-mentés ──────────────────────────────────────────
 
 if Config.SaveInterval and Config.SaveInterval > 0 then
     CreateThread(function()
@@ -201,7 +228,10 @@ if Config.SaveInterval and Config.SaveInterval > 0 then
     end)
 end
 
--- ── Damage-on-empty (szerver oldali HP csökkentés) ───────────
+-- ── Damage-on-empty ────────────────────────────────────────────
+
+-- #81: Dinamikus Config.Needs iteráció a hardcoded hunger/thirst helyett
+-- A szerver operátor bármely need-et beállíthatja damage forrásként
 
 if Config.DamageOnEmpty and Config.DamageOnEmpty.enabled then
     CreateThread(function()
@@ -209,8 +239,13 @@ if Config.DamageOnEmpty and Config.DamageOnEmpty.enabled then
             Wait(Config.DamageOnEmpty.interval * 1000)
             for src, data in pairs(needsCache) do
                 local shouldDamage = false
-                if Config.DamageOnEmpty.hunger and data.hunger <= 0 then shouldDamage = true end
-                if Config.DamageOnEmpty.thirst and data.thirst <= 0 then shouldDamage = true end
+                for need, needCfg in pairs(Config.Needs) do
+                    if Config.DamageOnEmpty[need] and data[need] ~= nil then
+                        if data[need] <= needCfg.min then
+                            shouldDamage = true
+                        end
+                    end
+                end
                 if shouldDamage then
                     TriggerClientEvent('nxn-needs:client:applyDamage', src, Config.DamageOnEmpty.amount)
                     NXN.Needs.Log(('DamageOnEmpty: src=%d damage küldve'):format(src))
@@ -220,16 +255,15 @@ if Config.DamageOnEmpty and Config.DamageOnEmpty.enabled then
     end)
 end
 
--- ── Net events ────────────────────────────────────────────────
+-- ── Net events ──────────────────────────────────────────────────
 
---- Kliens kér szinkronizációt (pl. első spawn után)
 RegisterNetEvent('nxn-needs:server:requestSync', function()
     local src = source
     NXN.Needs.Log(('requestSync: src=%d'):format(src))
     SyncClient(src)
 end)
 
--- ── Resource start ───────────────────────────────────────────
+-- ── Resource start ─────────────────────────────────────────────
 
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName ~= Config.ResourceName then return end
@@ -242,30 +276,25 @@ end)
 
 -- ── Exportok ─────────────────────────────────────────────────
 
---- Visszaadja egy játékos összes szükségletét (cache)
----@param src number
----@return table|nil
+-- #79: shallow copy – külső resource nem tudja közvetlenül módosítani a cache-t
 exports('getNeeds', function(src)
     local data = needsCache[src]
     NXN.Needs.Log(('getNeeds export: src=%d found=%s'):format(src, tostring(data ~= nil)))
-    return data
+    if not data then return nil end
+    return {
+        hunger  = data.hunger,
+        thirst  = data.thirst,
+        stress  = data.stress,
+        fatigue = data.fatigue,
+    }
 end)
 
---- Visszaad egy konkrét szükséglet értéket
----@param src number
----@param need string  'hunger'|'thirst'|'stress'|'fatigue'
----@return number|nil
 exports('getNeed', function(src, need)
     local data = needsCache[src]
     if not data then return nil end
     return data[need]
 end)
 
---- Beállít egy szükséglet értéket (clamp-el, szinkronizál)
----@param src number
----@param need string
----@param value number
----@return boolean
 exports('setNeed', function(src, need, value)
     local data = needsCache[src]
     if not data then
@@ -284,11 +313,6 @@ exports('setNeed', function(src, need, value)
     return true
 end)
 
---- Módosít egy szükséglet értéket relatívan (+ vagy -)
----@param src number
----@param need string
----@param amount number
----@return boolean
 exports('modifyNeed', function(src, need, amount)
     local data = needsCache[src]
     if not data then
@@ -307,21 +331,21 @@ exports('modifyNeed', function(src, need, amount)
     return true
 end)
 
---- Visszaállítja az összes szükségletet alapértelmezett értékre
----@param src number
----@return boolean
 exports('resetNeeds', function(src)
     local identifier = GetIdentifier(src)
     if not identifier then return false end
     needsCache[src] = DefaultNeeds()
     SyncClient(src)
     SaveNeeds(src)
-    NXN.Needs.Log(('resetNeeds: src=%d visszaállítva'):format(src))
+    NXN.Needs.Log(('resetNeeds: src=%d visszaallítva'):format(src))
     return true
 end)
 
---- Azonnali DB-mentés egy játékoshoz
----@param src number
 exports('saveNeeds', function(src)
     SaveNeeds(src)
+end)
+
+-- #82: GetItemEffects elérhető exportként is
+exports('getItemEffects', function(itemName)
+    return GetItemEffects(itemName)
 end)

@@ -23,8 +23,6 @@ server_scripts {
     'server.lua'
 }
 
-files {
-    'docs/index.html'
-}
+-- #83: docs/index.html eltávolítva – NUI nélküli resource-ban files szekció felesleges
 
 lua54 'yes'

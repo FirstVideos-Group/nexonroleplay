@@ -5,7 +5,7 @@
 NXN            = NXN or {}
 NXN.Needs      = NXN.Needs or {}
 
--- ── Segédfüggvények ──────────────────────────────────────────
+-- ── Segédfüggvények ────────────────────────────────────────────
 
 ---@param v number
 ---@param min number
@@ -37,34 +37,5 @@ function NXN.Needs.Error(msg)
     print('[nxn-needs][ERROR] ' .. tostring(msg))
 end
 
--- ── Item–Needs hatástáblázat összeállítása ───────────────────
--- Szerver oldalon fut (az inventory config csak szerveren elérhető).
--- Client oldalon üres marad – a szerver kezeli a needs módosítást.
-
---- Visszaadja egy item needs-hatásait.
---- Először az nxn-inventory Config.Items[item].needs-t nézi,
---- majd az nxn-needs Config.ItemOverrides[item] felülírja ha van.
----@param itemName string
----@return table  { hunger=N, thirst=N, stress=N, fatigue=N } vagy {}
-function NXN.Needs.GetItemEffects(itemName)
-    local effects = {}
-
-    -- Forrás 1: nxn-inventory item definíció
-    local invOk, invConfig = pcall(function()
-        return exports['nxn-inventory']:getItemDef(itemName)
-    end)
-    if invOk and invConfig and invConfig.needs then
-        for need, val in pairs(invConfig.needs) do
-            effects[need] = val
-        end
-    end
-
-    -- Forrás 2: helyi felülírások (Config.ItemOverrides)
-    if Config and Config.ItemOverrides and Config.ItemOverrides[itemName] then
-        for need, val in pairs(Config.ItemOverrides[itemName]) do
-            effects[need] = val
-        end
-    end
-
-    return effects
-end
+-- #82: NXN.Needs.GetItemEffects eltávolítva innen – áthelyezve server.lua-ba
+-- (szerver export hívás kliens kontextusból nem szükséges, pcall overhead megszűnt)
