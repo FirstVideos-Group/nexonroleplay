@@ -3,32 +3,67 @@
 > Moduláris, framework-független FiveM scriptek a Nexon Roleplay szerverhez.  
 > Minden resource az `nxn-` előtagot használja, egységes dizájnrendszerrel és teljes export-kompatibilitással.
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
+[![Code of Conduct](https://img.shields.io/badge/Magatart%C3%A1si%20K%C3%B3dex-2025-green)](./CODE_OF_CONDUCT.md)
+[![Contributing](https://img.shields.io/badge/Hozz%C3%A1j%C3%A1rul%C3%A1s-welcome-orange)](./CONTRIBUTING.md)
+
 ---
 
 ## 📦 Resourcek
 
+### 🔧 Core
+
 | Resource | Leírás |
 |---|---|
-| [`nxn-antiwanted`](./nxn-antiwanted) | Körözöttség (wanted level) automatikus kezelése és blokkolása |
-| [`nxn-autoseatbelt`](./nxn-autoseatbelt) | Automatikus biztonsági öv felcsatolása járműbe szállásnál |
-| [`nxn-cityhall`](./nxn-cityhall) | Városháza rendszer — ügyintézés, iratok, karakterkezelés |
 | [`nxn-database`](./nxn-database) | Központi adatbázis-kezelő modul minden script számára |
 | [`nxn-engine`](./nxn-engine) | Szerver core engine — alaprendszer és közös logika |
 | [`nxn-example`](./nxn-example) | Boilerplate / sablon resource új scriptek készítéséhez |
-| [`nxn-hud`](./nxn-hud) | Fő HUD rendszer — élet, páncél, egyéb státusz indikátorok |
-| [`nxn-identity`](./nxn-identity) | Karakteridentitás kezelése (név, születési dátum, stb.) |
-| [`nxn-inventory`](./nxn-inventory) | Inventory / tárgykezelő rendszer |
-| [`nxn-licenses`](./nxn-licenses) | Jogosítványok és engedélyek kezelése |
+
+### 🖼️ UI / HUD
+
+| Resource | Leírás |
+|---|---|
 | [`nxn-loading`](./nxn-loading) | Betöltőképernyő és szerver-csatlakozás UI |
-| [`nxn-location-hud`](./nxn-location-hud) | Helyszín megjelenítő HUD elem (utcanév, kerület) |
-| [`nxn-minimap`](./nxn-minimap) | Minimap testreszabás és kezelés |
-| [`nxn-needs`](./nxn-needs) | Karakter szükségletek rendszere (éhség, szomjúság, stb.) |
 | [`nxn-notify`](./nxn-notify) | Értesítési rendszer — toastok, alertek, visszajelzések |
-| [`nxn-npcconversation`](./nxn-npcconversation) | NPC párbeszéd és interakció rendszer |
-| [`nxn-seatbelt`](./nxn-seatbelt) | Biztonsági öv rendszer — állapot nyilvántartás és logika |
-| [`nxn-seatbelt-extras`](./nxn-seatbelt-extras) | Kiegészítők az `nxn-seatbelt` scripthez |
-| [`nxn-signs`](./nxn-signs) | Közúti és egyéb táblák megjelenítése a világban |
+| [`nxn-hud`](./nxn-hud) | Fő HUD rendszer — élet, páncél, egyéb státusz indikátorok |
+| [`nxn-minimap`](./nxn-minimap) | Minimap testreszabás és kezelés |
+| [`nxn-location-hud`](./nxn-location-hud) | Helyszín megjelenítő HUD elem (utcanév, kerület) |
 | [`nxn-vehicle-hud`](./nxn-vehicle-hud) | Jármű HUD — sebesség, üzemanyag, fordulatszám kijelzés |
+
+### 👤 Karakter & Identitás
+
+| Resource | Leírás |
+|---|---|
+| [`nxn-identity`](./nxn-identity) | Karakteridentitás kezelése (név, születési dátum, stb.) |
+| [`nxn-needs`](./nxn-needs) | Karakter szükségletek rendszere (éhség, szomjúság, stb.) |
+| [`nxn-licenses`](./nxn-licenses) | Jogosítványok és engedélyek kezelése |
+| [`nxn-inventory`](./nxn-inventory) | Inventory / tárgykezelő rendszer |
+| [`nxn-cityhall`](./nxn-cityhall) | Városháza rendszer — ügyintézés, iratok, karakterkezelés |
+
+### 💰 Gazdaság & Kereskedelem
+
+| Resource | Leírás |
+|---|---|
+| [`nxn-finance`](./nxn-finance) | Pénzügyi rendszer — központi gazdasági logika |
+| [`nxn-bank`](./nxn-bank) | Banki műveletek — számlakezelés, utalás, egyenleg |
+| [`nxn-shop`](./nxn-shop) | Üzlet / bolt rendszer — termékek vásárlása és eladása |
+| [`nxn-food`](./nxn-food) | Étel és ital rendszer — fogyasztás, szükségletek kielégítése |
+
+### 🚗 Járművek
+
+| Resource | Leírás |
+|---|---|
+| [`nxn-seatbelt`](./nxn-seatbelt) | Biztonsági öv rendszer — állapot nyilvántartás és logika |
+| [`nxn-autoseatbelt`](./nxn-autoseatbelt) | Automatikus biztonsági öv felcsatolása járműbe szállásnál |
+| [`nxn-seatbelt-extras`](./nxn-seatbelt-extras) | Kiegészítők az `nxn-seatbelt` scripthez |
+| [`nxn-antiwanted`](./nxn-antiwanted) | Körözöttség (wanted level) automatikus kezelése és blokkolása |
+
+### 🌍 Világ
+
+| Resource | Leírás |
+|---|---|
+| [`nxn-signs`](./nxn-signs) | Közúti és egyéb táblák megjelenítése a világban |
+| [`nxn-npcconversation`](./nxn-npcconversation) | NPC párbeszéd és interakció rendszer |
 
 ---
 
@@ -68,6 +103,12 @@ ensure nxn-licenses
 ensure nxn-inventory
 ensure nxn-cityhall
 
+# Gazdaság & Kereskedelem
+ensure nxn-finance
+ensure nxn-bank
+ensure nxn-shop
+ensure nxn-food
+
 # Járművek
 ensure nxn-seatbelt
 ensure nxn-autoseatbelt
@@ -94,13 +135,15 @@ Minden új scriptnek meg kell felelnie a következő követelményeknek:
 - HTML dokumentáció a dizájn-dokumentáció stílusában
 - Kompatibilitás a többi `nxn-*` scripttel
 
+Részletek a [hozzájárulási útmutatóban](./CONTRIBUTING.md) és a [magatartási kódexben](./CODE_OF_CONDUCT.md).
+
 A dizájnrendszer részletei a [`design-guide.html`](./design-guide.html) fájlban találhatók.
 
 ---
 
 ## 📄 Licensz
 
-Ez a projekt a **Nexon Roleplay** belső fejlesztése. Kizárólag a szerver saját használatára készült.
+Ez a projekt **GNU General Public License v3** alatt került kiadásra. Lásd: [LICENSE](./LICENSE).
 
 ---
 
