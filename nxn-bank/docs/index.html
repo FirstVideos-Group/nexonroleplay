@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-bank – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span.sub { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 880px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab  { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .dep-badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+        .dep-req  { background: #f05b5b22; color: var(--danger);  border: 1px solid #f05b5b44; }
+        .dep-opt  { background: #5b6af022; color: var(--accent);  border: 1px solid #5b6af044; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-bank"></i>
+    <div>
+        <h1>nxn-bank <span class="sub">v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-bank</strong> az <code>nxn-finance</code> pénzügyi motorra épülő dedikált bankrendszer. ATM-eken és bankfiókokban kezeli a befizetést, felvétet, játékosok közötti átutalást, és lapozható tranzakciónaplót biztosít.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-bank/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── html/
+    ├── index.html
+    ├── style.css
+    └── app.js</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-plug-02"></i> Függőségek</h2>
+    <p>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-finance</code> – minden pénzmozgás ezen keresztül történik<br/>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-database</code> – tranzakciónapló tábla, identifier<br/>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-notify</code> – visszajelzések<br/>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-identity</code> – játékos neve átutalásnál<br/>
+        <span class="dep-badge dep-opt">Opcionális</span> <code>nxn-hud</code> – egyenleg badge frissítés
+    </p>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.ATMs</td><td>4 helyszín</td><td>ATM koordináták és feliratok</td></tr>
+        <tr><td>Config.Banks</td><td>3 helyszín</td><td>Bankfiók koordináták (teljes panel)</td></tr>
+        <tr><td>Config.InteractDistance</td><td>2.0</td><td>Interakció hatósugara méterben</td></tr>
+        <tr><td>Config.Marker.enabled</td><td>true</td><td>Közelség marker megjelenítése</td></tr>
+        <tr><td>Config.TransactionLogPageSize</td><td>20</td><td>Tranzakciónapló sorok oldalanként</td></tr>
+        <tr><td>Config.MinTransferAmount</td><td>1</td><td>Minimum átutalható összeg ($)</td></tr>
+        <tr><td>Config.TransactionCooldown</td><td>2000</td><td>Ismétlős műveletek közötti várakozás (ms)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>deposit(src, amount)</td><td>integer, integer</td><td>boolean</td><td>Készpénz → bankszámla befizetés</td></tr>
+        <tr><td>withdraw(src, amount)</td><td>integer, integer</td><td>boolean</td><td>Bankszámla → készpénz felvét</td></tr>
+        <tr><td>transfer(src, targetSrc, amount, desc?)</td><td>int, int, int, string?</td><td>boolean</td><td>Bankszámla → másik játékos bankszámlája</td></tr>
+        <tr><td>getTransactions(identifier, page?)</td><td>string, integer?</td><td>table</td><td>Tranzakciónapló lapozva</td></tr>
+        <tr><td>logTransaction(identifier, type, amount, desc?, targetId?)</td><td>…</td><td>void</td><td>Manuális tranzakció rögzítése</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Leírás</th></tr>
+        <tr><td>openATM()</td><td>ATM panel megnyitása programmatikusan</td></tr>
+        <tr><td>openBankCounter()</td><td>Bankpult panel megnyitása (átutalás + napló)</td></tr>
+        <tr><td>closeBank()</td><td>Panel bezárása programmatikusan</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Szerver – befizetés</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Szerver – átutalás</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Szerver – napló</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Kliens – panel</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- Játékos fizet be $1000-t (pl. munkabér érkezésekor)
+local ok = exports['nxn-bank']:deposit(src, 1000)
+if ok then
+    print('Befizetés sikeres')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Átutalás másik játékosnak
+local ok = exports['nxn-bank']:transfer(src, targetSrc, 500, 'Autó ára')
+if not ok then
+    -- nincs elég pénz vagy hibás célszemély
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Tranzakciónapló lekérése (szerver oldali script)
+local identifier = exports['nxn-database']:getIdentifier(src)
+local txList = exports['nxn-bank']:getTransactions(identifier, 1)
+for _, tx in ipairs(txList) do
+    print(tx.type, tx.amount, tx.description)
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- ATM panel megnyitása kliensről (pl. nxn-target interakció)
+exports['nxn-bank']:openATM()
+
+-- Bankpult (teljes panel: átutalás + napló)
+exports['nxn-bank']:openBankCounter()
+
+-- Bezárás
+exports['nxn-bank']:closeBank()</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-bank:server:deposit</td><td>Client → Server</td><td>Befizetési kérelem (amount)</td></tr>
+        <tr><td>nxn-bank:server:withdraw</td><td>Client → Server</td><td>Felvéti kérelem (amount)</td></tr>
+        <tr><td>nxn-bank:server:transfer</td><td>Client → Server</td><td>Átutalási kérelem (targetId, amount, desc)</td></tr>
+        <tr><td>nxn-bank:server:getTransactions</td><td>Client → Server</td><td>Napló lapozás kérés (page)</td></tr>
+        <tr><td>nxn-bank:client:syncBalance</td><td>Server → Client</td><td>Egyenleg frissítés { cash, bank }</td></tr>
+        <tr><td>nxn-bank:client:transactionResult</td><td>Server → Client</td><td>Művelet visszajelzés { ok, message }</td></tr>
+        <tr><td>nxn-bank:client:transactions</td><td>Server → Client</td><td>Napló adatok { items, page, total }</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-database-02"></i> Adatbázis tábla</h2>
+    <pre><code>CREATE TABLE IF NOT EXISTS `nxn_bank_transactions` (
+    `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `identifier`  VARCHAR(64)  NOT NULL,
+    `type`        ENUM('deposit','withdraw','transfer_in','transfer_out','fine') NOT NULL,
+    `amount`      INT          NOT NULL,
+    `description` VARCHAR(255) DEFAULT NULL,
+    `target_id`   VARCHAR(64)  DEFAULT NULL,
+    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_identifier` (`identifier`),
+    INDEX `idx_created_at` (`created_at`)
+);</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th></tr>
+        <tr><td>nxn-finance</td><td>Minden pénzmozgás (addMoney, removeMoney, getMoney)</td></tr>
+        <tr><td>nxn-database</td><td>registerTable, getIdentifier, MySQL lekérdezések</td></tr>
+        <tr><td>nxn-notify</td><td>nxn-notify:client:show visszajelzések</td></tr>
+        <tr><td>nxn-identity</td><td>getFullName(src) átutalás névmegjelenítéshez</td></tr>
+        <tr><td>nxn-hud</td><td>updateModuleData('money', ...) egyenleg badge</td></tr>
+        <tr><td>nxn-cityhall</td><td>issueFine → nxn-finance:removeMoney (bank) + logTransaction</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-bank</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Főpanel -->
+<div id="nxn-bank-panel" class="nxn-panel hidden">
+
+    <!-- Fejléc -->
+    <div class="nxn-panel__header">
+        <span id="panel-title">
+            <i class="hgi hgi-stroke hgi-bank"></i>
+            <span id="panel-title-text">ATM</span>
+        </span>
+        <button class="nxn-btn-icon" id="btn-close">
+            <i class="hgi hgi-stroke hgi-cancel-01"></i>
+        </button>
+    </div>
+
+    <!-- Egyenleg kártyák -->
+    <div class="balance-row">
+        <div class="balance-card">
+            <i class="hgi hgi-stroke hgi-money-02"></i>
+            <div>
+                <span class="balance-label">Készpénz</span>
+                <span class="balance-value" id="val-cash">$0</span>
+            </div>
+        </div>
+        <div class="balance-card">
+            <i class="hgi hgi-stroke hgi-bank"></i>
+            <div>
+                <span class="balance-label">Bankszámla</span>
+                <span class="balance-value" id="val-bank">$0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabok -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="deposit">Befizetés</button>
+        <button class="tab-btn" data-tab="withdraw">Felvét</button>
+        <button class="tab-btn tab-bank-only" data-tab="transfer">Átutalás</button>
+        <button class="tab-btn tab-bank-only" data-tab="log">Napló</button>
+    </div>
+
+    <!-- TAB: Befizetés -->
+    <div class="tab-content active" id="tab-deposit">
+        <div class="nxn-form">
+            <label class="nxn-label">Összeg ($)</label>
+            <input class="nxn-input" id="input-deposit" type="number" min="1" placeholder="pl. 500" />
+            <button class="nxn-btn" id="btn-deposit">
+                <i class="hgi hgi-stroke hgi-arrow-up-02"></i> Befizetés
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB: Felvét -->
+    <div class="tab-content" id="tab-withdraw">
+        <div class="nxn-form">
+            <label class="nxn-label">Összeg ($)</label>
+            <input class="nxn-input" id="input-withdraw" type="number" min="1" placeholder="pl. 500" />
+            <button class="nxn-btn" id="btn-withdraw">
+                <i class="hgi hgi-stroke hgi-arrow-down-02"></i> Felvét
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB: Átutalás (bank only) -->
+    <div class="tab-content" id="tab-transfer">
+        <div class="nxn-form">
+            <label class="nxn-label">Célszemély játékos ID</label>
+            <input class="nxn-input" id="input-transfer-target" type="number" min="1" placeholder="pl. 3" />
+            <label class="nxn-label">Összeg ($)</label>
+            <input class="nxn-input" id="input-transfer-amount" type="number" min="1" placeholder="pl. 1000" />
+            <label class="nxn-label">Megjegyzés (opcionális)</label>
+            <input class="nxn-input" id="input-transfer-desc" type="text" maxlength="120" placeholder="pl. Autó ára" />
+            <button class="nxn-btn" id="btn-transfer">
+                <i class="hgi hgi-stroke hgi-transfer-horizontal"></i> Átutalás
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB: Napló (bank only) -->
+    <div class="tab-content" id="tab-log">
+        <div class="log-list" id="log-list">
+            <p class="nxn-label" id="log-empty">Nincs tranzakció.</p>
+        </div>
+        <div class="log-pagination">
+            <button class="nxn-btn nxn-btn-sm" id="btn-log-prev" disabled>
+                <i class="hgi hgi-stroke hgi-arrow-left-01"></i>
+            </button>
+            <span id="log-page-info" class="nxn-label">1. oldal</span>
+            <button class="nxn-btn nxn-btn-sm" id="btn-log-next">
+                <i class="hgi hgi-stroke hgi-arrow-right-01"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Visszajelzés sáv -->
+    <div id="bank-feedback" class="bank-feedback hidden"></div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
