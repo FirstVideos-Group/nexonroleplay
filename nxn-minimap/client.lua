@@ -1,8 +1,5 @@
 -- ============================================================
 --  nxn-minimap | client.lua
---  FIX: SetMinimapInInterior -> SetRadarAsInteriorThisFrame
---  FIX: Helyes HUD elrejtesi nativok (DisplayAreaName, stb.)
---  FIX: playerSpawned + resource start megbizhatosag
 -- ============================================================
 
 -- ── Allapot ─────────────────────────────────────────────────
@@ -14,60 +11,58 @@ local districtData   = nil
 local gpsActive      = false
 local initialized    = false
 
--- ── NUI segd ──────────────────────────────────────────────
+-- ── NUI segéd ──────────────────────────────────────────────
 
+-- #70: shallow copy – a hívó eredeti táblája nem módosul
 local function NUISend(action, data)
-    local payload = data or {}
-    payload.action = action
+    local payload = { action = action }
+    if data then
+        for k, v in pairs(data) do payload[k] = v end
+    end
     NXN.Minimap.Log(('NUI send: action=%s'):format(action))
     SendNUIMessage(payload)
 end
 
--- ── Natív minimap alap ─────────────────────────────────────
+-- ── Natív minimap alap ─────────────────────────────────────────
 
 local function ApplyMinimapStyle()
     SetRadarBigmapEnabled(false, false)
     DisplayRadar(minimapVisible)
 end
 
--- ── Natív HUD elemek elrejtese ──────────────────────────────
--- A GTA minden frame-ben visszaallitja ezeket, ezert Wait(0) loopban kell hivni.
--- Hasznalunk ket megkozelitest egyutt:
---   1. HideHudComponentThisFrame – az adott HUD elemet rejtjuk el
---   2. DisplayAreaName / DisplayStreetName (ha letezik) – GTA dedikalt nativok
+-- ── Natív HUD elemek elrejtése ──────────────────────────────────
+-- GTA minden frame-ben visszaallitja ezeket, ezert Wait(0) loopban kell hivni.
 --
--- Helyes HUD komponens indexek (FiveM / GTA V):
---   2  = radar (minimap szoveg overlay)
+-- Valós FiveM HUD komponens indexek (GetHudComponentState / HideHudComponentThisFrame):
 --   6  = vehicle name
---   7  = area name  (LITTLE SEOUL stb.)
---   9  = street name (San Andreas Ave stb.)
+--   7  = area name   (LITTLE SEOUL stb.)  ← ezt rejtük el
+--   8  = vehicle class
+--   9  = street name (San Andreas Ave stb.)  ← ezt rejtük el
+--  11  = minimap / radar (nem rejtjük el, csak újradizájnoljuk)
+-- #72: if DisplayAreaName felesleges check eltávolítva – mindig elérhető
+-- #74: Config.HiddenHUDComponents itérálása – dinamikusan konfigurálható
 
 local function HideNativeComponents()
     if not Config.HideNativeHUDComponents then return end
 
-    -- Terulet es utca szoveg elrejtese – ezeket az nxn-location-hud jeleníti meg
-    HideHudComponentThisFrame(7)   -- AREA_NAME
-    HideHudComponentThisFrame(9)   -- STREET_NAME
+    HideHudComponentThisFrame(7)  -- area name
+    HideHudComponentThisFrame(9)  -- street name
+    DisplayAreaName(false)         -- GTA dedikált nativ (mindig elérhető)
 
-    -- Dedikalt nativok: ezek biztosabban mukodnek mint a komponens index
-    -- DisplayAreaName: ha false, a GTA nem rendereli a korzetkiemelest
-    -- (Csak akkor letezik ha a GTA verzio tamogatja – biztonsagi check-kel)
-    if DisplayAreaName then
-        DisplayAreaName(false)
+    -- #74: dinamikusan konfigurálható extra komponensek
+    for _, idx in ipairs(Config.HiddenHUDComponents or {}) do
+        HideHudComponentThisFrame(idx)
     end
 end
 
--- ── Blip / belsoteres mod (frame-folytonos) ─────────────────────
--- SetRadarAsInteriorThisFrame(): csak az adott frame-re el, ezert
--- minden frame-ben hivni kell a Wait(0) loopban.
--- Interior modban a legtobb kulso blip eltakarodik.
+-- ── Blip / belsőteres mód (frame-folytonos) ──────────────────────
+-- SetRadarAsInteriorThisFrame(): csak az adott frame-re él.
+-- #71: dummy 0,0,0,0 koordináták – a pozíció nem befolyásolja a blip-elrejtést,
+--      felesleges GetEntityCoords/GetEntityHeading hívások elávolítva (~180 nativ/s)
 
 local function ApplyBlipVisibility()
     if not showBlips then
-        local playerPed = PlayerPedId()
-        local px, py, pz = table.unpack(GetEntityCoords(playerPed))
-        local heading = GetEntityHeading(playerPed)
-        SetRadarAsInteriorThisFrame(px, py, pz, heading, 1.0)
+        SetRadarAsInteriorThisFrame(0.0, 0.0, 0.0, 0.0, 1.0)
     end
 end
 
@@ -78,7 +73,7 @@ CreateThread(function()
         Wait(1000)
         if not minimapVisible then goto gps_skip end
 
-        local wp     = GetFirstBlipInfoId(8)  -- waypoint blip
+        local wp     = GetFirstBlipInfoId(8)
         local newGps = DoesBlipExist(wp)
 
         if newGps ~= gpsActive then
@@ -91,7 +86,7 @@ CreateThread(function()
     end
 end)
 
--- ── Fo HUD loop (Wait(0) – frame-folytonos nativ hivok) ────────────
+-- ── Fő HUD loop (Wait(0) – frame-folytonos nativ hívók) ─────────────
 
 CreateThread(function()
     while true do
@@ -102,7 +97,7 @@ CreateThread(function()
     end
 end)
 
--- ── Inicializalas ────────────────────────────────────────────
+-- ── Inicializálás ────────────────────────────────────────────
 
 local function Init()
     if initialized then return end
@@ -121,7 +116,6 @@ local function Init()
     })
 end
 
--- Resource indulasakor (hot-restart)
 CreateThread(function()
     Wait(500)
     if NetworkIsPlayerActive(PlayerId()) then
@@ -130,7 +124,6 @@ CreateThread(function()
     end
 end)
 
--- Spawn / respawn
 AddEventHandler('playerSpawned', function()
     NXN.Minimap.Log('playerSpawned – minimap init')
     initialized = false
@@ -138,7 +131,7 @@ AddEventHandler('playerSpawned', function()
     Init()
 end)
 
--- ── Lathatosag ──────────────────────────────────────────────
+-- ── Láthatóság ──────────────────────────────────────────────
 
 local function SetMinimapVisible(state)
     minimapVisible = state
@@ -147,7 +140,7 @@ local function SetMinimapVisible(state)
     NXN.Minimap.Log(('SetMinimapVisible: %s'):format(tostring(state)))
 end
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ────────────────────────────────────────────────
 
 exports('setVisible', function(state)
     SetMinimapVisible(state)
@@ -163,9 +156,11 @@ exports('setBlips', function(state)
     NUISend('setBlips', { visible = state })
 end)
 
+-- #73: NUISend hozzáadva – korábban a NUI nem reagált a setAreas hívásra
 exports('setAreas', function(state)
     showAreas = state
     NXN.Minimap.Log(('setAreas: %s'):format(tostring(state)))
+    NUISend('setAreas', { visible = state })
 end)
 
 exports('setGPSEnabled', function(state)

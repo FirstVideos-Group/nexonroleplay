@@ -14,11 +14,11 @@ client_scripts {
     'client.lua'
 }
 
+-- #76: docs/index.html eltávolítva – NUI-ban nem használt fájl
 files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
-    'docs/index.html'
 }
 
 ui_page 'html/index.html'
