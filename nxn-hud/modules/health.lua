@@ -9,14 +9,18 @@ CreateThread(function()
 
     while true do
         Wait(Config.PollInterval)
-        if not hudVisible then goto continue end
-        if not moduleStates['health'] then goto continue end
+        if not NXN.HUD.visible then goto continue end
+        if not NXN.HUD.moduleStates['health'] then goto continue end
 
         local ped   = PlayerPedId()
-        local hp    = math.floor(math.max(0, (GetEntityHealth(ped) - 100) / 1))
+        -- #26: GetEntityMaxHealth-szel skalazt HP, math.min(100) felso korlat
+        local rawHp = GetEntityHealth(ped)
+        local maxHp = GetEntityMaxHealth(ped)
+        local hp    = math.floor(math.max(0, math.min(100,
+            (rawHp - 100) / math.max(1, maxHp - 100) * 100
+        )))
         local armor = math.floor(GetPedArmour(ped))
 
-        -- Csak ha valtozott
         if hp ~= lastHp or armor ~= lastArmor then
             lastHp    = hp
             lastArmor = armor

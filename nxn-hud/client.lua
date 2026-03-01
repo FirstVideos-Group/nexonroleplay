@@ -1,25 +1,23 @@
 -- ============================================================
 --  nxn-hud | client.lua
 --  Kozponti HUD manager
---  FIX: moduleStates es hudVisible GLOBAL (nem local),
---       hogy a modules/*.lua fajlok is elerhessek oket
 -- ============================================================
 
--- FIX: 'local' helyett global, hogy a modulok lathassak
-hudVisible   = true
-moduleStates = {}
+-- Állapot az NXN.HUD namespace-ben tárolva (#23)
+NXN.HUD.visible      = true
+NXN.HUD.moduleStates = {}
 
 -- Modulallapotok inicializalasa a Config alapjan
 for name, cfg in pairs(Config.Modules) do
-    moduleStates[name] = cfg.enabled
+    NXN.HUD.moduleStates[name] = cfg.enabled
 end
 
--- ── NUI kommunikacio ─────────────────────────────────────────────
+-- ── NUI kommunikacio ─────────────────────────────────────────
 
 ---@param action string
----@param data table
+---@param data   table
 function NXN.HUD.Send(action, data)
-    if not hudVisible then return end
+    if not NXN.HUD.visible then return end
     local payload = data or {}
     payload.action = action
     NXN.HUD.Log(('NUI send: action=%s'):format(action))
@@ -30,7 +28,7 @@ local function SendConfig()
     local modulesCfg = {}
     for name, cfg in pairs(Config.Modules) do
         modulesCfg[name] = {
-            enabled       = moduleStates[name],
+            enabled       = NXN.HUD.moduleStates[name],
             alwaysVisible = cfg.alwaysVisible,
             order         = cfg.order,
         }
@@ -43,28 +41,32 @@ local function SendConfig()
     NXN.HUD.Log(('HUD init kuldve, pozicio=%s'):format(Config.Position))
 end
 
--- ── Lathatosag ────────────────────────────────────────────────
+-- ── Lathatosag ────────────────────────────────────────────
 
 local function SetHudVisible(state)
-    hudVisible = state
+    NXN.HUD.visible = state
     SendNUIMessage({ action = 'setVisible', visible = state })
+    -- #24: Ha lathatova valik, friss allapot-szinkronizaciot kuldunk
+    if state then
+        SendConfig()
+    end
     NXN.HUD.Log(('HUD lathatosag: %s'):format(tostring(state)))
 end
 
--- ── Modul kezeles ─────────────────────────────────────────────
+-- ── Modul kezeles ─────────────────────────────────────────
 
 local function SetModuleEnabled(name, state)
-    if moduleStates[name] == nil then
+    if NXN.HUD.moduleStates[name] == nil then
         NXN.HUD.Warn(('SetModuleEnabled: ismeretlen modul: %s'):format(name))
         return false
     end
-    moduleStates[name] = state
+    NXN.HUD.moduleStates[name] = state
     SendNUIMessage({ action = 'setModule', module = name, enabled = state })
     NXN.HUD.Log(('Modul allapot: %s = %s'):format(name, tostring(state)))
     return true
 end
 
--- ── Spawn ───────────────────────────────────────────────────
+-- ── Spawn ───────────────────────────────────────────────
 
 AddEventHandler('playerSpawned', function()
     NXN.HUD.Log('playerSpawned – HUD inicializalas')
@@ -72,28 +74,27 @@ AddEventHandler('playerSpawned', function()
     SendConfig()
 end)
 
--- ── nxn-needs frissites ────────────────────────────────────────
+-- ── nxn-needs frissites ───────────────────────────────────────
+-- #28: stress kezelese a stress.lua modulban tortenik, itt csak hunger+thirst
 
 AddEventHandler('nxn-needs:client:updated', function(needs)
-    if moduleStates['hunger'] then
+    if NXN.HUD.moduleStates['hunger'] then
         NXN.HUD.Send('updateModule', { module = 'hunger', value = needs.hunger or 0 })
     end
-    if moduleStates['thirst'] then
+    if NXN.HUD.moduleStates['thirst'] then
         NXN.HUD.Send('updateModule', { module = 'thirst', value = needs.thirst or 0 })
     end
-    if moduleStates['stress'] then
-        NXN.HUD.Send('updateModule', { module = 'stress', value = needs.stress or 0 })
-    end
+    -- stress: stress.lua kezeli teljes egeszeben
 end)
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ───────────────────────────────────────────────
 
 exports('setVisible', function(state)
     SetHudVisible(state)
 end)
 
 exports('isVisible', function()
-    return hudVisible
+    return NXN.HUD.visible
 end)
 
 exports('setModule', function(name, state)
@@ -101,11 +102,11 @@ exports('setModule', function(name, state)
 end)
 
 exports('getModuleState', function(name)
-    return moduleStates[name]
+    return NXN.HUD.moduleStates[name]
 end)
 
 exports('getAllModuleStates', function()
-    return moduleStates
+    return NXN.HUD.moduleStates
 end)
 
 exports('setPosition', function(pos)
@@ -117,8 +118,10 @@ exports('updateModule', function(moduleName, value)
     NXN.HUD.Send('updateModule', { module = moduleName, value = value })
 end)
 
+-- #25: shallow copy a data tablarol, hogy a hivó eredeti tablaja ne valtozzon
 exports('updateModuleData', function(moduleName, data)
-    local payload = data
+    local payload = {}
+    for k, v in pairs(data or {}) do payload[k] = v end
     payload.action = 'updateModuleData'
     payload.module = moduleName
     SendNUIMessage(payload)

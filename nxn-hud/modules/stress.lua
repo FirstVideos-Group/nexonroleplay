@@ -1,25 +1,28 @@
 -- ============================================================
 --  nxn-hud | modules/stress.lua
---  FIX: setTimeout/clearTimeout nem letezik Lua-ban
---       GetGameTimer alapu hide timer hasznalata helyette
+--  Stressz kezeles: ertek kuldese + show/hide logika
+--  #27: updateModule kuldese (ertek)
+--  #28: teljes stress logika itt van, client.lua-ban nincs stress ag
 -- ============================================================
 
 local hideAt = nil
 local cfg    = Config.Modules.stress
 
 AddEventHandler('nxn-needs:client:updated', function(needs)
-    if not moduleStates['stress'] then return end
+    if not NXN.HUD.moduleStates['stress'] then return end
     if not cfg then return end
 
     local stress = needs.stress or 0
 
+    -- #27: Ertek kuldese a NUI-ba
+    NXN.HUD.Send('updateModule', { module = 'stress', value = stress })
+
+    -- Show/hide logika
     if not cfg.alwaysVisible then
         if stress > (cfg.threshold or 10) then
-            -- Stresszes: megjelenik, hide timer torlese
             SendNUIMessage({ action = 'showModuleTemporary', module = 'stress' })
             hideAt = nil
         else
-            -- Stressz visszacsment: hide timer beallitasa
             if not hideAt then
                 hideAt = GetGameTimer() + (cfg.hideDelay or 5000)
             end
@@ -27,7 +30,7 @@ AddEventHandler('nxn-needs:client:updated', function(needs)
     end
 end)
 
--- Hide timer figyelese kulonallo szalban
+-- Hide timer figyelese
 CreateThread(function()
     while true do
         Wait(500)
