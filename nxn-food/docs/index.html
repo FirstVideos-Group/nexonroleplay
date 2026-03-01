@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-food – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+            --warn:    #f0b35b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span.sub { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 880px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); font-family: monospace; }
+        .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; font-weight: 600; }
+        .badge-server { background: #1e3a5f; color: #5b9cf0; }
+        .badge-client { background: #1e3a2f; color: #3ecf8e; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .dep-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--muted); margin: 3px; }
+        .dep-badge i { color: var(--accent); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-restaurant-01"></i>
+    <div>
+        <h1>nxn-food <span class="sub">v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-food</strong> kezeli az étel/ital fogyasztást, az NPC éttermek és boltok vásárlási rendszerét, valamint az <code>nxn-needs</code> éhség/szomjúság/stressz/fáradtság módosítást. A vásárlás <code>nxn-finance</code> exportokon keresztül von le pénzt, az itemek az <code>nxn-inventory</code>-ba kerülnek.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-food/
+├── fxmanifest.lua      ← dependency: nxn-needs, nxn-inventory, nxn-notify, nxn-npcconversation, nxn-finance
+├── config.lua          ← items, shops, árak, animációk
+├── shared.lua          ← NXN.Food logger
+├── client.lua          ← animáció, NPC regisztrálás, bolt UI, exportok
+├── server.lua          ← fogyasztás logika, shop vásárlás, exportok
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-puzzle"></i> Függőségek</h2>
+    <div>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-needs</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-inventory</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-notify</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-npcconversation</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-finance</span>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.AnimationBlocking</td><td>false</td><td>Mozgásblokkolás evés/ivás közben</td></tr>
+        <tr><td>Config.Items</td><td>–</td><td>Fogyasztható étel/ital definíciók (label, hunger, thirst, stress, fatigue, animation, duration)</td></tr>
+        <tr><td>Config.Shops</td><td>–</td><td>NPC éttermek/boltok (label, npc, items + árak)</td></tr>
+        <tr><td>Config.Animations</td><td>–</td><td>Animáció szótár és clip definíciók</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getItem(itemName)</td><td><span class="badge badge-server">server</span></td><td>itemName: string</td><td>table|nil</td><td>Item definíció visszaadása a configból</td></tr>
+        <tr><td>getAllItems()</td><td><span class="badge badge-server">server</span></td><td>–</td><td>table</td><td>Minden fogyasztható item listája</td></tr>
+        <tr><td>getShops()</td><td><span class="badge badge-server">server</span></td><td>–</td><td>table</td><td>Boltok listája koordinátákkal és itemekkel</td></tr>
+        <tr><td>isConsumable(itemName)</td><td><span class="badge badge-server">server</span></td><td>itemName: string</td><td>boolean</td><td>Fogyasztható-e az adott item</td></tr>
+        <tr><td>consumeItem(src, itemName)</td><td><span class="badge badge-server">server</span></td><td>src: int, itemName: string</td><td>boolean</td><td>Item fogyasztás külsőleg indítása (pl. orvosi scriptből)</td></tr>
+        <tr><td>isEating()</td><td><span class="badge badge-client">client</span></td><td>–</td><td>boolean</td><td>Játékos jelenleg eszik/iszik-e</td></tr>
+        <tr><td>cancelConsume()</td><td><span class="badge badge-client">client</span></td><td>–</td><td>–</td><td>Fogyasztás megszakítása (animáció leállítása)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Adat</th><th>Leírás</th></tr>
+        <tr><td>nxn-food:server:use</td><td>Client → Server</td><td>itemName</td><td>Item használat kérése (inventory triggereli)</td></tr>
+        <tr><td>nxn-food:client:consume</td><td>Server → Client</td><td>itemData (table)</td><td>Animáció indítása kliens oldalon</td></tr>
+        <tr><td>nxn-food:server:consumed</td><td>Client → Server</td><td>itemName</td><td>Animáció lefutott, hatás alkalmazása</td></tr>
+        <tr><td>nxn-food:client:consumed</td><td>Szerver lokál</td><td>{ itemName, effects }</td><td>Más scriptek figyelhetik (pl. nxn-hud)</td></tr>
+        <tr><td>nxn-food:server:requestShop</td><td>Client → Server</td><td>shopId</td><td>Bolt adatok lekérése</td></tr>
+        <tr><td>nxn-food:client:shopData</td><td>Server → Client</td><td>shopId, shopData, currentMoney</td><td>Bolt UI megnyitása adatokkal</td></tr>
+        <tr><td>nxn-food:server:buy</td><td>Client → Server</td><td>shopId, itemName</td><td>Vásárlás kérése</td></tr>
+        <tr><td>nxn-food:client:buyResult</td><td>Server → Client</td><td>ok, newBalance</td><td>Vásárlás eredménye, frissített egyenleg</td></tr>
+        <tr><td>nxn-food:client:openShop</td><td>Lokál (nxn-npcconversation)</td><td>shopId</td><td>Bolt UI megnyitása NPC dialógból</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">e1 – Fogyasztás külső scriptből</div>
+        <div class="tab" onclick="switchTab(this,'t2')">e2 – isEating() ellenőrzés</div>
+        <div class="tab" onclick="switchTab(this,'t3')">e3 – Inventory integrálás</div>
+        <div class="tab" onclick="switchTab(this,'t4')">e4 – nxn-needs kapcsolat</div>
+    </div>
+
+    <div class="tab-content active" id="t1">
+        <pre><code>-- Orvosi vagy más resource fogyasztást indít:
+-- server.lua
+local ok = exports['nxn-food']:consumeItem(src, 'water_bottle')
+if not ok then
+    print('Ismeretlen item vagy nxn-food nem fut.')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Kliens oldali ellenőrzés (pl. animáció blokkoláshoz):
+-- client.lua
+if exports['nxn-food']:isEating() then
+    -- Játékos most eszik, ne tegyük lehetővé az interakciót
+    return
+end
+
+-- Megszakítás kényszer esetén:
+exports['nxn-food']:cancelConsume()</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Az nxn-inventory az item használatakor triggereli:
+-- (nxn-inventory konfigban be kell állítani az item use eventjét)
+-- server.lua (nxn-inventory use handler)
+TriggerEvent('nxn-food:server:use', source, 'hamburger')
+
+-- Vagy közvetlenül:
+RegisterServerEvent('nxn-food:server:use', function(itemName)
+    -- ezt az nxn-food kezeli automatikusan
+end)</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- A fogyasztás után az nxn-food automatikusan hívja:
+-- server.lua (nxn-food belső logika)
+exports['nxn-needs']:modifyNeed(src, 'hunger',  35)  -- hamburger
+exports['nxn-needs']:modifyNeed(src, 'thirst',  -5)
+exports['nxn-needs']:modifyNeed(src, 'stress',  -5)
+
+-- Teli has ellenőrzés (getNeed export):
+local hunger = exports['nxn-needs']:getNeed(src, 'hunger')
+if hunger >= 90 then
+    -- 'Már nem vagy éhes!' értesítés küldve
+end</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th></tr>
+        <tr><td>nxn-needs</td><td>modifyNeed, getNeed exportok – éhség/szomjúság/stressz/fáradtság módosítás minden fogyasztásnál</td></tr>
+        <tr><td>nxn-inventory</td><td>removeItem (fogyasztás után), addItem (vásárlásnál), hasItem (ellenőrzés)</td></tr>
+        <tr><td>nxn-notify</td><td>Fogyasztási és vásárlási visszajelzések (success / warn / danger)</td></tr>
+        <tr><td>nxn-npcconversation</td><td>registerNPC/unregisterNPC – éttermi NPC-k automatikus regisztrálása resource start/stop-kor</td></tr>
+        <tr><td>nxn-finance</td><td>getMoney (ellenőrzés), removeMoney (vásárlásnál), addMoney (visszatérítésnél)</td></tr>
+        <tr><td>nxn-hud</td><td>nxn-food:client:consumed eventet figyelheti a HUD animáció frissítéshez</td></tr>
+        <tr><td>nxn-shop</td><td>Ha nxn-shop telepítve van, a bolt logika delegálható registerShop exporton keresztül</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

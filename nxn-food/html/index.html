@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-food</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="shop-overlay" class="hidden">
+    <div class="nxn-panel shop-panel">
+        <div class="nxn-panel__header">
+            <span><i class="hgi hgi-stroke hgi-restaurant-01"></i> <span id="shop-title">Étterem</span></span>
+            <button class="nxn-btn-icon" onclick="closeShop()"><i class="hgi hgi-stroke hgi-cancel-01"></i></button>
+        </div>
+        <div class="shop-balance">
+            <i class="hgi hgi-stroke hgi-money-02"></i>
+            <span>Egyenleged:</span>
+            <strong id="shop-balance">$0</strong>
+        </div>
+        <div class="nxn-panel__body" id="shop-items"></div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

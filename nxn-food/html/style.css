@@ -1,0 +1,170 @@
+/* ── Nexon Design System – nxn-food ── */
+:root {
+    --nxn-bg:      #0e0f14;
+    --nxn-surface: #16181f;
+    --nxn-border:  #2a2d3a;
+    --nxn-accent:  #5b6af0;
+    --nxn-text:    #e4e6f0;
+    --nxn-muted:   #6b6f85;
+    --nxn-success: #3ecf8e;
+    --nxn-danger:  #f05b5b;
+    --nxn-warn:    #f0b35b;
+    --nxn-radius:  10px;
+    --nxn-font:    'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: transparent;
+    font-family: var(--nxn-font);
+    color: var(--nxn-text);
+    overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* ── Overlay ── */
+#shop-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: nxnFadeIn .2s ease;
+}
+
+/* ── Panel ── */
+.shop-panel {
+    width: 420px;
+    max-height: 80vh;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,.55);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nxn-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--nxn-border);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.nxn-panel__header i { margin-right: 6px; color: var(--nxn-accent); }
+
+.shop-balance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--nxn-bg);
+    border-bottom: 1px solid var(--nxn-border);
+    font-size: 13px;
+    color: var(--nxn-muted);
+}
+
+.shop-balance i { color: var(--nxn-success); }
+.shop-balance strong { color: var(--nxn-success); margin-left: auto; font-size: 14px; }
+
+.nxn-panel__body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: calc(80vh - 110px);
+}
+
+/* ── Item kártya ── */
+.food-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--nxn-bg);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    animation: nxnFadeIn .18s ease;
+    transition: border-color .15s;
+}
+
+.food-item:hover { border-color: var(--nxn-accent); }
+
+.food-item__icon {
+    font-size: 24px;
+    color: var(--nxn-accent);
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.food-item__info {
+    flex: 1;
+}
+
+.food-item__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nxn-text);
+    margin-bottom: 3px;
+}
+
+.food-item__effects {
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--nxn-muted);
+}
+
+.food-item__effects .positive { color: var(--nxn-success); }
+.food-item__effects .negative { color: var(--nxn-danger); }
+
+.food-item__price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--nxn-success);
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+/* ── Buy button ── */
+.nxn-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--nxn-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+    flex-shrink: 0;
+}
+.nxn-btn:hover { opacity: .85; }
+
+.nxn-btn-icon {
+    background: none;
+    border: none;
+    color: var(--nxn-muted);
+    font-size: 18px;
+    cursor: pointer;
+    transition: color .15s;
+    line-height: 1;
+}
+.nxn-btn-icon:hover { color: var(--nxn-text); }
+
+/* ── Animációk ── */
+@keyframes nxnFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
