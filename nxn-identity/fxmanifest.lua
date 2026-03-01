@@ -5,6 +5,12 @@ author      'Nexon Dev Team <nexondev@firstvideosgroup.eu>'
 description 'nxn-identity – Karakter identitas es skin rendszer'
 version     '1.0.0'
 
+-- #37: dependency deklarációk hozzáadva
+dependencies {
+    'nxn-notify',
+    'nxn-database',
+}
+
 shared_scripts {
     'config.lua',
     'shared.lua'

@@ -46,7 +46,7 @@ AddEventHandler('onResourceStart', function(res)
     end
 end)
 
--- ── Szerversoldali cache ──────────────────────────────────────────
+-- ── Szerver-oldali cache ────────────────────────────────────────
 -- { [src] = identityRow }
 local identCache = {}
 
@@ -57,8 +57,7 @@ local function GetIdentifier(src)
     return exports['nxn-database']:getIdentifier(src)
 end
 
--- ── nxn-database:playerLoaded esemeny ──────────────────────────
--- Amikor a DB betolti a jatekost, lekerdjuk az identitasat
+-- ── nxn-database:playerLoaded esemeny ─────────────────────────────
 
 AddEventHandler('nxn-database:server:playerLoaded', function(src, dbData)
     NXN.Identity.Log(('playerLoaded event: src=%d ident=%s'):format(src, tostring(dbData and dbData.identifier)))
@@ -74,7 +73,6 @@ AddEventHandler('nxn-database:server:playerLoaded', function(src, dbData)
     if row then
         identCache[src] = row
         NXN.Identity.Log(('Identitas betoltve: src=%d name=%s %s'):format(src, row.firstname, row.lastname))
-        -- Kulduk a kliensnek (spawn + skin)
         TriggerClientEvent('nxn-identity:client:loaded', src, row)
     else
         NXN.Identity.Info(('Uj jatekos, karakterletrehozas szukseges: src=%d'):format(src))
@@ -82,30 +80,43 @@ AddEventHandler('nxn-database:server:playerLoaded', function(src, dbData)
     end
 end)
 
--- ── Karakter letrehozas (kliens elkuldvi adatokat) ───────────────
+-- ── Karakter letrehozas ─────────────────────────────────────────
 
 RegisterNetEvent('nxn-identity:server:createIdentity')
 AddEventHandler('nxn-identity:server:createIdentity', function(data)
-    local src = source
+    local src        = source
     local identifier = GetIdentifier(src)
     if not identifier then
         NXN.Identity.Warn(('createIdentity: nincs identifier, src=%d'):format(src))
         return
     end
 
-    -- Biztonsag: duplikat ellenorzes
     local existing = MySQL.single.await(
         'SELECT id FROM `nxn_identities` WHERE identifier = ?',
         { identifier }
     )
     if existing then
         NXN.Identity.Warn(('createIdentity: mar letezik identitas src=%d'):format(src))
-        TriggerClientEvent('nxn-identity:client:loaded', src, identCache[src])
+        -- #34: ha a cache ures, DB fallback
+        local row = identCache[src]
+        if not row then
+            NXN.Identity.Log(('createIdentity: cache ures, DB fallback src=%d'):format(src))
+            row = MySQL.single.await(
+                'SELECT * FROM `nxn_identities` WHERE identifier = ?',
+                { identifier }
+            )
+            identCache[src] = row
+        end
+        if row then
+            TriggerClientEvent('nxn-identity:client:loaded', src, row)
+        else
+            NXN.Identity.Warn(('createIdentity: fallback DB lekerdes is sikertelen src=%d'):format(src))
+        end
         return
     end
 
     local faceJson   = data.face_features and json.encode(data.face_features) or nil
-    local outfitJson = data.outfit and json.encode(data.outfit) or nil
+    local outfitJson = data.outfit        and json.encode(data.outfit)        or nil
 
     local insertId = MySQL.insert.await([[
         INSERT INTO `nxn_identities`
@@ -114,16 +125,16 @@ AddEventHandler('nxn-identity:server:createIdentity', function(data)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ]], {
         identifier,
-        data.firstname    or '',
-        data.lastname     or '',
-        data.gender       or 0,
-        data.birth_day    or 1,
-        data.birth_month  or 1,
-        data.birth_year   or 1990,
-        data.skin_color   or 0,
-        data.eye_color    or 0,
-        data.hair_style   or 0,
-        data.hair_color   or 0,
+        data.firstname      or '',
+        data.lastname       or '',
+        data.gender         or 0,
+        data.birth_day      or 1,
+        data.birth_month    or 1,
+        data.birth_year     or 1990,
+        data.skin_color     or 0,
+        data.eye_color      or 0,
+        data.hair_style     or 0,
+        data.hair_color     or 0,
         data.hair_highlight or 0,
         faceJson,
         outfitJson,
@@ -137,20 +148,20 @@ AddEventHandler('nxn-identity:server:createIdentity', function(data)
     NXN.Identity.Info(('Uj identitas letrehozva: src=%d id=%d %s %s'):format(
         src, insertId, data.firstname, data.lastname
     ))
-
     TriggerClientEvent('nxn-identity:client:loaded', src, row)
     TriggerEvent('nxn-identity:server:identityCreated', src, row)
 end)
 
--- ── Pozicio mentes ───────────────────────────────────────────────
+-- ── Pozicio mentes ────────────────────────────────────────────
+-- #35: MySQL.update.await hasznalatava (race condition elkerulesere)
 
 RegisterNetEvent('nxn-identity:server:savePosition')
 AddEventHandler('nxn-identity:server:savePosition', function(x, y, z, heading)
-    local src = source
+    local src        = source
     local identifier = GetIdentifier(src)
     if not identifier then return end
 
-    MySQL.update(
+    MySQL.update.await(
         'UPDATE `nxn_identities` SET pos_x=?, pos_y=?, pos_z=?, pos_heading=? WHERE identifier=?',
         { x, y, z, heading, identifier }
     )
@@ -162,14 +173,14 @@ AddEventHandler('nxn-identity:server:savePosition', function(x, y, z, heading)
         identCache[src].pos_heading = heading
     end
 
-    NXN.Identity.Log(('Pozicio mentve: src=%d x=%.1f y=%.1f z=%.1f h=%.1f'):format(src,x,y,z,heading))
+    NXN.Identity.Log(('Pozicio mentve: src=%d x=%.1f y=%.1f z=%.1f h=%.1f'):format(src, x, y, z, heading))
 end)
 
--- ── Skin update (karakter ujratestreszabas utan) ─────────────────
+-- ── Skin update ───────────────────────────────────────────────
 
 RegisterNetEvent('nxn-identity:server:updateSkin')
 AddEventHandler('nxn-identity:server:updateSkin', function(skin)
-    local src = source
+    local src        = source
     local identifier = GetIdentifier(src)
     if not identifier then return end
 
@@ -186,84 +197,56 @@ AddEventHandler('nxn-identity:server:updateSkin', function(skin)
     })
 
     if identCache[src] then
-        for k,v in pairs(skin) do identCache[src][k] = v end
+        for k, v in pairs(skin) do identCache[src][k] = v end
     end
 
     NXN.Identity.Log(('Skin frissitve: src=%d'):format(src))
 end)
 
--- ── Disconnect cleanup ────────────────────────────────────────────
+-- ── Disconnect cleanup ──────────────────────────────────────────
+-- #35: playerDropped csak cache-t torol – a kliens mar kuldott savePosition-t await-tel
 
 AddEventHandler('playerDropped', function()
     local src = source
-    local data = identCache[src]
-    if not data then return end
-    -- Vegso pozicio mentes
-    NXN.Identity.Log(('playerDropped pozicio mentes: src=%d'):format(src))
-    -- (a kliens mar kuldott savePosition-t, de biztonsagkent cache-bol is irjuk)
-    MySQL.update(
-        'UPDATE `nxn_identities` SET pos_x=?, pos_y=?, pos_z=?, pos_heading=? WHERE identifier=?',
-        { data.pos_x, data.pos_y, data.pos_z, data.pos_heading, data.identifier }
-    )
+    NXN.Identity.Log(('playerDropped: cache torlese src=%d'):format(src))
     identCache[src] = nil
 end)
 
 -- ── Exportok (szerver) ──────────────────────────────────────────
 
---- Teljes identitas adat visszaadasa
----@param src number
----@return table|nil
 exports('getIdentity', function(src)
     local d = identCache[src]
     NXN.Identity.Log(('getIdentity export: src=%d found=%s'):format(src, tostring(d ~= nil)))
     return d
 end)
 
---- Csak nev visszaadasa (pl. igazolvany)
----@param src number
----@return string|nil  'Vezetéknév Keresztnév' formatum
 exports('getFullName', function(src)
     local d = identCache[src]
     if not d then return nil end
     return (d.firstname or '') .. ' ' .. (d.lastname or '')
 end)
 
---- Csak keresztnev
----@param src number
----@return string|nil
 exports('getFirstName', function(src)
     local d = identCache[src]
     return d and d.firstname or nil
 end)
 
---- Csak vezeteknev
----@param src number
----@return string|nil
 exports('getLastName', function(src)
     local d = identCache[src]
     return d and d.lastname or nil
 end)
 
---- Nem (0=ferfi 1=no)
----@param src number
----@return number|nil
 exports('getGender', function(src)
     local d = identCache[src]
     return d and d.gender or nil
 end)
 
---- Szuletesi datum string
----@param src number
----@return string|nil  'ÉÉÉÉ.HH.NN'
 exports('getBirthDate', function(src)
     local d = identCache[src]
     if not d then return nil end
     return ('%04d.%02d.%02d'):format(d.birth_year, d.birth_month, d.birth_day)
 end)
 
---- Eletkor szamitasa
----@param src number
----@return number|nil
 exports('getAge', function(src)
     local d = identCache[src]
     if not d then return nil end
@@ -275,15 +258,15 @@ exports('getAge', function(src)
     return age
 end)
 
---- Van-e mar identitasa a jatekosnak
----@param src number
----@return boolean
 exports('hasIdentity', function(src)
     return identCache[src] ~= nil
 end)
 
---- Osszes online identitas cache
----@return table
+-- #36: shallow copy – a hivó nem módosíthatja a belső cache-t
 exports('getAllIdentities', function()
-    return identCache
+    local copy = {}
+    for src, data in pairs(identCache) do
+        copy[src] = data
+    end
+    return copy
 end)
