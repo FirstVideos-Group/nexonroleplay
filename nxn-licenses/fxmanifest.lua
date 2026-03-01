@@ -5,6 +5,14 @@ author      'Nexon Dev Team <nexondev@firstvideosgroup.eu>'
 description 'nxn-licenses – Igazolvány és engedélykezelő rendszer'
 version     '1.0.0'
 
+-- #54: dependencies hozzáadva az indítási sorrend garantálásához
+dependencies {
+    'nxn-database',
+    'nxn-notify',
+    'nxn-identity',
+    'nxn-inventory',
+}
+
 shared_scripts {
     'config.lua',
     'shared.lua',

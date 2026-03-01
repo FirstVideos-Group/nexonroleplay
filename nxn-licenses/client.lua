@@ -7,9 +7,7 @@ local licenses      = {}   -- { [type] = row }
 local pending       = {}   -- { [type] = row }
 local invItems      = {}   -- { [itemName] = true } – helyi inventory cache tükrözés
 
--- ── Inventory szinkron figyelese ──────────────────────────────
--- Minden alkalommal amikor az nxn-inventory szinkronizál a klienssel,
--- frissítjük a helyi invItems cache-t is.
+-- ── Inventory szinkron figyelése ─────────────────────────────────────
 
 RegisterNetEvent('nxn-inventory:client:sync', function(data)
     invItems = {}
@@ -23,16 +21,11 @@ RegisterNetEvent('nxn-inventory:client:sync', function(data)
         for _ in pairs(invItems) do c = c + 1 end
         return c
     end)()))
-    -- Ha az UI nyitva van, frissítjük a nézetet
     if isOpen then PushToUI() end
 end)
 
--- ── Helyi inventory segéd ─────────────────────────────────────
+-- ── Helyi inventory segéd ─────────────────────────────────────────────
 
---- Kliens oldalon ellenőrzi, hogy az igazolvány fizikailag nála van-e.
---- Csak UI logikához használjuk – a szerver oldal is ellenőriz.
----@param licenseType string
----@return boolean
 local function ClientHasItem(licenseType)
     if not Config.InventoryCheck then return true end
     local def = NXN.Licenses.GetTypeDef(licenseType)
@@ -40,7 +33,7 @@ local function ClientHasItem(licenseType)
     return invItems[def.inventoryItem] == true
 end
 
--- ── UI ──────────────────────────────────────────────────
+-- ── UI ──────────────────────────────────────────────────────────────
 
 local function SetUIVisible(state)
     isOpen = state
@@ -49,15 +42,15 @@ local function SetUIVisible(state)
     NXN.Licenses.Log(('UI látható: %s'):format(tostring(state)))
 end
 
--- PushToUI most átadja az inventory állapotot is minden kártyához
-function PushToUI()
+-- #52: PushToUI local függvényként deklarálva (korábban globális volt)
+local function PushToUI()
     local enriched = {}
     for _, def in ipairs(Config.LicenseTypes) do
         enriched[def.id] = {
-            def        = def,
-            license    = licenses[def.id] or nil,
-            pending    = pending[def.id]  or nil,
-            hasInInv   = ClientHasItem(def.id),   -- ★ új mező: fizikailag nála van-e
+            def      = def,
+            license  = licenses[def.id] or nil,
+            pending  = pending[def.id]  or nil,
+            hasInInv = ClientHasItem(def.id),
         }
     end
     SendNUIMessage({
@@ -75,7 +68,7 @@ local function CloseUI()
     SetUIVisible(false)
 end
 
--- ── Net events ───────────────────────────────────────────
+-- ── Net events ─────────────────────────────────────────────────
 
 RegisterNetEvent('nxn-licenses:client:sync', function(data, pend)
     NXN.Licenses.Log('Szinkronizáció fogadva')
@@ -93,7 +86,7 @@ RegisterNetEvent('nxn-licenses:client:viewShown', function(payload)
     isOpen = true
 end)
 
--- ── NUI callbacks ─────────────────────────────────────────
+-- ── NUI callbacks ──────────────────────────────────────────────
 
 RegisterNUICallback('close', function(_, cb)
     CloseUI()
@@ -106,13 +99,11 @@ RegisterNUICallback('apply', function(data, cb)
     cb('ok')
 end)
 
--- ★ showTo előtt kliens oldalon is ellenőrizzük (gyors visszajelzés)
 RegisterNUICallback('showTo', function(data, cb)
     local licType = data.licenseType
     NXN.Licenses.Log(('NUI showTo: type=%s target=%s'):format(
         tostring(licType), tostring(data.targetSrc)
     ))
-    -- Gyors kliens oldali ellenőrzés
     if Config.InventoryCheck and not ClientHasItem(licType) then
         SendNUIMessage({
             action  = 'showError',
@@ -125,7 +116,6 @@ RegisterNUICallback('showTo', function(data, cb)
     cb('ok')
 end)
 
--- ★ viewLicense: megtekintés előtt inventory ellenőrzés
 RegisterNUICallback('viewLicense', function(data, cb)
     local licType = data.licenseType
     NXN.Licenses.Log(('NUI viewLicense: %s'):format(tostring(licType)))
@@ -137,7 +127,6 @@ RegisterNUICallback('viewLicense', function(data, cb)
         cb('ok')
         return
     end
-    -- Ha megvan: szerver küldött adatokat már a sync-ben, csak UI-t nyitúk
     SendNUIMessage({ action = 'openLicenseView', licenseType = licType })
     cb('ok')
 end)
@@ -160,11 +149,11 @@ RegisterNUICallback('getNearbyPlayers', function(_, cb)
             end
         end
     end
-    table.sort(result, function(a,b) return a.dist < b.dist end)
+    table.sort(result, function(a, b) return a.dist < b.dist end)
     cb(result)
 end)
 
--- ── Parancs + ESC ──────────────────────────────────────────
+-- ── Parancs + ESC ──────────────────────────────────────────────
 
 RegisterCommand(Config.Command, function()
     if isOpen then CloseUI() else OpenUI() end
@@ -181,11 +170,17 @@ Citizen.CreateThread(function()
     end
 end)
 
--- ── Exportok ─────────────────────────────────────────────
+-- ── Exportok ────────────────────────────────────────────────
 
-exports('openLicenses',     function() if not isOpen then OpenUI()  end end)
-exports('closeLicenses',    function() if isOpen     then CloseUI() end end)
-exports('isOpen',           function() return isOpen end)
-exports('getLocalLicenses', function() return licenses end)
---- Kliens oldali gyors inventory check
-exports('clientHasItem',    function(licenseType) return ClientHasItem(licenseType) end)
+exports('openLicenses',  function() if not isOpen then OpenUI()  end end)
+exports('closeLicenses', function() if isOpen     then CloseUI() end end)
+exports('isOpen',        function() return isOpen end)
+
+-- #53: getLocalLicenses shallow copy visszaadása belső referencia helyett
+exports('getLocalLicenses', function()
+    local copy = {}
+    for k, v in pairs(licenses) do copy[k] = v end
+    return copy
+end)
+
+exports('clientHasItem', function(licenseType) return ClientHasItem(licenseType) end)

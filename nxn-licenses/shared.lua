@@ -23,7 +23,7 @@ function NXN.Licenses.Error(msg)
     print(('^9[nxn-licenses]^7 ^1[HIBA]^7 %s'):format(tostring(msg)))
 end
 
---- Igazolvány típus definìció visszaadása id alapján
+--- Igazolvány típus definìció visszaadása id alapán
 ---@param typeId string
 ---@return table|nil
 function NXN.Licenses.GetTypeDef(typeId)
@@ -39,37 +39,39 @@ function NXN.Licenses.NowStr()
     return os.date('!%Y-%m-%d %H:%M:%S')
 end
 
---- Lejarat string számítása validDays alapján (UTC)
+--- Lejárat string számítása validDays alapán (UTC)
 ---@param validDays number
 ---@return string|nil
 function NXN.Licenses.ExpiresStr(validDays)
     if not validDays or validDays == 0 then return nil end
-    -- FIX: os.time() UTC-ben számol, os.date('!') is UTC – konzisztens
     local future = os.time() + (validDays * 86400)
     return os.date('!%Y-%m-%d %H:%M:%S', future)
 end
 
---- Ellenőrzi, hogy egy igazolvány lejárt-e
--- FIX: UTC alapon hasonlít – az expires_at UTC-ben tárolódik,
--- os.time() lokális időt ad vissza, ezért UTC offsettel korrigálva.
+--- #51: IsExpired javítva – UTC offset számítás os.date('!*t') alapon.
+--- Az előző kód os.time(os.date('*t')) == os.time() volt, tehát az offset
+--- mindig 0-t adott. Most os.date('!*t') – az UTC strukturát adja vissza.
 ---@param row table   adatbázis sor (expires_at mezővel)
 ---@return boolean
 function NXN.Licenses.IsExpired(row)
     if not row or not row.expires_at then return false end
-    local y,mo,d,h,mi,s = row.expires_at:match('(%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)')
+    local y, mo, d, h, mi, s = row.expires_at:match('(%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)')
     if not y then return false end
-    -- UTC timestamp építése: os.time() egy UTC epochöt ad, de os.time({...})
-    -- lokális időnek értelmezi az argást – UTC korrekció szükséges
-    local utcOffset = os.time() - os.time(os.date('*t', os.time()))
-    local t = os.time({
+    -- UTC offset: lokális os.time() és a UTC struktúra különbsége
+    local localNow = os.time()
+    local utcNow   = os.time(os.date('!*t'))  -- UTC struktúrát konvertál vissza epochra
+    local offset   = localNow - utcNow
+    -- expires_at UTC-ben van tárolva; os.time({...}) lokálisnak értelmezi
+    -- tehát le kell vonni az offset-et a helyes UTC epochért
+    local expireTs = os.time({
         year  = tonumber(y),
         month = tonumber(mo),
         day   = tonumber(d),
         hour  = tonumber(h),
         min   = tonumber(mi),
         sec   = tonumber(s),
-    }) + utcOffset
-    return os.time() > t
+    }) - offset
+    return localNow > expireTs
 end
 
 --- Megfelelő státusz string

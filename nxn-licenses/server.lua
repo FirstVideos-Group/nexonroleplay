@@ -2,13 +2,16 @@
 --  nxn-licenses | server.lua
 -- ============================================================
 
--- ── Cache ──────────────────────────────────────────────
+-- ── Cache ────────────────────────────────────────────────────
 --- { [src] = { [licenseId] = rowTable, ... } }
 local licenseCache = {}
 --- { [src] = { [licenseId] = rowTable, ... } }
 local pendingCache = {}
 
--- ── Segédfüggvények ───────────────────────────────────────
+-- #47: szekvenciális számláló az egyedi igazolvány számok garantálásához
+local idSeq = 0
+
+-- ── Segédfüggvények ───────────────────────────────────────────
 
 local function GetIdentifier(src)
     return exports['nxn-database']:getIdentifier(src)
@@ -28,9 +31,15 @@ local function GetAge(src)
     return 0
 end
 
+-- #46: NotifyPlayer javítva – típusonkénti kliens event nevek
+-- (a korábbi 'nxn-notify:client:show' nem létezik az nxn-notify resource-ban)
 local function NotifyPlayer(src, msg, ntype)
-    if GetResourceState('nxn-notify') == 'started' then
-        TriggerClientEvent('nxn-notify:client:show', src, msg, ntype or 'info')
+    if GetResourceState('nxn-notify') ~= 'started' then return end
+    local t = ntype or 'info'
+    if     t == 'success' then TriggerClientEvent('nxn-notify:client:success', src, msg)
+    elseif t == 'danger'  then TriggerClientEvent('nxn-notify:client:danger',  src, msg)
+    elseif t == 'warning' then TriggerClientEvent('nxn-notify:client:warning', src, msg)
+    else                       TriggerClientEvent('nxn-notify:client:info',    src, msg)
     end
 end
 
@@ -41,10 +50,14 @@ local function SyncClient(src)
     NXN.Licenses.Log(('SyncClient: src=%d'):format(src))
 end
 
+-- #47: GenerateIdNumber – idSeq + nagyobb random tartomány az egyediségért
 local function GenerateIdNumber(licenseType)
-    local ts  = tostring(os.time()):sub(-6)
-    local rnd = math.random(100, 999)
-    return ('%s-%s-%s-%d'):format(Config.IdPrefix, licenseType:upper():sub(1,3), ts, rnd)
+    idSeq = idSeq + 1
+    local ts  = tostring(os.time())
+    local rnd = math.random(1000, 9999)
+    return ('%s-%s-%s-%04d-%d'):format(
+        Config.IdPrefix, licenseType:upper():sub(1, 3), ts, rnd, idSeq
+    )
 end
 
 local function countMap(t)
@@ -53,11 +66,6 @@ local function countMap(t)
     return c
 end
 
---- Ellenőrzi, hogy az igazolvány fizikailag megvan-e az inventoryban.
---- Ha az nxn-inventory nem fut vagy Config.InventoryCheck = false, true-val tér vissza.
----@param src integer
----@param licenseType string
----@return boolean
 local function HasItemInInventory(src, licenseType)
     if not Config.InventoryCheck then return true end
     if GetResourceState('nxn-inventory') ~= 'started' then
@@ -76,15 +84,11 @@ local function HasItemInInventory(src, licenseType)
     return has
 end
 
---- Item adása inventory-ba kiadáskor (ha az nxn-inventory fut).
----@param src integer
----@param licenseType string
 local function GiveItemToInventory(src, licenseType)
     if not Config.InventoryCheck then return end
     if GetResourceState('nxn-inventory') ~= 'started' then return end
     local def = NXN.Licenses.GetTypeDef(licenseType)
     if not def or not def.inventoryItem then return end
-    -- Ha már bent van (pl. másodlagos grantLicense), ne duplikálja
     if exports['nxn-inventory']:hasItem(src, def.inventoryItem, 1) then
         NXN.Licenses.Log(('GiveItemToInventory: már bent van: src=%d item=%s'):format(
             src, def.inventoryItem
@@ -101,9 +105,6 @@ local function GiveItemToInventory(src, licenseType)
     end
 end
 
---- Item eltávolítása visszavonásnál
----@param src integer
----@param licenseType string
 local function RemoveItemFromInventory(src, licenseType)
     if not Config.InventoryCheck then return end
     if GetResourceState('nxn-inventory') ~= 'started' then return end
@@ -115,7 +116,7 @@ local function RemoveItemFromInventory(src, licenseType)
     end
 end
 
--- ── Adatbázis ──────────────────────────────────────────────
+-- ── Adatbázis ────────────────────────────────────────────────────
 
 local function RegisterTables()
     NXN.Licenses.Info('Adatbázis táblák regisztrálása...')
@@ -126,7 +127,7 @@ local function RegisterTables()
                 `id`           INT UNSIGNED  NOT NULL AUTO_INCREMENT,
                 `identifier`   VARCHAR(60)   NOT NULL,
                 `license_type` VARCHAR(40)   NOT NULL,
-                `id_number`    VARCHAR(40)   NOT NULL,
+                `id_number`    VARCHAR(60)   NOT NULL,
                 `issued_at`    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `expires_at`   DATETIME      DEFAULT NULL,
                 `revoked`      TINYINT(1)    NOT NULL DEFAULT 0,
@@ -156,7 +157,7 @@ local function RegisterTables()
     NXN.Licenses.Info('Táblák OK.')
 end
 
--- ── Betöltés ──────────────────────────────────────────────
+-- ── Betöltés ────────────────────────────────────────────────────
 
 local function LoadPlayerLicenses(src, identifier)
     NXN.Licenses.Log(('LoadPlayerLicenses: src=%d ident=%s'):format(src, identifier))
@@ -187,7 +188,7 @@ local function LoadPlayerLicenses(src, identifier)
     TriggerEvent('nxn-licenses:server:loaded', src)
 end
 
--- ── Player events ─────────────────────────────────────────
+-- ── Player events ─────────────────────────────────────────────
 
 AddEventHandler('nxn-database:server:playerLoaded', function(src, playerData)
     NXN.Licenses.Log(('playerLoaded: src=%d'):format(src))
@@ -203,7 +204,7 @@ AddEventHandler('playerDropped', function()
     NXN.Licenses.Log(('playerDropped cleanup: src=%d'):format(src))
 end)
 
--- ── Feldolgozó tick ─────────────────────────────────────────
+-- ── Feldolgozó tick ───────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -243,20 +244,9 @@ CreateThread(function()
                     local ident = exports['nxn-database']:getIdentifier(s)
                     if ident == req.identifier then
 
-                        local newRow = MySQL.single.await(
-                            'SELECT * FROM `nxn_licenses` WHERE identifier=? AND license_type=?',
-                            { req.identifier, req.license_type }
-                        )
-                        if not newRow then
-                            Wait(300)
-                            newRow = MySQL.single.await(
-                                'SELECT * FROM `nxn_licenses` WHERE identifier=? AND license_type=?',
-                                { req.identifier, req.license_type }
-                            )
-                        end
-
-                        if not licenseCache[s] then licenseCache[s] = {} end
-                        licenseCache[s][req.license_type] = newRow or {
+                        -- #48: Wait(300) retry eltávolítva – row-t az ismert adatokból
+                        -- építjük fel, nem blokkolunk a for cikluson belül
+                        local newRow = {
                             identifier   = req.identifier,
                             license_type = req.license_type,
                             id_number    = idNum,
@@ -265,13 +255,14 @@ CreateThread(function()
                             revoked      = 0,
                         }
 
+                        if not licenseCache[s] then licenseCache[s] = {} end
+                        licenseCache[s][req.license_type] = newRow
+
                         if pendingCache[s] then
                             pendingCache[s][req.license_type] = nil
                         end
 
-                        -- ★ Fizikai item adása az inventory-ba
                         GiveItemToInventory(s, req.license_type)
-
                         SyncClient(s)
 
                         local def2  = NXN.Licenses.GetTypeDef(req.license_type)
@@ -287,9 +278,9 @@ CreateThread(function()
     end
 end)
 
--- ── Net events ─────────────────────────────────────────────
+-- ── Net events ────────────────────────────────────────────────
 
--- Igenylés
+-- Igénylés
 RegisterNetEvent('nxn-licenses:server:apply', function(licenseType)
     local src        = source
     local identifier = GetIdentifier(src)
@@ -309,7 +300,7 @@ RegisterNetEvent('nxn-licenses:server:apply', function(licenseType)
     end
 
     if pendingCache[src] and pendingCache[src][licenseType] then
-        NotifyPlayer(src, ('%s igenylésed már feldolgozás alatt.'):format(def.label), 'warning')
+        NotifyPlayer(src, ('%s igénylésed már feldolgozás alatt.'):format(def.label), 'warning')
         return
     end
 
@@ -340,10 +331,10 @@ RegisterNetEvent('nxn-licenses:server:apply', function(licenseType)
 
     local mins = math.ceil(def.processSec / 60)
     NotifyPlayer(src,
-        ('Igenylés beadásra került. Kb. %d perc múlva kerül az inventory-dba.'):format(mins),
+        ('Igénylés beadásra került. Kb. %d perc múlva kerül az inventory-dba.'):format(mins),
         'info'
     )
-    NXN.Licenses.Info(('Igenylés: src=%d type=%s readyAt=%s'):format(src, licenseType, readyAt))
+    NXN.Licenses.Info(('Igénylés: src=%d type=%s readyAt=%s'):format(src, licenseType, readyAt))
 end)
 
 -- Felmutatás
@@ -358,7 +349,6 @@ RegisterNetEvent('nxn-licenses:server:showTo', function(licenseType, targetSrc)
         return
     end
 
-    -- ★ Inventory ellenőrzés: fizikailag nálad van-e?
     if not HasItemInInventory(src, licenseType) then
         NotifyPlayer(src, 'Az igazolvány nincs nálad (inventory)!', 'warning')
         return
@@ -389,7 +379,7 @@ RegisterNetEvent('nxn-licenses:server:requestSync', function()
     SyncClient(source)
 end)
 
--- ── Resource start ──────────────────────────────────────────
+-- ── Resource start ─────────────────────────────────────────────
 
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName ~= Config.ResourceName then return end
@@ -400,10 +390,9 @@ AddEventHandler('onResourceStart', function(resourceName)
     end)
 end)
 
--- ── Exportok ────────────────────────────────────────────
+-- ── Exportok ───────────────────────────────────────────────
 
 --- Van-e érvényes igazolvány ÉS fizikailag az inventory-jában is megvan-e?
---- (Ha Config.InventoryCheck = false, csak DB-t ellenőriz)
 ---@param src integer
 ---@param licenseType string
 ---@return boolean
@@ -411,7 +400,6 @@ exports('hasLicense', function(src, licenseType)
     local lic = licenseCache[src] and licenseCache[src][licenseType]
     if not lic then return false end
     if NXN.Licenses.IsExpired(lic) then return false end
-    -- Inventory ellenőrzés
     return HasItemInInventory(src, licenseType)
 end)
 
@@ -423,14 +411,20 @@ exports('getLicense', function(src, licenseType)
     return licenseCache[src] and licenseCache[src][licenseType] or nil
 end)
 
---- Összes igazolvány
+--- #50: getAllLicenses shallow copy visszaadása – belső cache referencia helyett
 ---@param src integer
 ---@return table
 exports('getAllLicenses', function(src)
-    return licenseCache[src] or {}
+    local data = licenseCache[src]
+    if not data then return {} end
+    local copy = {}
+    for k, v in pairs(data) do copy[k] = v end
+    return copy
 end)
 
---- Visszavonás – DB + cache + inventory tárgy eltávolítása
+--- #49: revokeLicense – MySQL.update.await a DB-first sorrend garantálásához
+--- (korábban aszinkron update + azonnali cache törlés: crash esetén
+---  a DB revoked=0 maradt, újraindítás után visszakaptad az igazolványt)
 ---@param src integer
 ---@param licenseType string
 ---@return boolean
@@ -438,14 +432,14 @@ exports('revokeLicense', function(src, licenseType)
     local identifier = GetIdentifier(src)
     if not identifier then return false end
 
-    MySQL.update(
+    -- Először DB, utána cache + inventory
+    MySQL.update.await(
         'UPDATE `nxn_licenses` SET revoked=1 WHERE identifier=? AND license_type=?',
         { identifier, licenseType }
     )
 
     if licenseCache[src] then licenseCache[src][licenseType] = nil end
 
-    -- ★ Fizikai item eltávolítása
     RemoveItemFromInventory(src, licenseType)
 
     SyncClient(src)
@@ -482,7 +476,6 @@ exports('grantLicense', function(src, licenseType)
     if not licenseCache[src] then licenseCache[src] = {} end
     licenseCache[src][licenseType] = newRow
 
-    -- ★ Fizikai item adása
     GiveItemToInventory(src, licenseType)
 
     SyncClient(src)
@@ -499,7 +492,7 @@ exports('getExpiry', function(src, licenseType)
     return lic and lic.expires_at or nil
 end)
 
---- Függő igenylés van-e
+--- Függő igénylés van-e
 ---@param src integer
 ---@param licenseType string
 ---@return boolean
