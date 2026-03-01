@@ -7,55 +7,53 @@ Config = {}
 Config.Debug        = false
 Config.ResourceName = GetCurrentResourceName()
 
--- ── Önkormányzat hely / blip ───────────────────────────────
+-- ── Önkormányzat hely / blip ──────────────────────────────────
 Config.Building = {
     name     = 'Önkormányzat',
-    coords   = vector3(372.77, -596.89, 28.75),   -- Rockford Hills City Hall
-    -- Fő épület blip (mindig látszik)
+    coords   = vector3(372.77, -596.89, 28.75),
     blip = {
         enabled = true,
-        sprite  = 475,      -- City Hall ikon
-        color   = 4,        -- zöld
+        sprite  = 475,
+        color   = 4,
         scale   = 0.9,
         label   = 'Önkormányzat',
     },
 }
 
--- ── NPC beállítások ───────────────────────────────────────
+-- ── NPC beállítások ────────────────────────────────────────
 Config.NPC = {
     id      = 'cityhall_clerk',
-    label   = 'Ügyintéző',
+    label   = 'ÜgyínTéző',
     model   = 'ig_priest',
     coords  = vector4(372.1, -596.8, 28.75, 159.0),
     scenario = 'WORLD_HUMAN_CLIPBOARD',
 
-    -- NPC közeli blip (csak X méteren belül látszik)
     blip = {
         enabled     = true,
         sprite      = 446,
         color       = 5,
         scale       = 0.7,
-        label       = 'Ügyintéző',
-        visibleDist = 80.0,   -- láthatSági távolság méterben
+        label       = 'ÜgyínTéző',
+        visibleDist = 80.0,
     },
 }
 
--- ── Interakciós távolságok ──────────────────────────────
-Config.InteractDistance = 3.0   -- nyárás távolsága (m)
-Config.HintDistance     = 6.0   -- tipp szöveg megjelenése (m)
+-- ── Interakciós távolságok ────────────────────────────────
+Config.InteractDistance = 3.0
+Config.HintDistance     = 6.0
 
--- ── Ügyek / menii ───────────────────────────────────────
+-- ── Ügyek / menü ──────────────────────────────────────────
 --
--- Minden fobészélgetési opció ide kerül. Ezek az nxn-npcconversation-ban
+-- Minden főbeszélgetési opció ide kerül. Ezek az nxn-npcconversation-ban
 -- registerelt diálogusok. Az 'action' mező mondja meg a scriptnek mi történjen.
 --
--- action tímogatott értékek (beépített):
+-- action támogatott értékek (beépített):
 --   'openLicenses'   – Igazolvány menü megnyitása (nxn-licenses)
---   'openFines'      – Csekk/bírsság nézet megnyitása
+--   'openFines'      – Csekk/bírásg nézet megnyitása
 --   'openInfo'       – Információs panel megnyitása
 --   'custom'         – Saját event (eventName mezővel megadható)
 --
--- Külső resourceok runtime hozzáadhatnak új menüelemeket az
+-- Külsõ resourceok runtime hozzáadhatnak új menüelemeket az
 -- exports['nxn-cityhall']:addMenuItem(...) exporton keresztül.
 
 Config.MenuItems = {
@@ -63,14 +61,14 @@ Config.MenuItems = {
         id       = 'licenses',
         label    = 'Igazolványok',
         icon     = 'hgi-id-verified',
-        response = 'Rendben, híd elő az igazolvány kezelőt!',
+        response = 'Rendben, hívom elő az igazolvány kezelőt!',
         action   = 'openLicenses',
     },
     {
         id       = 'fines',
-        label    = 'Bírságaim / Csekk',
+        label    = 'Bírásgaim / Csekk',
         icon     = 'hgi-invoice-03',
-        response = 'Azonnal megnezem a függő csekkjeit.',
+        response = 'Azonnal megnézem a függő csekkjeit.',
         action   = 'openFines',
     },
     {
@@ -80,7 +78,7 @@ Config.MenuItems = {
         response = 'Az aktualitásokat már kitettem a hirdetőtáblára.',
         action   = 'openInfo',
     },
-    -- Jövőbeli beővítések (példák):
+    -- Jövőbeli bővítések (példák):
     --[[
     {
         id       = 'evidence',
@@ -101,19 +99,19 @@ Config.MenuItems = {
     ]]
 }
 
--- ── Tájékoztató szöveg (openInfo) ────────────────────────
+-- ── Tájékoztató szöveg (openInfo) ────────────────────────────
 Config.InfoContent = {
     title   = 'Hatósági Tájékoztató',
     items = {
-        { icon = 'hgi-id-verified',     text = 'Az igazolvány kiváltáshoz szükséges személyesen befaiti az önkormányzathoz.' },
-        { icon = 'hgi-steering-wheel',  text = 'Jogosítvány igénylése: 17 éves kor fölött, 10 perc feldolgozási idő.' },
-        { icon = 'hgi-invoice-03',      text = 'Ki nem fizetett bírság esetén az Ügyintézőnél lehet rendezni.' },
-        { icon = 'hgi-alert-circle',    text = 'Az igazolványok lejárata előtt 7 nappal értesítést küldünk.' },
+        { icon = 'hgi-id-verified',    text = 'Az igazolvány kiváltásához szükséges személyesen felkeresni az önkormányzatot.' },
+        { icon = 'hgi-steering-wheel', text = 'Jogosítvány igénylése: 17 éves kor fölött, 10 perc feldolgozási idő.' },
+        { icon = 'hgi-invoice-03',     text = 'Ki nem fizetett bírásg esetén az ÜgyínTézőnél lehet rendezni.' },
+        { icon = 'hgi-alert-circle',   text = 'Az igazolványok lejárata előtt 7 nappal értesítést küldünk.' },
     },
 }
 
 -- ── Csekk panel beállítás ────────────────────────────────
 Config.FinesPanel = {
-    title   = 'Csekk / Bírság Kezelő',
-    emptyMsg = 'Nincs fiiggő bírságod. Szép munka!',
+    title    = 'Csekk / Bírásg Kezelő',
+    emptyMsg = 'Nincs függő bírásgod. Szép munka!',
 }

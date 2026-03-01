@@ -2,11 +2,11 @@
 --  nxn-cityhall | server.lua
 -- ============================================================
 
--- ── Csekk cache ──────────────────────────────────────────────
+-- ── Csekk cache ───────────────────────────────────────────────
 --- { [src] = { {id, reason, amount, issued_at, paid} } }
 local finesCache = {}
 
--- ── Segédfüggvények ─────────────────────────────────────────
+-- ── Segédfüggvények ────────────────────────────────────────
 
 local function GetIdentifier(src)
     if GetResourceState('nxn-database') ~= 'started' then return nil end
@@ -78,42 +78,72 @@ end)
 
 -- Csekk fizetése
 RegisterNetEvent('nxn-cityhall:server:payFine', function(fineId)
-    local src        = source
+    local src = source
+
+    -- Típusvalidáció: fineId csak pozitív egész szám lehet
+    if type(fineId) ~= 'number' or math.floor(fineId) ~= fineId or fineId <= 0 then
+        NXN.CityHall.Warn(('payFine: érvénytelen fineId=%s src=%d'):format(tostring(fineId), src))
+        return
+    end
+
     local identifier = GetIdentifier(src)
     if not identifier then return end
 
-    NXN.CityHall.Log(('payFine: src=%d id=%s'):format(src, tostring(fineId)))
+    NXN.CityHall.Log(('payFine: src=%d id=%d'):format(src, fineId))
 
-    -- Ellenőrzés: valami van-e
+    -- Ellenőrzés: létezik-e, a játékosé-e, fizetetlen-e
     local fine = MySQL.single.await(
         'SELECT * FROM `nxn_fines` WHERE id = ? AND identifier = ? AND paid = 0',
         { fineId, identifier }
     )
 
     if not fine then
-        Notify(src, 'Nem található bírság.', 'warning')
+        Notify(src, 'Nem található bírásg.', 'warning')
         return
     end
 
-    -- Jövőbeli pénzrendszer integráció helye:
-    -- local balance = exports['nxn-bank']:getBalance(src)
-    -- if balance < fine.amount then Notify(src,'Nincs elég pénzed.','danger'); return end
-    -- exports['nxn-bank']:removeBalance(src, fine.amount)
+    -- nxn-bank integráció: egyenleg ellenőrzés és leválásztas
+    if GetResourceState('nxn-bank') ~= 'started' then
+        Notify(src, 'A pénzrendszer jelenleg nem elérhető. Próbáld később!', 'danger')
+        NXN.CityHall.Warn(('payFine: nxn-bank nem fut, src=%d'):format(src))
+        return
+    end
+
+    local balance = exports['nxn-bank']:getBalance(src)
+    if not balance or balance < fine.amount then
+        Notify(src, ('Nincs elég pénzed a bírásg befizetéséhez. (Hiány: $%d)'):format(
+            fine.amount - (balance or 0)
+        ), 'danger')
+        return
+    end
+
+    exports['nxn-bank']:removeBalance(src, fine.amount)
 
     MySQL.update.await(
         'UPDATE `nxn_fines` SET paid = 1, paid_at = NOW() WHERE id = ?',
         { fineId }
     )
 
-    Notify(src, ('✅ Bírság befizetve: $%d – %s'):format(fine.amount, fine.reason), 'success')
-    TriggerClientEvent('nxn-cityhall:client:finesPaid', src, fineId)
+    -- Cache frissítése: a fizetett bejegyzést eltávolítjuk
+    if finesCache[src] then
+        for i, f in ipairs(finesCache[src]) do
+            if f.id == fineId then
+                table.remove(finesCache[src], i)
+                break
+            end
+        end
+    end
+
+    Notify(src, ('✅ Bírásg befizetve: $%d – %s'):format(fine.amount, fine.reason), 'success')
+    -- frissített lista küldése (nem nyìt új nézetet)
+    TriggerClientEvent('nxn-cityhall:client:finesPaid', src, finesCache[src] or {})
     TriggerEvent('nxn-cityhall:server:finePaid', src, fine)
     NXN.CityHall.Info(('Fine fizetve: src=%d id=%d amount=%d'):format(src, fineId, fine.amount))
 end)
 
--- ── Exportok (szerver) ──────────────────────────────────────
+-- ── Exportok (szerver) ─────────────────────────────────────────
 
---- Bírság kiadása (például rendőrségi script által)
+--- Bírásg kiadása (például rendőrségi script által)
 ---@param src      integer   cél játékos
 ---@param reason   string    ok / leírás
 ---@param amount   integer   összeg ($)
@@ -131,7 +161,17 @@ exports('issueFine', function(src, reason, amount, issuedBy)
         { identifier, reason or '', amount or 0, issuedBy or 'server' }
     )
 
-    Notify(src, ('⚠️ Bírságot kaptad: $%d – %s'):format(amount, reason), 'warning')
+    -- Cache azonnali frissítése
+    if not finesCache[src] then finesCache[src] = {} end
+    table.insert(finesCache[src], {
+        id        = id,
+        reason    = reason or '',
+        amount    = amount or 0,
+        issued_by = issuedBy or 'server',
+        paid      = 0,
+    })
+
+    Notify(src, ('⚠️ Bírásgot kaptad: $%d – %s'):format(amount, reason), 'warning')
     TriggerEvent('nxn-cityhall:server:fineIssued', src, id, reason, amount)
     NXN.CityHall.Info(('issueFine: src=%d reason=%s amount=%d id=%d'):format(
         src, reason, amount, id
@@ -139,14 +179,21 @@ exports('issueFine', function(src, reason, amount, issuedBy)
     return id
 end)
 
---- Bírság változásai – listázás
+--- Bírásg lista lekérése – mindig friss DB adat
 ---@param src integer
 ---@return table
 exports('getFines', function(src)
-    return finesCache[src] or {}
+    local identifier = GetIdentifier(src)
+    if not identifier then return {} end
+    local rows = MySQL.query.await(
+        'SELECT * FROM `nxn_fines` WHERE identifier = ? AND paid = 0 ORDER BY issued_at DESC',
+        { identifier }
+    ) or {}
+    finesCache[src] = rows
+    return rows
 end)
 
---- Bírság visszavonása
+--- Bírásg visszavonása
 ---@param fineId integer
 ---@return boolean
 exports('revokeFine', function(fineId)
@@ -158,7 +205,7 @@ exports('revokeFine', function(fineId)
     return (affected or 0) > 0
 end)
 
---- Osszes fizetetlen bírság összege
+--- Osszes fizetetlen bírásg összege
 ---@param src integer
 ---@return integer
 exports('getTotalFines', function(src)
@@ -171,7 +218,7 @@ exports('getTotalFines', function(src)
     return (row and row.total) or 0
 end)
 
---- Van-e ki nem fizetett bírság
+--- Van-e ki nem fizetett bírásg
 ---@param src integer
 ---@return boolean
 exports('hasUnpaidFines', function(src)

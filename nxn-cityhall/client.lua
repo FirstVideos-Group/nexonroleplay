@@ -41,16 +41,17 @@ local function OpenView(view, extraData)
     NXN.CityHall.Log(('OpenView: %s'):format(view))
 end
 
--- ── Blipek ────────────────────────────────────────────────
+-- ── Blipek ─────────────────────────────────────────────────
 
 local function CreateBuildingBlip()
+    if buildingBlip then return end
     if not Config.Building.blip.enabled then return end
     local b = Config.Building
     buildingBlip = AddBlipForCoord(b.coords.x, b.coords.y, b.coords.z)
     SetBlipSprite(buildingBlip, b.blip.sprite or 475)
     SetBlipColour(buildingBlip, b.blip.color or 4)
     SetBlipScale(buildingBlip, b.blip.scale or 0.9)
-    SetBlipAsShortRange(buildingBlip, false)  -- mindig látszik
+    SetBlipAsShortRange(buildingBlip, false)
     BeginTextCommandSetBlipName('STRING')
     AddTextComponentSubstringPlayerName(b.blip.label or b.name)
     EndTextCommandSetBlipName(buildingBlip)
@@ -63,8 +64,8 @@ local function CreateNPCBlip(coords)
     SetBlipSprite(npcBlip, Config.NPC.blip.sprite or 446)
     SetBlipColour(npcBlip, Config.NPC.blip.color or 5)
     SetBlipScale(npcBlip, Config.NPC.blip.scale or 0.7)
-    SetBlipAsShortRange(npcBlip, true)    -- csak közelről látszik
-    SetBlipDisplay(npcBlip, 0)            -- először rejtett
+    SetBlipAsShortRange(npcBlip, true)
+    SetBlipDisplay(npcBlip, 0)
     BeginTextCommandSetBlipName('STRING')
     AddTextComponentSubstringPlayerName(Config.NPC.blip.label or Config.NPC.label)
     EndTextCommandSetBlipName(npcBlip)
@@ -96,11 +97,11 @@ local function RegisterNPCWithConversation()
 
     local npc = Config.NPC
     local ok  = exports['nxn-npcconversation']:registerNPC(npc.id, {
-        label    = npc.label,
-        model    = npc.model,
-        coords   = npc.coords,
-        scenario = npc.scenario,
-        blip     = { enabled = false },  -- saját blipet kezelünk
+        label     = npc.label,
+        model     = npc.model,
+        coords    = npc.coords,
+        scenario  = npc.scenario,
+        blip      = { enabled = false },
         dialogues = BuildDialogues(),
     })
 
@@ -114,7 +115,7 @@ local function RegisterNPCWithConversation()
     end
 end
 
--- ── Menü elem akciók kezelése ───────────────────────────────
+-- ── Menü elem akciók kezelése ─────────────────────────────────
 
 local function HandleAction(item)
     NXN.CityHall.Log(('HandleAction: id=%s action=%s'):format(
@@ -122,7 +123,6 @@ local function HandleAction(item)
     ))
 
     if item.action == 'openLicenses' then
-        -- először zárjuk be a beszélgetést
         if GetResourceState('nxn-npcconversation') == 'started' then
             exports['nxn-npcconversation']:closeConversation()
         end
@@ -157,8 +157,7 @@ local function HandleAction(item)
     end
 end
 
--- ── nxn-npcconversation action eventek ──────────────────────────
--- Minden Config.MenuItems elemhez létrejön 'nxn-cityhall:action:<id>' event
+-- ── nxn-npcconversation action eventek ────────────────────────────
 
 for _, item in ipairs(Config.MenuItems) do
     local capturedItem = item
@@ -188,14 +187,13 @@ RegisterNetEvent('nxn-cityhall:client:openFines', function(fines)
     OpenView('fines', { fines = fines })
 end)
 
-RegisterNetEvent('nxn-cityhall:client:finesPaid', function(fineId)
-    NXN.CityHall.Log(('Fine fizettt: %s'):format(tostring(fineId)))
-    -- Frissítés: újra lekérdezük
-    TriggerServerEvent('nxn-cityhall:server:getFines')
+-- A finesPaid már nem nyit új nézetet – csak frissíti a meglévő listát
+RegisterNetEvent('nxn-cityhall:client:finesPaid', function(updatedFines)
+    NXN.CityHall.Log(('finesPaid: lista frissítése, %d db'):format(#updatedFines))
+    NUISend('updateFines', { fines = updatedFines })
 end)
 
 -- ── NPC blip dinamikus láthatóság ──────────────────────────────
--- Csak Config.NPC.blip.visibleDist méteren belül látszik a blip
 
 CreateThread(function()
     local visDist = Config.NPC.blip.visibleDist or 80.0
@@ -206,45 +204,56 @@ CreateThread(function()
             local myPos  = GetEntityCoords(PlayerPedId())
             local npcPos = vector3(npcC.x, npcC.y, npcC.z)
             local dist   = #(myPos - npcPos)
-            if dist < visDist then
-                SetBlipDisplay(npcBlip, 2)  -- látható
-            else
-                SetBlipDisplay(npcBlip, 0)  -- rejtett
-            end
+            SetBlipDisplay(npcBlip, dist < visDist and 2 or 0)
         end
     end
 end)
 
 -- ── Inicializálás ─────────────────────────────────────────────
 
-AddEventHandler('playerSpawned', function()
+local function Init()
     NXN.CityHall.Info('Inicializálás...')
     Wait(1500)
     CreateBuildingBlip()
     RegisterNPCWithConversation()
+end
+
+AddEventHandler('playerSpawned', function()
+    Init()
+end)
+
+-- Resource újraindításkor is inicializál (ha a játékos már spawned)
+AddEventHandler('onResourceStart', function(res)
+    if res ~= GetCurrentResourceName() then return end
+    -- Ha a játékos már járműben/világban van (spawn után), azonnal inicializálunk
+    local ped = PlayerPedId()
+    if ped and ped ~= 0 and GetEntityCoords(ped) ~= vector3(0, 0, 0) then
+        NXN.CityHall.Info('onResourceStart: késő indítás, azonnali inicializálás')
+        Init()
+    end
 end)
 
 AddEventHandler('onResourceStop', function(res)
     if res ~= Config.ResourceName then return end
-    if buildingBlip then RemoveBlip(buildingBlip) end
-    if npcBlip      then RemoveBlip(npcBlip)      end
+    if buildingBlip then RemoveBlip(buildingBlip); buildingBlip = nil end
+    if npcBlip      then RemoveBlip(npcBlip);      npcBlip      = nil end
     if npcRegistered and GetResourceState('nxn-npcconversation') == 'started' then
         exports['nxn-npcconversation']:unregisterNPC(Config.NPC.id)
     end
+    npcRegistered = false
 end)
 
 -- ESC bezárás
 CreateThread(function()
     while true do
-        Wait(0)
+        Wait(isOpen and 0 or 200)
         if isOpen and IsControlJustReleased(0, 322) then
             CloseUI()
         end
-        Wait(isOpen and 0 or 200)
     end
 end)
 
--- ── Kliens exportok ──────────────────────────────────────────
+-- ── Kliens exportok ───────────────────────────────────────────
 
 --- Menüelem hozzáadása futás közben (más resource-ból)
 ---@param item table { id, label, icon, response, action, eventName? }
@@ -254,7 +263,6 @@ exports('addMenuItem', function(item)
         NXN.CityHall.Warn('addMenuItem: hiányzik item.id')
         return false
     end
-    -- Duplikát ellenőrzés
     for _, m in ipairs(Config.MenuItems) do
         if m.id == item.id then
             NXN.CityHall.Warn(('addMenuItem: duplikát id: %s'):format(item.id))
@@ -262,13 +270,9 @@ exports('addMenuItem', function(item)
         end
     end
     table.insert(Config.MenuItems, item)
-
-    -- Event handler regisztrálása
     AddEventHandler('nxn-cityhall:action:' .. item.id, function()
         HandleAction(item)
     end)
-
-    -- nxn-npcconversation frissítése
     if npcRegistered and GetResourceState('nxn-npcconversation') == 'started' then
         exports['nxn-npcconversation']:addDialogue(Config.NPC.id, {
             id       = item.id,
@@ -278,7 +282,6 @@ exports('addMenuItem', function(item)
             event    = 'nxn-cityhall:action:' .. item.id,
         })
     end
-
     NXN.CityHall.Log(('addMenuItem: %s hozzáadva'):format(item.id))
     return true
 end)
@@ -300,6 +303,6 @@ exports('removeMenuItem', function(itemId)
     return false
 end)
 
-exports('openView',    function(view) OpenView(view) end)
-exports('closePanel',  function()     CloseUI()      end)
-exports('isOpen',      function()     return isOpen  end)
+exports('openView',   function(view) OpenView(view) end)
+exports('closePanel', function()     CloseUI()      end)
+exports('isOpen',     function()     return isOpen  end)
