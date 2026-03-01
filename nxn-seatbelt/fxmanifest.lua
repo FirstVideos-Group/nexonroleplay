@@ -16,9 +16,10 @@ client_scripts {
 
 files {
     'html/index.html',
+    'html/style.css',       -- #96: hozzaadva (NUI CSS nelkul stilustalan UI)
     'html/app.js',
     'sounds/seatbelt_warning.ogg',
-    'docs/index.html'
+    -- #96: docs/index.html eltavolitva
 }
 
 ui_page 'html/index.html'

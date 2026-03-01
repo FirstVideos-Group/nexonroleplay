@@ -2,30 +2,28 @@
 --  nxn-seatbelt | client.lua
 -- ============================================================
 
--- ── Állapot ──────────────────────────────────────────────────
+-- ── Állapot ──────────────────────────────────────────────────────
 
 local fastened        = false
 local inVehicle       = false
 local currentVehicle  = 0
-local warnTimer       = 0.0
 local warnPlaying     = false
 local lastBlockNotify = 0
 
--- ── FiveM Control ID-k ───────────────────────────────────────
--- FIX: A korabbi kod 75 (INPUT_ENTER = E gomb) es 245 (INPUT_VEH_HORN =
---      dudagas) ID-kat hasznalta, egyik sem az F kiszallas gomb.
---      Helyes ID-k:
---        23  = INPUT_ENTER       (E gomb, jarmube szallas)
---        194 = INPUT_VEH_EXIT    (F gomb, kiszallas jarmubol)  <-- ez kell
+-- #93: GetGameTimer()-alapú abszolút időmérés a float drift helyétt
+-- warnStartTime: mikor kapcsolt be a figyelmeztető hang (ms), nil = nem fut
+local warnStartTime   = nil
+
+-- ── FiveM Control ID-k ─────────────────────────────────────────
 
 local INPUT_VEH_ENTER = 23   -- E gomb
 local INPUT_VEH_EXIT  = 194  -- F gomb
 
--- ── Billentyű regisztráció ───────────────────────────────────
+-- ── Billentyű regisztráció ──────────────────────────────────────
 
 RegisterKeyMapping('nxn_seatbelt_toggle', Config.ToggleKeyLabel, 'keyboard', Config.ToggleKey)
 
--- ── Notify ───────────────────────────────────────────────
+-- ── Notify ───────────────────────────────────────────────────
 
 local function Notify(msg, ntype)
     if GetResourceState('nxn-notify') ~= 'started' then
@@ -40,73 +38,113 @@ local function Notify(msg, ntype)
     end
 end
 
--- ── HUD szinkron ───────────────────────────────────────────
+-- ── HUD szinkron ──────────────────────────────────────────────
 
+-- #98: pcall védelem hianyzó setSeatbelt export ellen
 local function SyncHUD()
     if GetResourceState('nxn-vehicle-hud') ~= 'started' then return end
-    local modState = exports['nxn-vehicle-hud']:getModuleState('seatbelt')
-    if modState == nil then
-        exports['nxn-vehicle-hud']:setModule('seatbelt', true)
+    local ok, err = pcall(function()
+        local modState = exports['nxn-vehicle-hud']:getModuleState('seatbelt')
+        if modState == nil then
+            exports['nxn-vehicle-hud']:setModule('seatbelt', true)
+        end
+        exports['nxn-vehicle-hud']:setSeatbelt(fastened)
+    end)
+    if not ok then
+        NXN.Seatbelt.Warn(('SyncHUD hiba: %s'):format(tostring(err)))
     end
-    exports['nxn-vehicle-hud']:setSeatbelt(fastened)
     NXN.Seatbelt.Log(('HUD szinkron: fastened=%s'):format(tostring(fastened)))
 end
 
--- ── Hang ─────────────────────────────────────────────────
+-- ── Hang ────────────────────────────────────────────────────
 
 local function StopWarningSound()
     if not warnPlaying then return end
     SendNUIMessage({ action = 'stopWarning' })
-    warnPlaying = false
+    warnPlaying  = false
+    warnStartTime = nil
 end
 
+-- #97: GetCurrentResourceName() mindig friss ertek, nil check
 local function PlayWarningSound()
     if warnPlaying then return end
+    local resourceName = GetCurrentResourceName()
+    if not resourceName or resourceName == '' then
+        NXN.Seatbelt.Warn('PlayWarningSound: ResourceName ismeretlen, hang kihagyva')
+        return
+    end
     warnPlaying = true
     SendNUIMessage({
         action = 'playWarning',
-        file   = ('nui://%s/sounds/%s'):format(Config.ResourceName, Config.WarningSoundFile),
+        file   = ('nui://%s/sounds/%s'):format(resourceName, Config.WarningSoundFile),
         volume = Config.WarningSoundVolume,
     })
 end
 
--- ── Öv toggle ───────────────────────────────────────────────
+-- ── Öv toggle ────────────────────────────────────────────────
 
 local function SetFastened(state)
     if fastened == state then return end
     fastened = state
     NXN.Seatbelt.Log(('Ov: fastened=%s'):format(tostring(fastened)))
     if fastened then
-        StopWarningSound()
-        warnTimer = 0.0
+        StopWarningSound()   -- StopWarningSound reseteli warnStartTime-ot is
         Notify(Config.Notify.fastened, 'success')
     else
-        warnTimer = 0.0
+        warnStartTime = nil   -- Reset: új warn ciklus indul
         Notify(Config.Notify.unfastened, 'warning')
     end
     SyncHUD()
 end
 
--- ── Command ────────────────────────────────────────────────
+-- ── Command ─────────────────────────────────────────────────
 
 RegisterCommand('nxn_seatbelt_toggle', function()
     if not inVehicle then return end
     SetFastened(not fastened)
 end, false)
 
--- ── Fő loop ─────────────────────────────────────────────────
+-- ── Fő loop: kizárólag DisableControlAction (frame-folytonos) ─────────
 
+-- #92: DisableControlAction valóban igényel Wait(0)-t, kulön thread-be került
 CreateThread(function()
     while true do
+        Wait(0)
+        if inVehicle and fastened and Config.BlockExitWhenFastened then
+            local now = GetGameTimer()
+
+            local tryingToExit = IsControlJustPressed(0, INPUT_VEH_EXIT)
+                              or IsControlJustPressed(0, INPUT_VEH_ENTER)
+
+            DisableControlAction(0, INPUT_VEH_EXIT,  true)
+            DisableControlAction(0, INPUT_VEH_ENTER, true)
+
+            if tryingToExit and (now - lastBlockNotify) > 2000 then
+                lastBlockNotify = now
+                Notify(Config.Notify.blocked, 'warning')
+                NXN.Seatbelt.Log('Kiszallas blokkolva, ertesites kuldve')
+            end
+        end
+    end
+end)
+
+-- ── Állapot loop: jármuű észlelés, hang, sebesség (200/500 ms) ─────────
+
+-- #92: állapotvizsgálatok lassabb threadben – nincs frame-folytonos overhead
+-- #93: warnStartTime (GetGameTimer) alapu figyelmeztető hang – nincs float drift
+CreateThread(function()
+    while true do
+        Wait(inVehicle and 200 or 500)
+
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
 
-        -- Járműbe / kiszállás észlelés
+        -- Járműbe / kiszallás észlelés
         if veh ~= 0 and not inVehicle then
             inVehicle      = true
             currentVehicle = veh
             fastened       = false
-            warnTimer      = 0.0
+            warnStartTime  = nil
             StopWarningSound()
             SyncHUD()
             NXN.Seatbelt.Log(('Jarmube szallt: entId=%d'):format(veh))
@@ -115,42 +153,23 @@ CreateThread(function()
             inVehicle      = false
             currentVehicle = 0
             fastened       = false
-            warnTimer      = 0.0
+            warnStartTime  = nil
             StopWarningSound()
             SyncHUD()
             NXN.Seatbelt.Log('Kiszallt')
         end
 
-        -- Kiszállás blokkolása bekötött öv esetén
-        -- FIX: IsControlJustPressed ELOBB fut, UTANA DisableControlAction.
-        --      INPUT_VEH_EXIT = 194 (F gomb), INPUT_ENTER = 23 (E gomb).
-        if inVehicle and fastened and Config.BlockExitWhenFastened then
-            local now = GetGameTimer()
-
-            -- 1. Először leolvassuk a gombnyomást
-            local tryingToExit = IsControlJustPressed(0, INPUT_VEH_EXIT)
-                              or IsControlJustPressed(0, INPUT_VEH_ENTER)
-
-            -- 2. Utána tiltjuk le (ha előbb tiltjuk, JustPressed már false lesz)
-            DisableControlAction(0, INPUT_VEH_EXIT,  true)
-            DisableControlAction(0, INPUT_VEH_ENTER, true)
-
-            -- 3. Értesítés spam-védelemmel (2 másodpercenként egyszer)
-            if tryingToExit and (now - lastBlockNotify) > 2000 then
-                lastBlockNotify = now
-                Notify(Config.Notify.blocked, 'warning')
-                NXN.Seatbelt.Log('Kiszallas blokkolva, ertesites kuldve')
-            end
-        end
-
-        -- Figyelmezteto hang
+        -- #93: Figyelmeztető hang GetGameTimer()-alapú időméréssel
+        -- nincs float drift, nincs kétszeres GetFrameTime() hívás
         if inVehicle and not fastened then
-            warnTimer = warnTimer + GetFrameTime()
-            if warnTimer <= Config.WarningSoundDuration then
+            if not warnStartTime then warnStartTime = GetGameTimer() end
+            local elapsed = (GetGameTimer() - warnStartTime) / 1000.0
+
+            if elapsed <= Config.WarningSoundDuration then
+                -- Hang intervallumonkent egy beep: ellenorizzuk, hogy átlepte-e a következő intervallum határát
+                -- (200 ms-es loop: maximum 1 hang késéssel, de nincs frame-drift)
                 local interval = Config.WarningSoundInterval
-                local cycle    = math.floor(warnTimer / interval)
-                local prev     = math.floor((warnTimer - GetFrameTime()) / interval)
-                if cycle ~= prev then
+                if not warnPlaying and math.floor(elapsed / interval) > math.floor((elapsed - 0.2) / interval) then
                     PlayWarningSound()
                 end
             elseif warnPlaying then
@@ -160,27 +179,24 @@ CreateThread(function()
             StopWarningSound()
         end
 
-        -- Auto-kicsatolás sebesség felett
+        -- #94: currentVehicle ~= 0 es DoesEntityExist ellenőrzés AutoUnbuckle előtt
         if inVehicle and fastened and Config.AutoUnbuckleSpeedThreshold then
-            local speed = GetEntitySpeed(currentVehicle) * 3.6
-            if speed > Config.AutoUnbuckleSpeedThreshold then
-                NXN.Seatbelt.Warn(('Auto-kicsatolas: %.1f km/h'):format(speed))
-                SetFastened(false)
+            if currentVehicle ~= 0 and DoesEntityExist(currentVehicle) then
+                local speed = GetEntitySpeed(currentVehicle) * 3.6  -- m/s -> km/h
+                if speed > Config.AutoUnbuckleSpeedThreshold then
+                    NXN.Seatbelt.Warn(('Auto-kicsatolas: %.1f km/h'):format(speed))
+                    SetFastened(false)
+                end
             end
-        end
-
-        if inVehicle then
-            Wait(0)
-        else
-            Wait(500)
         end
     end
 end)
 
--- ── NUI callbacks ────────────────────────────────────────────
+-- ── NUI callbacks ─────────────────────────────────────────────
 
 RegisterNUICallback('soundEnded', function(_, cb)
-    warnPlaying = false
+    warnPlaying  = false
+    warnStartTime = nil
     cb('ok')
 end)
 
@@ -190,7 +206,12 @@ exports('isFastened', function()
     return fastened
 end)
 
+-- #95: inVehicle guard – járművön kívül meghívva nincsen hatas
 exports('setFastened', function(state)
+    if not inVehicle then
+        NXN.Seatbelt.Warn('setFastened: jatekos nincs jarmuben, muvelet kihagyva')
+        return
+    end
     SetFastened(state)
 end)
 
@@ -199,16 +220,19 @@ exports('isInVehicle', function()
 end)
 
 exports('fasten', function()
+    if not inVehicle then return end
     SetFastened(true)
 end)
 
 exports('unfasten', function()
+    if not inVehicle then return end
     SetFastened(false)
 end)
 
+-- #99: StopWarningSound() elobb lefut, igy nincs kettős NUI hangpéldány
 exports('playWarning', function()
     if inVehicle and not fastened then
-        warnPlaying = false
-        PlayWarningSound()
+        StopWarningSound()  -- leallitja a jelenlegi peldanyt (ha fut)
+        PlayWarningSound()  -- utana inditja az ujat
     end
 end)
