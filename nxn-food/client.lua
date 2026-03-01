@@ -1,9 +1,11 @@
 -- ============================================================
 --  nxn-food | client.lua
+--  MEGJEGYZÉS: A bolt vásárlás logika az nxn-shop-ba lett
+--  átvezérelve (#140). Ez a fájl csak a fogyasztás animációt
+--  és nxn-npcconversation regisztrációt kezeli.
 -- ============================================================
 
-local isConsuming  = false
-local consumeTimer = nil
+local isConsuming = false
 
 -- ── Helpers ──────────────────────────────────────────────────
 
@@ -30,12 +32,6 @@ local function PlayFoodAnim(animType, duration, cb)
     end
 end
 
-local function StopConsumeAnim(animType)
-    local animCfg = Config.Animations[animType]
-    if not animCfg then return end
-    StopAnimTask(PlayerPedId(), animCfg.dict, animCfg.clip, 2.0)
-end
-
 -- ── Net events ───────────────────────────────────────────────
 
 RegisterNetEvent('nxn-food:client:consume', function(itemData)
@@ -47,23 +43,32 @@ RegisterNetEvent('nxn-food:client:consume', function(itemData)
     NXN.Food.Log(('Fogyasztás indul: %s'):format(itemData.label))
 
     PlayFoodAnim(itemData.animation, itemData.duration, function()
-        if not isConsuming then return end  -- megszakítva
+        if not isConsuming then return end
         isConsuming = false
         TriggerServerEvent('nxn-food:server:consumed', itemData.itemName)
     end)
 end)
 
--- ── NPC regisztrálás ─────────────────────────────────────────
+-- ── NPC regisztrálás (csak ha nxn-shop NEM fut) ──────────────
+-- Ha nxn-shop fut, az kezeli a bolt NPC-ket.
+-- Az nxn-food NPC-k csak a fogyasztás dialóg opciót adják.
 
 AddEventHandler('onClientResourceStart', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
-    Wait(500)
+    Wait(800)
 
     if GetResourceState('nxn-npcconversation') ~= 'started' then
-        NXN.Food.Warn('nxn-npcconversation nem fut, NPC-k nem regisztrálhatók.')
+        NXN.Food.Warn('nxn-npcconversation nem fut.')
         return
     end
 
+    -- Ha nxn-shop fut, a bolt NPC-ket az nxn-shop regisztrálja
+    if GetResourceState('nxn-shop') == 'started' then
+        NXN.Food.Info('nxn-shop fut – bolt NPC-k kezelése átadva.')
+        return
+    end
+
+    -- nxn-shop nélkül: saját NPC-k regisztrálása
     for shopId, shop in pairs(Config.Shops) do
         local npcCfg = {
             label    = shop.label,
@@ -82,30 +87,26 @@ AddEventHandler('onClientResourceStart', function(resourceName)
             },
         }
         exports['nxn-npcconversation']:registerNPC(shopId .. '_food_npc', npcCfg)
-        NXN.Food.Log(('NPC regisztrálva: %s'):format(shopId))
+        NXN.Food.Log(('Fallback NPC regisztrálva: %s'):format(shopId))
     end
 end)
 
 AddEventHandler('onClientResourceStop', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
     if GetResourceState('nxn-npcconversation') ~= 'started' then return end
+    if GetResourceState('nxn-shop') == 'started' then return end
     for shopId, _ in pairs(Config.Shops) do
         exports['nxn-npcconversation']:unregisterNPC(shopId .. '_food_npc')
     end
 end)
 
--- ── Shop megnyitás esemény ────────────────────────────────────
-
+-- Fallback shop megnyitás (csak ha nxn-shop nem fut)
 RegisterNetEvent('nxn-food:client:openShop', function(shopId)
     local shop = Config.Shops[shopId]
-    if not shop then
-        NXN.Food.Warn(('Ismeretlen bolt: %s'):format(tostring(shopId)))
-        return
-    end
+    if not shop then return end
     TriggerServerEvent('nxn-food:server:requestShop', shopId)
 end)
 
--- Szerver visszaküldi az adatokat
 RegisterNetEvent('nxn-food:client:shopData', function(shopId, shopData, currentMoney)
     SendNUIMessage({
         action       = 'openShop',
@@ -116,8 +117,6 @@ RegisterNetEvent('nxn-food:client:shopData', function(shopId, shopData, currentM
     SetNuiFocus(true, true)
 end)
 
--- ── NUI callbacks ────────────────────────────────────────────
-
 RegisterNUICallback('closeShop', function(_, cb)
     SetNuiFocus(false, false)
     SendNUIMessage({ action = 'closeShop' })
@@ -125,11 +124,16 @@ RegisterNUICallback('closeShop', function(_, cb)
 end)
 
 RegisterNUICallback('buyItem', function(data, cb)
-    TriggerServerEvent('nxn-food:server:buy', data.shopId, data.itemName)
+    -- Ha nxn-shop fut, az kezeli; egyébként fallback
+    if GetResourceState('nxn-shop') == 'started' then
+        exports['nxn-shop']:openShop(data.shopId, 'buy')
+    else
+        TriggerServerEvent('nxn-food:server:buy', data.shopId, data.itemName)
+    end
     cb('ok')
 end)
 
--- ── Exports ──────────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────
 
 exports('isEating', function()
     return isConsuming

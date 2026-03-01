@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-shop</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="shop-overlay" class="hidden">
+    <div class="nxn-panel shop-panel">
+        <!-- Header -->
+        <div class="nxn-panel__header">
+            <span><i id="shop-cat-icon" class="hgi hgi-stroke hgi-store-01"></i> <span id="shop-title">Bolt</span></span>
+            <button class="nxn-btn-icon" id="close-btn"><i class="hgi hgi-stroke hgi-cancel-01"></i></button>
+        </div>
+        <!-- Egyenleg + súly sáv -->
+        <div class="shop-info-bar">
+            <span><i class="hgi hgi-stroke hgi-money-02"></i> <span id="balance-label">$0</span></span>
+            <span><i class="hgi hgi-stroke hgi-scale-01"></i> <span id="weight-label">–</span></span>
+        </div>
+        <!-- Tabs -->
+        <div class="shop-tabs" id="shop-tabs">
+            <button class="shop-tab active" data-tab="buy">Vásárlás</button>
+            <button class="shop-tab" data-tab="sell" id="sell-tab-btn" style="display:none">Eladás</button>
+        </div>
+        <!-- Buy panel -->
+        <div class="nxn-panel__body" id="buy-panel">
+            <div id="shop-items"></div>
+        </div>
+        <!-- Sell panel -->
+        <div class="nxn-panel__body hidden" id="sell-panel">
+            <div id="sell-items"></div>
+        </div>
+        <!-- Kosár -->
+        <div class="shop-cart" id="shop-cart">
+            <div class="cart-row">
+                <span class="cart-label">Végösszeg</span>
+                <strong id="cart-total">$0</strong>
+            </div>
+            <div class="cart-row">
+                <span class="cart-label">Egyenleg vásárlás után</span>
+                <span id="cart-balance-after" class="cart-val">$0</span>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

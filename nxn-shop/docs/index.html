@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-shop – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0; --bg: #0e0f14; --surface: #16181f;
+            --border:  #2a2d3a; --text: #e4e6f0; --muted: #6b6f85;
+            --success: #3ecf8e; --danger: #f05b5b; --warn: #f0b35b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span.sub { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); font-family: monospace; }
+        .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; font-weight: 600; }
+        .badge-s { background: #1e3a5f; color: #5b9cf0; } .badge-c { background: #1e3a2f; color: #3ecf8e; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .dep-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--muted); margin: 3px; }
+        .dep-badge i { color: var(--accent); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-store-01"></i>
+    <div><h1>nxn-shop <span class="sub">v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-shop</strong> az általános, újrafelhasználható boltrendszer. NPC kereskedőket regisztrál az <code>nxn-npcconversation</code>-ön keresztül, vásárlást és eladást kezel <code>nxn-inventory</code> + <code>nxn-finance</code> exportokon át, opcionális véges készlet (stock) rendszerrel és sell tabbal.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-shop/
+├── fxmanifest.lua      ← dep: nxn-inventory, nxn-notify, nxn-npcconversation, nxn-finance, nxn-database
+├── config.lua          ← Config.Shops, Config.StockRefillInterval, Config.SellEnabled
+├── shared.lua          ← NXN.Shop logger
+├── client.lua          ← NPC regisztrálás, UI megnyitás, NUI callbackek, exportok
+├── server.lua          ← vásárlás/eladás logika, stock DB, registerShop, exportok
+├── html/               ← Nexon design: buy + sell tab, qty selector, kosár
+└── docs/index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-puzzle"></i> Függőségek</h2>
+    <div>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-inventory</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-notify</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-npcconversation</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-finance</span>
+        <span class="dep-badge"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> nxn-database</span>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok</td></tr>
+        <tr><td>Config.StockRefillInterval</td><td>3600</td><td>Stock automatikus feltöltés másodpercenként (0 = kikapcs.)</td></tr>
+        <tr><td>Config.SellEnabled</td><td>true</td><td>Globális eladás engedélyezés</td></tr>
+        <tr><td>Config.Shops</td><td>–</td><td>Bolt definíciók (label, category, npc, canSell, sellPriceMultiplier, items)</td></tr>
+        <tr><td>Config.CategoryIcons</td><td>–</td><td>Kategória → HugeIcons icon neve</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Paraméter</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getShop(shopId)</td><td>shopId: string</td><td>table|nil</td><td>Bolt konfiguráció (config + runtime)</td></tr>
+        <tr><td>getAllShops()</td><td>–</td><td>table</td><td>Összes bolt (config + runtime)</td></tr>
+        <tr><td>getShopStock(shopId, itemName)</td><td>string, string</td><td>int|nil</td><td>Aktuális stock érték</td></tr>
+        <tr><td>setShopStock(shopId, itemName, amount)</td><td>string, string, int</td><td>–</td><td>Stock kézi beállítása (admin/esemény)</td></tr>
+        <tr><td>addShopItem(shopId, itemDef)</td><td>string, table</td><td>boolean</td><td>Runtime item hozzáadás</td></tr>
+        <tr><td>removeShopItem(shopId, itemName)</td><td>string, string</td><td>boolean</td><td>Runtime item eltávolítás</td></tr>
+        <tr><td>registerShop(shopId, cfg)</td><td>string, table</td><td>boolean</td><td>Bolt regisztrálás más resource-ból (pl. nxn-jobs)</td></tr>
+        <tr><td>unregisterShop(shopId)</td><td>string</td><td>boolean</td><td>Runtime bolt eltávolítás</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Paraméter</th><th>Leírás</th></tr>
+        <tr><td>openShop(shopId, mode?)</td><td>shopId: string, mode: 'buy'|'sell'</td><td>Bolt UI megnyitása programmatikusan</td></tr>
+        <tr><td>closeShop()</td><td>–</td><td>Bolt UI bezárása</td></tr>
+        <tr><td>isShopOpen()</td><td>–</td><td>Nyitva van-e a bolt UI</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Adat</th><th>Leírás</th></tr>
+        <tr><td>nxn-shop:client:openShop</td><td>Szerver → Kliens / Lokál</td><td>shopId, mode</td><td>Bolt UI megnyitása (NPC dialógból is)</td></tr>
+        <tr><td>nxn-shop:server:requestShop</td><td>Kliens → Szerver</td><td>shopId, mode</td><td>Bolt adatok kérése</td></tr>
+        <tr><td>nxn-shop:client:shopData</td><td>Szerver → Kliens</td><td>shopId, shopData, money, mode</td><td>Bolt UI adatok (item lista, egyenleg)</td></tr>
+        <tr><td>nxn-shop:server:buy</td><td>Kliens → Szerver</td><td>shopId, itemName, amount</td><td>Vásárlás kérés</td></tr>
+        <tr><td>nxn-shop:server:sell</td><td>Kliens → Szerver</td><td>shopId, itemName, amount</td><td>Eladás kérés</td></tr>
+        <tr><td>nxn-shop:client:buyResult</td><td>Szerver → Kliens</td><td>ok, msg, newBalance</td><td>Vásárlás eredmény + egyenleg frissítés</td></tr>
+        <tr><td>nxn-shop:client:sellResult</td><td>Szerver → Kliens</td><td>ok, msg, newBalance</td><td>Eladás eredmény + egyenleg frissítés</td></tr>
+        <tr><td>nxn-shop:server:requestInventory</td><td>Kliens → Szerver</td><td>–</td><td>Sell tab inventory lekérés</td></tr>
+        <tr><td>nxn-shop:client:inventoryData</td><td>Szerver → Kliens</td><td>items[]</td><td>Eladható tárgyak listája</td></tr>
+        <tr><td>nxn-shop:server:stockUpdated</td><td>Szerver lokál</td><td>shopId, itemName, newStock</td><td>Stock változás esemény (más scriptek figyelhetik)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">e1 – Runtime bolt regisztrálás</div>
+        <div class="tab" onclick="switchTab(this,'t2')">e2 – Stock kezelés (admin)</div>
+        <div class="tab" onclick="switchTab(this,'t3')">e3 – nxn-food integráció</div>
+        <div class="tab" onclick="switchTab(this,'t4')">e4 – Bolt megnyitás kliensről</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- nxn-jobs server.lua – munkahelyi bolt regisztrálása
+exports['nxn-shop']:registerShop('mechanic_shop', {
+    label    = 'Szerelő Kellékek',
+    category = 'general',
+    canSell  = false,
+    items    = {
+        { item = 'repair_kit', price = 1200, stock = nil },
+    },
+})
+
+-- Resource leállításkor:
+exports['nxn-shop']:unregisterShop('mechanic_shop')</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Admin script – stock visszatöltés eseményre:
+RegisterCommand('restockshop', function(src, args)
+    local shopId   = args[1]
+    local itemName = args[2]
+    local amount   = tonumber(args[3]) or 50
+    exports['nxn-shop']:setShopStock(shopId, itemName, amount)
+end, true)
+
+-- Aktuális stock lekérdezése:
+local stock = exports['nxn-shop']:getShopStock('pawn_shop_1', 'phone')
+print('Telefon készlet: ' .. tostring(stock))</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- nxn-food csak a fogyasztást kezeli (animáció + nxn-needs).
+-- A bolt vásárlás az nxn-shop Config.Shops-ban van (burger_shot_1, upnatom_1 stb.)
+-- nxn-food server.lua – ha nxn-shop fut, delegáljuk a vásárlást:
+if GetResourceState('nxn-shop') == 'started' then
+    -- A vásárlás nxn-shop-on keresztül megy,
+    -- nxn-food csak az nxn-food:server:use eventet kezeli
+    NXN.Food.Info('nxn-shop fut, bolt vásárlás delegálva.')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- Kliens oldali megnyitás más resource-ból:
+exports['nxn-shop']:openShop('247_supermarket_1', 'buy')
+
+-- Ellenőrzés:
+if exports['nxn-shop']:isShopOpen() then
+    print('Bolt nyitva van')
+end
+
+-- Bezárás:
+exports['nxn-shop']:closeShop()</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th></tr>
+        <tr><td>nxn-inventory</td><td>addItem (vásárlás), removeItem + hasItem (eladás), getInventory (sell tab)</td></tr>
+        <tr><td>nxn-finance</td><td>getMoney (ellenőrzés), removeMoney (vásárlás), addMoney (eladás + visszatérítés)</td></tr>
+        <tr><td>nxn-notify</td><td>success / warn / danger toastok minden akcióhoz</td></tr>
+        <tr><td>nxn-npcconversation</td><td>registerNPC / unregisterNPC – automatikus NPC spawn/despawn</td></tr>
+        <tr><td>nxn-database</td><td>registerTable – nxn_shop_stock tábla létrehozása és stock perzisztencia</td></tr>
+        <tr><td>nxn-food</td><td>Burger Shot és egyéb éttermi boltok az nxn-shop Config.Shops-ban; nxn-food csak fogyasztást kezel</td></tr>
+        <tr><td>nxn-jobs</td><td>registerShop export – munkahelyi bolt dinamikusan regisztrálható</td></tr>
+        <tr><td>nxn-cityhall</td><td>registerShop export – városi ügyintézési bolt opcionálisan</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

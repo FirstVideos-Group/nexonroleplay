@@ -1,5 +1,8 @@
 -- ============================================================
 --  nxn-food | server.lua
+--  MEGJEGYZÉS: A bolt vásárlás logika az nxn-shop-ba lett
+--  átvezérelve (#140). Ez a fájl csak a fogyasztás logikát
+--  és az inventory-alapú item használatot kezeli.
 -- ============================================================
 
 -- ── Net events ───────────────────────────────────────────────
@@ -13,14 +16,12 @@ RegisterServerEvent('nxn-food:server:use', function(itemName)
         return
     end
 
-    -- Ellenőrzés: van-e az inventoryban
     local hasIt = exports['nxn-inventory']:hasItem(src, itemName)
     if not hasIt then
         exports['nxn-notify']:notifyPlayer(src, 'Nincs nálad ilyen tárgy!', 'danger')
         return
     end
 
-    -- Ellenőrzés: nem teli-e a has (hunger)
     if item.hunger and item.hunger > 0 then
         local currentHunger = exports['nxn-needs']:getNeed(src, 'hunger')
         if currentHunger and currentHunger >= 90 then
@@ -29,7 +30,6 @@ RegisterServerEvent('nxn-food:server:use', function(itemName)
         end
     end
 
-    -- Ellenőrzés: nem teli-e a szomjúság
     if item.thirst and item.thirst > 0 then
         local currentThirst = exports['nxn-needs']:getNeed(src, 'thirst')
         if currentThirst and currentThirst >= 90 then
@@ -41,7 +41,6 @@ RegisterServerEvent('nxn-food:server:use', function(itemName)
     local itemData = {}
     for k, v in pairs(item) do itemData[k] = v end
     itemData.itemName = itemName
-
     TriggerClientEvent('nxn-food:client:consume', src, itemData)
     NXN.Food.Log(('consume triggerelve -> src:%s item:%s'):format(src, itemName))
 end)
@@ -52,35 +51,29 @@ RegisterServerEvent('nxn-food:server:consumed', function(itemName)
     local item = Config.Items[itemName]
     if not item then return end
 
-    -- nxn-needs hatások alkalmazása
     if item.hunger  and item.hunger  ~= 0 then exports['nxn-needs']:modifyNeed(src, 'hunger',  item.hunger)  end
     if item.thirst  and item.thirst  ~= 0 then exports['nxn-needs']:modifyNeed(src, 'thirst',  item.thirst)  end
     if item.stress  and item.stress  ~= 0 then exports['nxn-needs']:modifyNeed(src, 'stress',  item.stress)  end
     if item.fatigue and item.fatigue ~= 0 then exports['nxn-needs']:modifyNeed(src, 'fatigue', item.fatigue) end
 
-    -- Item eltávolítása az inventoryból
     exports['nxn-inventory']:removeItem(src, itemName, 1)
-
-    -- Értesítés
     exports['nxn-notify']:notifyPlayer(src, (item.label or itemName) .. ' elfogyasztva!', 'success')
 
-    -- Lokális event más scriptek számára
     TriggerEvent('nxn-food:client:consumed', src, {
         itemName = itemName,
-        effects  = {
-            hunger  = item.hunger,
-            thirst  = item.thirst,
-            stress  = item.stress,
-            fatigue = item.fatigue,
-        },
+        effects  = { hunger = item.hunger, thirst = item.thirst, stress = item.stress, fatigue = item.fatigue },
     })
-
     NXN.Food.Log(('consumed: src:%s item:%s'):format(src, itemName))
 end)
 
--- Bolt adatok küldése kliensnek
+-- Fallback bolt logika – csak ha nxn-shop NEM fut
 RegisterServerEvent('nxn-food:server:requestShop', function(shopId)
     local src  = source
+    if GetResourceState('nxn-shop') == 'started' then
+        -- nxn-shop kezeli, ezt ne futtassuk
+        NXN.Food.Warn('nxn-shop fut, requestShop fallback kihagyva.')
+        return
+    end
     local shop = Config.Shops[shopId]
     if not shop then return end
 
@@ -88,12 +81,7 @@ RegisterServerEvent('nxn-food:server:requestShop', function(shopId)
     if GetResourceState('nxn-finance') == 'started' then
         money = exports['nxn-finance']:getMoney(src) or 0
     end
-
-    -- Összeállítjuk a bolt item listát (label-lel kiegészítve)
-    local shopData = {
-        label = shop.label,
-        items = {},
-    }
+    local shopData = { label = shop.label, items = {} }
     for _, entry in ipairs(shop.items) do
         local itemDef = Config.Items[entry.item]
         if itemDef then
@@ -107,33 +95,29 @@ RegisterServerEvent('nxn-food:server:requestShop', function(shopId)
             })
         end
     end
-
     TriggerClientEvent('nxn-food:client:shopData', src, shopId, shopData, money)
 end)
 
--- Vásárlás logika
 RegisterServerEvent('nxn-food:server:buy', function(shopId, itemName)
     local src  = source
+    if GetResourceState('nxn-shop') == 'started' then
+        NXN.Food.Warn('nxn-shop fut, buy fallback kihagyva.')
+        return
+    end
     local shop = Config.Shops[shopId]
     if not shop then return end
 
-    -- Megkeressük az árat
     local price = nil
     for _, entry in ipairs(shop.items) do
-        if entry.item == itemName then
-            price = entry.price
-            break
-        end
+        if entry.item == itemName then price = entry.price; break end
     end
     if not price then
-        exports['nxn-notify']:notifyPlayer(src, 'Ez a termék nem elérhető ebben a boltban!', 'danger')
+        exports['nxn-notify']:notifyPlayer(src, 'Ez a termék nem elérhető!', 'danger')
         return
     end
-
     local item = Config.Items[itemName]
     if not item then return end
 
-    -- Pénzellenőrzés
     if GetResourceState('nxn-finance') == 'started' then
         local balance = exports['nxn-finance']:getMoney(src) or 0
         if balance < price then
@@ -142,31 +126,20 @@ RegisterServerEvent('nxn-food:server:buy', function(shopId, itemName)
         end
         exports['nxn-finance']:removeMoney(src, price, nil, 'Étel vásárlás: ' .. item.label, 'nxn-food')
     end
-
-    -- Item hozzáadása az inventoryhoz
     local ok, err = exports['nxn-inventory']:addItem(src, itemName, 1)
     if not ok then
-        -- Ha nem sikerült, pénzt visszaadjuk
         if GetResourceState('nxn-finance') == 'started' then
             exports['nxn-finance']:addMoney(src, price, nil, 'Visszatérítés: ' .. item.label, 'nxn-food')
         end
-        exports['nxn-notify']:notifyPlayer(src, err or 'Nem sikerült hozzáadni a tárgyat!', 'warn')
+        exports['nxn-notify']:notifyPlayer(src, err or 'Nem sikerült hozzáadni!', 'warn')
         return
     end
-
     exports['nxn-notify']:notifyPlayer(src, (item.label or itemName) .. ' megvásárolva!', 'success')
-
-    -- Frissített pénzegyenleg küldése a UI-nak
-    local newMoney = 0
-    if GetResourceState('nxn-finance') == 'started' then
-        newMoney = exports['nxn-finance']:getMoney(src) or 0
-    end
+    local newMoney = GetResourceState('nxn-finance') == 'started' and exports['nxn-finance']:getMoney(src) or 0
     TriggerClientEvent('nxn-food:client:buyResult', src, true, newMoney)
-
-    NXN.Food.Log(('buy: src:%s item:%s price:%s'):format(src, itemName, price))
 end)
 
--- ── Exports ──────────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────
 
 exports('getItem', function(itemName)
     return Config.Items[itemName]
