@@ -20,8 +20,8 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
-    'signs/*.svg',
-    'docs/index.html'
+    'signs/*.svg'
+    -- #114: docs/index.html eltavolitva (felesleges, nem NUI fajl)
 }
 
 lua54 'yes'

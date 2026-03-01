@@ -3,9 +3,7 @@
 --  Zona-alapu jelzotabla megjelenites, SVG, fade animaciok
 -- ============================================================
 
--- ── Runtime tablak rejeisztere ────────────────────────────────
--- Merges config zones + runtime zones into one lookup
-
+-- ── Runtime tablak rejeisztere ─────────────────────────────────────
 local zones     = {}   -- { [id] = zoneCfg }
 local activeIds = {}   -- { [id] = true }  jelenleg latszodik
 local timers    = {}   -- { [id] = expireTime }  duration kovetese
@@ -15,18 +13,18 @@ for id, z in pairs(Config.Zones) do
     zones[id] = z
 end
 
--- ── NUI kommunikacio ───────────────────────────────────────────
+-- ── NUI kommunikacio ─────────────────────────────────────────────
 
 local function NUISend(data)
     SendNUIMessage(data)
 end
 
--- ── Tabla megjelenites ─────────────────────────────────────────
+-- ── Tabla megjelenites ───────────────────────────────────────────
 
 ---@param id     string
 ---@param zone   table
 local function ShowSign(id, zone)
-    if activeIds[id] then return end  -- mar latszik
+    if activeIds[id] then return end
     activeIds[id] = true
 
     local svgUrl = ('nui://%s/signs/%s'):format(Config.ResourceName, zone.file)
@@ -42,10 +40,17 @@ local function ShowSign(id, zone)
         fadeOut  = zone.fadeOut or Config.FadeOutMs,
     })
 
-    -- Duration kezelese
-    if zone.duration and zone.duration > 0 then
-        timers[id] = GetGameTimer() + (zone.duration * 1000)
-        NXN.Signs.Log(('  duration: %.1f mp'):format(zone.duration))
+    -- #109: Explicit nil-check (duration=0 Lua-ban truthy, de >0 nem teljesul)
+    -- duration=nil  -> nincs timer (orokos)
+    -- duration>0    -> timer keszul
+    -- duration=0    -> warn log, nincs timer (definialt viselkedes)
+    if zone.duration ~= nil then
+        if zone.duration > 0 then
+            timers[id] = GetGameTimer() + (zone.duration * 1000)
+            NXN.Signs.Log(('  duration: %.1f mp'):format(zone.duration))
+        else
+            NXN.Signs.Warn(('ShowSign: duration=0 – vegtelen megjelenitesnek szamit: id=%s'):format(id))
+        end
     end
 
     TriggerEvent('nxn-signs:shown', { id = id, zone = zone })
@@ -68,7 +73,10 @@ local function HideSign(id, zone)
     TriggerEvent('nxn-signs:hidden', { id = id })
 end
 
--- ── Zona-ellenorzo loop ─────────────────────────────────────────
+-- ── Zona-ellenorzo loop ─────────────────────────────────────────────
+-- #108 / #111: Manual (_manual=true) zonakon nem fut proximity check –
+-- csak a duration timer kezeli oket. Ez kizarja hogy a radius=0 miatt
+-- azonnal eltunjenek a showSign exporttal letrehozott tablak.
 
 CreateThread(function()
     while true do
@@ -79,60 +87,62 @@ CreateThread(function()
         local now    = GetGameTimer()
 
         for id, zone in pairs(zones) do
-            local dist = #(coords - zone.center)
-            local inZone = dist <= zone.radius
-
-            -- Duration lejarata
+            -- Duration lejarata – minden zona tipuson fut
             if timers[id] and now >= timers[id] then
                 NXN.Signs.Log(('Duration lejart: id=%s'):format(id))
                 HideSign(id, zone)
+                if zone._manual then
+                    zones[id] = nil  -- temp definicio torlese
+                end
             end
 
-            if inZone then
-                -- Benne vagyunk a zonaban, megjelenites (ha nem latszik meg)
-                if not activeIds[id] then
-                    NXN.Signs.Log(('Zona belepes: id=%s dist=%.1f'):format(id, dist))
-                    ShowSign(id, zone)
-                end
-            else
-                -- Kint vagyunk a zonabol, eltunik (ha latszik)
-                if activeIds[id] and not timers[id] then
-                    -- Csak a "folyamatos" tablakat rejtjuk el zona elhagyaskor
-                    -- A duration-osokat a timer kezeli
-                    NXN.Signs.Log(('Zona elhagyas: id=%s dist=%.1f'):format(id, dist))
-                    HideSign(id, zone)
-                elseif activeIds[id] and timers[id] then
-                    -- Duration-os tabla: ha kiment de meg latszo, hagyjuk futni
+            -- Proximity check: csak zona-alapu (nem manual) bejegyzeseken
+            if not zone._manual then
+                local dist   = #(coords - zone.center)
+                local inZone = dist <= zone.radius
+
+                if inZone then
+                    if not activeIds[id] then
+                        NXN.Signs.Log(('Zona belepes: id=%s dist=%.1f'):format(id, dist))
+                        ShowSign(id, zone)
+                    end
+                else
+                    if activeIds[id] and not timers[id] then
+                        NXN.Signs.Log(('Zona elhagyas: id=%s dist=%.1f'):format(id, dist))
+                        HideSign(id, zone)
+                    end
                 end
             end
         end
     end
 end)
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ──────────────────────────────────────────────────────
 
 --- Tabla manualis megjelenitesehez (mas resource, esemeny, script)
---- Ha nincs zona-id, egy egyedi ideiglenes tablat hoz letre
----@param id       string   egyedi azonosito
+---@param id       string
 ---@param cfg      table    { file, category, label?, duration?, fadeIn?, fadeOut? }
 exports('showSign', function(id, cfg)
     if not cfg or not cfg.file then
         NXN.Signs.Warn(('showSign: hianyzik a cfg.file: id=%s'):format(id))
         return
     end
-    -- Temp zona letrehozasa a runtime rejeiszterbe
+    -- #109: Explicit nil-check a duration-ra (0 is ervenyes ertek Lua-ban)
+    local duration = (cfg.duration ~= nil) and cfg.duration or 4
     zones[id] = {
         label    = cfg.label    or id,
         category = cfg.category or 'info',
         file     = cfg.file,
-        center   = vector3(0,0,0),  -- zona alapu check nem kell
+        center   = vector3(0, 0, 0),
         radius   = 0,
-        duration = cfg.duration or 4,
-        fadeIn   = cfg.fadeIn   or Config.FadeInMs,
-        fadeOut  = cfg.fadeOut  or Config.FadeOutMs,
-        _manual  = true,  -- jelzi hogy nem zona-alapu
+        duration = duration,
+        fadeIn   = cfg.fadeIn  or Config.FadeInMs,
+        fadeOut  = cfg.fadeOut or Config.FadeOutMs,
+        _manual  = true,
     }
-    NXN.Signs.Log(('showSign (export): id=%s file=%s'):format(id, cfg.file))
+    NXN.Signs.Log(('showSign (export): id=%s file=%s dur=%s'):format(
+        id, cfg.file, tostring(duration)
+    ))
     ShowSign(id, zones[id])
 end)
 
@@ -142,11 +152,11 @@ exports('hideSign', function(id)
     NXN.Signs.Log(('hideSign (export): id=%s'):format(id))
     HideSign(id, zones[id])
     if zones[id] and zones[id]._manual then
-        zones[id] = nil  -- torolje a temp definiciot
+        zones[id] = nil
     end
 end)
 
---- Uj zona regisztralasa runtime-ban (mas resource-ok hasznalhatjak)
+--- Uj zona regisztralasa runtime-ban
 ---@param id   string
 ---@param zone table  { label, category, file, center (vector3), radius, duration?, fadeIn?, fadeOut? }
 exports('registerZone', function(id, zone)
@@ -161,50 +171,70 @@ end)
 ---@param id string
 exports('unregisterZone', function(id)
     HideSign(id, zones[id])
-    zones[id]    = nil
+    zones[id]     = nil
     activeIds[id] = nil
-    timers[id]   = nil
+    timers[id]    = nil
     NXN.Signs.Log(('unregisterZone: id=%s'):format(id))
 end)
 
---- Aktiv tablak listaja
+--- Aktiv tablak listaja – shallow copy, belso referencia nem szivarg ki (#110)
 ---@return table  { [id] = true }
 exports('getActiveSigns', function()
-    return activeIds
+    local copy = {}
+    for k, v in pairs(activeIds) do copy[k] = v end
+    return copy
 end)
 
---- Zona definicio lekerdezes
+--- Zona definicio lekerdezes – shallow copy (#110)
 ---@param id string
 ---@return table|nil
 exports('getZone', function(id)
-    return zones[id]
+    local z = zones[id]
+    if not z then return nil end
+    local copy = {}
+    for k, v in pairs(z) do copy[k] = v end
+    return copy
 end)
 
---- Osszes zona listaja
+--- Osszes zona listaja – shallow copy (#110)
 ---@return table
 exports('getAllZones', function()
-    return zones
+    local copy = {}
+    for zid, z in pairs(zones) do
+        copy[zid] = {}
+        for k, v in pairs(z) do copy[zid][k] = v end
+    end
+    return copy
 end)
 
---- Folyamatosan lathato tabla erositese (duration felulirasa nil-re)
+--- Folyamatosan lathato tabla rogzitese (duration=nil, timer torlese)
 ---@param id string
 exports('pinSign', function(id)
-    if zones[id] then
-        zones[id].duration = nil
-        timers[id] = nil
-        NXN.Signs.Log(('pinSign: id=%s'):format(id))
+    -- #113: Warn ismeretlen id eseten
+    if not zones[id] then
+        NXN.Signs.Warn(('pinSign: ismeretlen id: %s'):format(id))
+        return
     end
+    zones[id].duration = nil
+    timers[id] = nil
+    NXN.Signs.Log(('pinSign: id=%s'):format(id))
 end)
 
 --- Tabla rogzitesenek feloldasa
 ---@param id      string
 ---@param seconds number|nil
 exports('unpinSign', function(id, seconds)
-    if zones[id] then
-        zones[id].duration = seconds
-        if seconds then
-            timers[id] = GetGameTimer() + (seconds * 1000)
-        end
-        NXN.Signs.Log(('unpinSign: id=%s sec=%s'):format(id, tostring(seconds)))
+    -- #113: Warn ismeretlen id eseten
+    if not zones[id] then
+        NXN.Signs.Warn(('unpinSign: ismeretlen id: %s'):format(id))
+        return
     end
+    zones[id].duration = seconds
+    -- #112: Mindig torolje a meglevo timert, majd ha van seconds, ujat allitson
+    if seconds and seconds > 0 then
+        timers[id] = GetGameTimer() + (seconds * 1000)
+    else
+        timers[id] = nil  -- seconds=nil vagy 0: timer torlese (orokos tabla)
+    end
+    NXN.Signs.Log(('unpinSign: id=%s sec=%s'):format(id, tostring(seconds)))
 end)
