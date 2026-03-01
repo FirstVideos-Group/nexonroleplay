@@ -6,22 +6,24 @@ local loadingDone    = false
 local enterTriggered = false
 local serverDataSent = false
 
--- ── Helpers ──────────────────────────────────────────────────
+-- ── Helpers ──────────────────────────────────────────────────────
 
+-- #59: SendUI – debug log hozzáadva, értékes absztrakcióvá téve
 local function SendUI(data)
+    NXN.Loading.Log(('SendUI: action=%s'):format(tostring(data.action)))
     SendNUIMessage(data)
 end
 
--- ── Loading screen init ──────────────────────────────────────
+-- ── Loading screen init ──────────────────────────────────────────
 --
--- A loadscreen resource már fut mielőtt a session inicializálódna.
--- Ezért Citizen.CreateThread-del folyamatosan próbálkozunk,
--- amíg a NetworkIsSessionStarted() igaz nem lesz.
+-- #60: onClientResourceStart fallback eltávolítva.
+-- A loadscreen resource az első futtatott resource – restart nem történik.
+-- A CreateThread loop önmagában is kezel 30s timeout-ot, fallback felesleges
+-- volt és race condition-t okozhatott a kétszeres playerReady küldéssel.
 
 Citizen.CreateThread(function()
     NXN.Loading.Log('Waiting for session to be active...')
 
-    -- Várunk amíg a session életbe lép
     local timeout = 0
     while not NetworkIsSessionStarted() do
         Citizen.Wait(500)
@@ -40,31 +42,16 @@ Citizen.CreateThread(function()
     end
 end)
 
--- Fallback: ha a thread mégsem fut le (pl. resource restart közben)
-AddEventHandler('onClientResourceStart', function(resourceName)
-    if resourceName ~= GetCurrentResourceName() then return end
-    NXN.Loading.Log('onClientResourceStart fired')
-
-    Citizen.SetTimeout(1000, function()
-        if not serverDataSent then
-            serverDataSent = true
-            NXN.Loading.Log('Fallback: sending playerReady from onClientResourceStart')
-            TriggerServerEvent('nxn-loading:server:playerReady')
-        end
-    end)
-end)
-
--- ── Net events ───────────────────────────────────────────────
+-- ── Net events ────────────────────────────────────────────────
 
 RegisterNetEvent('nxn-loading:client:serverData', function(data)
     NXN.Loading.Log('Received serverData from server')
-    -- A konfigurációs adatokat is továbbítjuk
-    data.modules        = Config.Loading.modules
+    data.modules         = Config.Loading.modules
     data.enterButtonText = Config.Loading.enterButtonText
-    data.musicVolume    = Config.Music.volume
-    data.musicFadeOut   = Config.Music.fadeOutDuration
-    data.minLoadTime    = Config.Loading.minLoadTime
-    data.musicFile      = Config.Music.file
+    data.musicVolume     = Config.Music.volume
+    data.musicFadeOut    = Config.Music.fadeOutDuration
+    data.minLoadTime     = Config.Loading.minLoadTime
+    data.musicFile       = Config.Music.file
     SendUI({ action = 'serverData', data = data })
 end)
 
@@ -73,14 +60,20 @@ RegisterNetEvent('nxn-loading:client:queueUpdate', function(data)
     SendUI({ action = 'queueUpdate', position = data.position, total = data.total })
 end)
 
+-- #61: doEnter – beginFadeOut NUI üzenet küldése a CSS fade-out
+-- indításához, majd fadeOutDuration + 200ms buffer után állítjuk le
+-- a NUI-t, hogy az animáció ne szakadjon meg (fekete villanás elkerülése)
 RegisterNetEvent('nxn-loading:client:doEnter', function()
-    NXN.Loading.Log('doEnter received – shutting down loading screen')
-    Citizen.Wait(800)
+    NXN.Loading.Log('doEnter received – kezdem a fade-out-ot')
+    -- NUI fade-out indítása
+    SendUI({ action = 'beginFadeOut' })
+    -- Várunk a fade-out animáció lejáratáig + kis buffer
+    Citizen.Wait(Config.Music.fadeOutDuration + 200)
     ShutdownLoadingScreen()
     ShutdownLoadingScreenNui()
 end)
 
--- ── NUI callbacks ────────────────────────────────────────────
+-- ── NUI callbacks ──────────────────────────────────────────────
 
 RegisterNUICallback('enterGame', function(_, cb)
     if enterTriggered then cb('ok') return end
@@ -96,7 +89,7 @@ RegisterNUICallback('loadingComplete', function(_, cb)
     cb('ok')
 end)
 
--- ── Exports ──────────────────────────────────────────────────
+-- ── Exportok ────────────────────────────────────────────────
 
 exports('isLoadingDone', function()
     return loadingDone

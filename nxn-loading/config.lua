@@ -3,22 +3,22 @@ Config = {}
 Config.Debug            = false              -- Debug üzenetek megjelenítése
 Config.ResourceName     = GetCurrentResourceName()
 
--- ── Szerver infó (megjelenik a loading screenen) ─────────────
+-- ── Szerver infó (megjelenik a loading screenen) ─────────────────
 Config.ServerName       = 'Nexon Roleplay'
 Config.ServerDescription = 'Üdvözölünk a Nexon Roleplay szerverén! Célunk egy valósághű, szórakoztató RP élmény biztosítása minden játékos számára. Légy részese egy élő, dinamikus városnak!'
 Config.ServerLogo       = ''  -- Opcionális: URL vagy üres string (üres = szöveges logo)
 
--- ── Szabályok ────────────────────────────────────────────────
+-- ── Szabályok ──────────────────────────────────────────────
 Config.Rules = {
     { icon = 'hgi-respect',           title = 'Tiszteletadás',       text = 'Minden játékost tiszteld. A személyes sértések és zaklatás tilos.' },
     { icon = 'hgi-mic-01',            title = 'Maradj karakterben',  text = 'OOC kommunikáció csak a kijelölt csatornákon engedélyezett.' },
     { icon = 'hgi-shield-01',         title = 'No RDM / VDM',        text = 'Indokolatlan gyilkosság és járműves ölés szigorúan tiltott.' },
     { icon = 'hgi-bug-01',            title = 'Exploitolás tiltott', text = 'Játékhibák, exploitok és cheatingeszközök használata bannolható.' },
-    { icon = 'hgi-communication-01',  title = 'Kommunikáció',        text = 'Konfliktus esetén keress adminisztrátort, ne vedd saját kezedbe.' },
+    { icon = 'hgi-communication-01',  title = 'Kommunikáció',        text = 'Konfliktus esetén keress adminisztrátor, ne vedd saját kezedbe.' },
     { icon = 'hgi-time-01',           title = 'Türelem',             text = 'Minden RP szituációban adj időt a másik félnek reagálni.' },
 }
 
--- ── Billentyűparancsok ────────────────────────────────────────
+-- ── Billentyűparancsok ─────────────────────────────────────────
 Config.Keybinds = {
     { key = 'F1',       desc = 'Karakterkártya megnyitása' },
     { key = 'F2',       desc = 'Telefonos menü' },
@@ -29,11 +29,11 @@ Config.Keybinds = {
     { key = 'Y',        desc = 'Kézbe emelt kézfej (megadás)' },
     { key = 'G',        desc = 'Bilétáló / lift interakció' },
     { key = 'E',        desc = 'Általános interakció' },
-    { key = 'X',        desc = 'Hangütés / zenemű' },
+    { key = 'X',        desc = 'Hangütés / zeneмű' },
     { key = '~',        desc = 'OOC chat' },
 }
 
--- ── Zene ─────────────────────────────────────────────────────
+-- ── Zene ──────────────────────────────────────────────────────────
 Config.Music = {
     enabled = true,
     volume  = 0.35,        -- 0.0 – 1.0
@@ -41,11 +41,15 @@ Config.Music = {
     fadeOutDuration = 2000 -- ms, mennyi idő alatt halkuljon le
 }
 
--- ── Várólista ────────────────────────────────────────────────
+-- ── Várólista ──────────────────────────────────────────────
 Config.Queue = {
     enabled         = true,
     maxPlayers      = 64,
-    updateInterval  = 5000  -- ms, milyen sűrűn frissüljön a pozíció
+    -- #62: FONTOS – A FiveM deferrals.update() minimum 1000ms közenkénti
+    -- hívásokat fogad el. 1000 alá állított érték csendesen figyelmen
+    -- kívül marad és a várólista pozíció nem frissül a játékosokon!
+    -- Ajánlott érték: 3000–10000 ms.
+    updateInterval  = 5000  -- ms (minimum: 1000)
 }
 
 -- ── Loading screen ───────────────────────────────────────────

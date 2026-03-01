@@ -2,17 +2,27 @@
 --  nxn-loading | server.lua
 -- ============================================================
 
-local queue      = {}   -- { src = true/false, ... } – várakozók sorban
+-- #55: `queue` tábla eltávolítva – duplikált állapot volt a `queueOrder`-rel.
+-- "Benne van-e" ellenőrzéshez GetQueuePosition(src) > 0 használandó.
 local queueOrder = {}   -- ordered list of source IDs
 local connected  = {}   -- src -> true, ha már bent van
 
--- ── Helpers ──────────────────────────────────────────────────
+-- ── Helpers ──────────────────────────────────────────────────────
 
 local function GetQueuePosition(src)
     for i, v in ipairs(queueOrder) do
         if v == src then return i end
     end
     return 0
+end
+
+local function RemoveFromQueue(src)
+    for i, v in ipairs(queueOrder) do
+        if v == src then
+            table.remove(queueOrder, i)
+            break
+        end
+    end
 end
 
 local function BroadcastQueueUpdate()
@@ -24,9 +34,12 @@ local function BroadcastQueueUpdate()
     end
 end
 
--- ── Connecting deferrals ─────────────────────────────────────
+-- ── Connecting deferrals ─────────────────────────────────────────
 
 if Config.Queue.enabled then
+    -- #62: FiveM deferrals.update() minimum 1000ms – runtime guard
+    local safeInterval = math.max(1000, Config.Queue.updateInterval)
+
     AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
         local src = source
         deferrals.defer()
@@ -36,26 +49,38 @@ if Config.Queue.enabled then
         Citizen.Wait(0)
         deferrals.update(('Üdvözölünk, %s! Betöltés folyamatban...'):format(name))
 
-        local playerCount = #GetPlayers()
-        if playerCount >= Config.Queue.maxPlayers then
+        if #GetPlayers() >= Config.Queue.maxPlayers then
             -- Helyezzük várólistára
             table.insert(queueOrder, src)
-            queue[src] = true
             NXN.Loading.Log(('Queue: %s hozzáadva, pozíció: %d'):format(name, #queueOrder))
             BroadcastQueueUpdate()
 
-            -- Várjunk amíg felszabadul hely
-            while #GetPlayers() >= Config.Queue.maxPlayers do
+            -- #56: disconnected flag – ha a játékos disconnect-el várakozás
+            -- közben, ne hívjuk meg a deferrals.done()-t egy halott kapcsolaton
+            local disconnected = false
+            local dropHandler = AddEventHandler('playerDropped', function()
+                if source == src then
+                    disconnected = true
+                end
+            end)
+
+            -- Várjunk amíg felszabadul hely VAGY a játékos disconnectelt
+            while not disconnected and #GetPlayers() >= Config.Queue.maxPlayers do
                 deferrals.update(('Várólista: %d. pozíció / %d várakozó'):format(
                     GetQueuePosition(src), #queueOrder))
-                Citizen.Wait(Config.Queue.updateInterval)
+                Citizen.Wait(safeInterval)
+            end
+
+            RemoveEventHandler(dropHandler)
+
+            -- Ha közben disconnectelt, ne folytassuk
+            if disconnected then
+                NXN.Loading.Log(('Queue: %s disconnect közben várakozás alatt, kihagyva'):format(name))
+                return
             end
 
             -- Eltávolítás várólistáról
-            for i, v in ipairs(queueOrder) do
-                if v == src then table.remove(queueOrder, i) break end
-            end
-            queue[src] = nil
+            RemoveFromQueue(src)
             BroadcastQueueUpdate()
         end
 
@@ -64,13 +89,12 @@ if Config.Queue.enabled then
     end)
 end
 
--- ── Net events ───────────────────────────────────────────────
+-- ── Net events ────────────────────────────────────────────────
 
 RegisterServerEvent('nxn-loading:server:playerReady', function()
     local src = source
     connected[src] = true
     NXN.Loading.Log(('playerReady: src=%s'):format(src))
-    -- Értesítjük a clientet, hogy küldhetünk adatokat
     TriggerClientEvent('nxn-loading:client:serverData', src, {
         serverName  = Config.ServerName,
         description = Config.ServerDescription,
@@ -81,31 +105,35 @@ RegisterServerEvent('nxn-loading:server:playerReady', function()
     })
 end)
 
+-- #58: enterGame handler connected[src] guard – megakadályozza a loading
+-- screen megkerülését (bármely kliens triggerelhette volna, playerReady nélkül)
 RegisterServerEvent('nxn-loading:server:enterGame', function()
     local src = source
+    if not connected[src] then
+        NXN.Loading.Warn(('enterGame: src=%d nem küldött playerReady-t, elutasítva'):format(src))
+        return
+    end
     NXN.Loading.Log(('enterGame: src=%s'):format(src))
-    -- Jelezzük a kliensnek, hogy indíthatja a fade-et
     TriggerClientEvent('nxn-loading:client:doEnter', src)
 end)
 
 AddEventHandler('playerDropped', function(reason)
     local src = source
     connected[src] = nil
-    -- Eltávolítás várólistáról is, ha ott volt
-    for i, v in ipairs(queueOrder) do
-        if v == src then table.remove(queueOrder, i) break end
-    end
-    queue[src] = nil
+    RemoveFromQueue(src)
     BroadcastQueueUpdate()
     NXN.Loading.Log(('playerDropped: src=%s reason=%s'):format(src, reason))
 end)
 
--- ── Exports ──────────────────────────────────────────────────
+-- ── Exports ────────────────────────────────────────────────────
 
---- Visszaadja a jelenlegi várólistát (pozíció -> src)
+--- #57: getQueue shallow copy – referencia helyett másolatot ad vissza
+--- Megakadályozza, hogy külső resource közvetlenül módosítsa a várólistát
 ---@return table
 exports('getQueue', function()
-    return queueOrder
+    local copy = {}
+    for i, v in ipairs(queueOrder) do copy[i] = v end
+    return copy
 end)
 
 --- Visszaadja a várakozó játékosok számát
