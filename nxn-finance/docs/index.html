@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nxn-finance – Dokumentáció</title>
+<link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #0a0c14; color: #c8d3e0; min-height: 100vh; }
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 240px; background: #0f1120; border-right: 1px solid rgba(255,255,255,0.07); padding: 28px 0 20px; overflow-y: auto; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 16px; }
+  .sidebar-logo i { font-size: 22px; color: #3b82f6; }
+  .sidebar-logo span { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+  .sidebar-logo small { display: block; font-size: 11px; color: #64748b; font-weight: 400; }
+  .nav-label { font-size: 10px; color: #475569; text-transform: uppercase; letter-spacing: .1em; padding: 10px 20px 4px; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #94a3b8; text-decoration: none; border-left: 3px solid transparent; transition: all .15s; cursor: pointer; }
+  .nav-link:hover, .nav-link.active { color: #3b82f6; border-left-color: #3b82f6; background: rgba(59,130,246,0.07); }
+  .main { margin-left: 240px; padding: 40px 48px; max-width: 960px; }
+  .page { display: none; } .page.active { display: block; }
+  h1 { font-size: 26px; font-weight: 800; color: #f1f5f9; margin-bottom: 8px; }
+  h2 { font-size: 18px; font-weight: 700; color: #f1f5f9; margin: 32px 0 10px; }
+  h3 { font-size: 14px; font-weight: 700; color: #94a3b8; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: .06em; }
+  p { font-size: 14px; line-height: 1.7; color: #94a3b8; margin-bottom: 12px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; color: #3b82f6; font-size: 11px; font-weight: 700; padding: 3px 9px; margin-bottom: 16px; }
+  pre { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: #7dd3fc; }
+  pre code { color: #c8d3e0; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13px; }
+  th { background: rgba(255,255,255,0.05); color: #94a3b8; font-weight: 700; text-align: left; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #c8d3e0; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag { display: inline-block; border-radius: 5px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
+  .tag-s { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .tag-c { background: rgba(168,85,247,0.15); color: #a855f7; }
+  .alert { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #fbbf24; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <i class="hgi hgi-bank"></i>
+    <div><span>nxn-finance</span><small>v1.0.0 – Nexon RP</small></div>
+  </div>
+  <div class="nav-label">Általános</div>
+  <a class="nav-link active" data-page="overview"><i class="hgi hgi-home-01"></i> Áttekintés</a>
+  <a class="nav-link" data-page="config"><i class="hgi hgi-settings-01"></i> Konfiguráció</a>
+  <div class="nav-label">Exportok</div>
+  <a class="nav-link" data-page="server-exports"><i class="hgi hgi-server-01"></i> Szerver exportok</a>
+  <a class="nav-link" data-page="client-exports"><i class="hgi hgi-computer"></i> Kliens exportok</a>
+  <div class="nav-label">Integráció</div>
+  <a class="nav-link" data-page="examples"><i class="hgi hgi-code"></i> Kódpéldák</a>
+  <a class="nav-link" data-page="events"><i class="hgi hgi-broadcast"></i> Events</a>
+</nav>
+<main class="main">
+
+<!-- Áttekintés -->
+<div class="page active" id="page-overview">
+  <h1><i class="hgi hgi-bank" style="color:#3b82f6"></i> nxn-finance</h1>
+  <span class="badge"><i class="hgi hgi-shield-01"></i> Nexon RP – Központi pénzrendszer</span>
+  <p>Az <code>nxn-finance</code> a szerver egyetlen, hiteles pénzügyi motorja. Két pénztípust kezel (<strong>cash</strong> és <strong>bank</strong>), adatbázisban tárolja az egyenlegeket, minden tranzakciót naplóz, és exportokon keresztül teszi elérhetővé a többi script számára.</p>
+  <div class="alert"><i class="hgi hgi-alert-02"></i> Semmilyen más script nem tárolja vagy módosítja közvetlenül a játékos egyenlegét – minden pénzmozgásnak az <code>nxn-finance</code> exportjain kell átmennie.</div>
+  <h2>Fájlstruktúra</h2>
+  <pre><code>nxn-finance/
+├── fxmanifest.lua
+├── config.lua        – pénztípusok, ATM pozíciók, bank NPC-k
+├── shared.lua        – NXN.Finance logger
+├── server.lua        – pénzmozgás logika, DB, exportok
+├── client.lua        – ATM/NPC regisztrálás, HUD event, exportok
+├── html/             – ATM / Bank UI
+└── docs/index.html   – ez a fájl</code></pre>
+  <h2>Függőségek</h2>
+  <table>
+    <tr><th>Script</th><th>Kötelező?</th><th>Miért?</th></tr>
+    <tr><td><code>nxn-database</code></td><td>✅</td><td>DB tábla regisztrálás, identifier lekérés</td></tr>
+    <tr><td><code>nxn-notify</code></td><td>✅</td><td>ATM műveletek visszajelzései</td></tr>
+    <tr><td><code>nxn-npcconversation</code></td><td>✅</td><td>Bank NPC dialóg regisztrálás</td></tr>
+    <tr><td><code>nxn-hud</code></td><td>⚠ Opcionális</td><td>Egyenleg kijelző frissítése</td></tr>
+  </table>
+</div>
+
+<!-- Konfiguráció -->
+<div class="page" id="page-config">
+  <h1>Konfiguráció</h1>
+  <p>A <code>config.lua</code>-ban módosítható minden fontos beállítás.</p>
+  <pre><code>-- Pénztípusok (cash / bank)
+Config.MoneyTypes = {
+    ['cash'] = { label = 'Készpénz',   icon = 'hgi-money-02', default = 500  },
+    ['bank'] = { label = 'Bankszámla', icon = 'hgi-bank',     default = 2500 },
+}
+Config.DefaultType = 'cash'   -- ha nincs típus megadva
+
+-- Mentési ciklus (ms)
+Config.SaveInterval = 300000  -- 5 perc
+
+-- ATM helyszínek
+Config.ATMs = {
+    { id = 'atm_grove', label = 'Fleeca ATM – Grove', coords = vector3(...), model = 'prop_atm_01' },
+    ...
+}
+
+-- Bank NPC-k
+Config.BankNPCs = {
+    ['fleeca_main'] = {
+        label = 'Fleeca Bank', model = 's_f_y_bank_01',
+        coords = vector4(...), scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
+        blip = { enabled = true, sprite = 108, color = 2, scale = 0.8 }
+    },
+}</code></pre>
+</div>
+
+<!-- Szerver exportok -->
+<div class="page" id="page-server-exports">
+  <h1>Szerver exportok</h1>
+  <table>
+    <tr><th>Export</th><th>Paraméterek</th><th>Visszatér</th><th>Leírás</th></tr>
+    <tr><td><code>getMoney</code></td><td>src, type?</td><td>integer</td><td>Egyenleg lekérése (nil = DefaultType)</td></tr>
+    <tr><td><code>getBalances</code></td><td>src</td><td>table</td><td><code>{ cash=N, bank=N }</code></td></tr>
+    <tr><td><code>hasMoney</code></td><td>src, amount, type?</td><td>boolean</td><td>Van-e elegendő pénze</td></tr>
+    <tr><td><code>addMoney</code></td><td>src, amount, type?, reason?, issuedBy?</td><td>boolean</td><td>Pénz hozzáadása, naplózva</td></tr>
+    <tr><td><code>removeMoney</code></td><td>src, amount, type?, reason?, issuedBy?</td><td>boolean</td><td>Levonás; false ha nincs elég</td></tr>
+    <tr><td><code>setMoney</code></td><td>src, amount, type?, reason?, issuedBy?</td><td>boolean</td><td>Közvetlen beállítás</td></tr>
+    <tr><td><code>transferMoney</code></td><td>fromSrc, toSrc, amount, type?, reason?</td><td>boolean</td><td>Játékos→játékos átutalás</td></tr>
+    <tr><td><code>getTransactionLog</code></td><td>src, limit?</td><td>table</td><td>Utolsó N tranzakció</td></tr>
+  </table>
+
+  <h2>Kódpéldák</h2>
+  <pre><code>-- Egyenleg lekérése
+local cash = exports['nxn-finance']:getMoney(src, 'cash')
+local bank = exports['nxn-finance']:getMoney(src, 'bank')
+
+-- Bolt vásárlás
+local ok = exports['nxn-finance']:removeMoney(src, 500, 'cash', 'Bolt vásárlás', 'nxn-shop')
+if not ok then
+    -- nincs elég pénz
+end
+
+-- Bírság levonás (nxn-cityhall által)
+exports['nxn-finance']:removeMoney(src, fine.amount, 'bank', fine.reason, 'nxn-cityhall')
+
+-- Fizetés (nxn-jobs)
+exports['nxn-finance']:addMoney(src, salary, 'bank', 'Fizetés', jobName)</code></pre>
+</div>
+
+<!-- Kliens exportok -->
+<div class="page" id="page-client-exports">
+  <h1>Kliens exportok</h1>
+  <table>
+    <tr><th>Export</th><th>Leírás</th></tr>
+    <tr><td><code>getLocalBalances()</code></td><td>Cache-elt egyenlegek: <code>{ cash, bank }</code></td></tr>
+    <tr><td><code>openATM(atmId?, tab?)</code></td><td>ATM / Bank UI megnyitása</td></tr>
+    <tr><td><code>closeATM()</code></td><td>UI bezárása</td></tr>
+    <tr><td><code>isATMOpen()</code></td><td>Nyitva van-e</td></tr>
+  </table>
+  <pre><code>-- HUD egyenleg lekérése
+local bal = exports['nxn-finance']:getLocalBalances()
+print(bal.cash, bal.bank)
+
+-- ATM megnyitása külső scriptből
+exports['nxn-finance']:openATM('atm_grove', 'deposit')</code></pre>
+</div>
+
+<!-- Kódpéldák -->
+<div class="page" id="page-examples">
+  <h1>Integrációs példák</h1>
+
+  <h2>nxn-shop – vásárlás</h2>
+  <pre><code>local balance = exports['nxn-finance']:getMoney(src, 'cash')
+if balance < item.price then
+    exports['nxn-notify']:notifyPlayer(src, 'Nincs elég pénzed!', 'danger')
+    return
+end
+exports['nxn-finance']:removeMoney(src, item.price, 'cash', 'Bolt: ' .. item.label, 'nxn-shop')</code></pre>
+
+  <h2>nxn-cityhall – bírság befizetés</h2>
+  <pre><code>-- RÉGI (javítandó):
+exports['nxn-bank']:removeBalance(src, fine.amount)
+
+-- ÚJ:
+local ok = exports['nxn-finance']:removeMoney(src, fine.amount, 'bank', fine.reason, 'nxn-cityhall')
+if not ok then
+    Notify(src, 'Nincs elég pénz a bankban!', 'danger')
+    return
+end</code></pre>
+
+  <h2>nxn-jobs – fizetés kifizetése</h2>
+  <pre><code>exports['nxn-finance']:addMoney(src, salary, 'bank', 'Heti fizetés', 'nxn-jobs')</code></pre>
+
+  <h2>Tranzakció log (admin)</h2>
+  <pre><code>local log = exports['nxn-finance']:getTransactionLog(src, 20)
+for _, entry in ipairs(log) do
+    print(entry.action, entry.amount, entry.reason, entry.created_at)
+end</code></pre>
+</div>
+
+<!-- Events -->
+<div class="page" id="page-events">
+  <h1>Events</h1>
+  <table>
+    <tr><th>Event</th><th>Irány</th><th>Adat</th><th>Leírás</th></tr>
+    <tr><td><code>nxn-finance:client:updated</code></td><td><span class="tag tag-s">S→C</span></td><td><code>{ cash, bank }</code></td><td>Egyenleg frissítés (HUD, UI)</td></tr>
+    <tr><td><code>nxn-finance:server:deposit</code></td><td><span class="tag tag-c">C→S</span></td><td><code>amount</code></td><td>Letét: cash → bank</td></tr>
+    <tr><td><code>nxn-finance:server:withdraw</code></td><td><span class="tag tag-c">C→S</span></td><td><code>amount</code></td><td>Felvét: bank → cash</td></tr>
+    <tr><td><code>nxn-finance:server:transfer</code></td><td><span class="tag tag-c">C→S</span></td><td><code>targetId, amount, reason?</code></td><td>Átutalás játékosnak</td></tr>
+    <tr><td><code>nxn-finance:server:moneyChanged</code></td><td>Szerver lokál</td><td><code>src, type, action, amount, newBalance</code></td><td>Más scriptek figyelhetik (pl. admin log)</td></tr>
+  </table>
+</div>
+
+</main>
+<script>
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      link.classList.add('active');
+      document.getElementById('page-' + link.dataset.page).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

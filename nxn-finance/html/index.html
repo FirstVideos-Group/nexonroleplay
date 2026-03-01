@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nxn-finance</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="hidden">
+    <div class="atm-panel">
+        <!-- Fejléc -->
+        <div class="atm-header">
+            <i class="hgi hgi-bank atm-header__icon"></i>
+            <div class="atm-header__info">
+                <span class="atm-header__title">Fleeca Bank</span>
+                <span class="atm-header__subtitle">Biztonságos banki szolgáltatások</span>
+            </div>
+            <button class="atm-close" id="btnClose" title="Bezárás">
+                <i class="hgi hgi-cancel-01"></i>
+            </button>
+        </div>
+
+        <!-- Egyenleg kártyák -->
+        <div class="balance-row">
+            <div class="balance-card">
+                <i class="hgi hgi-money-02 balance-card__icon"></i>
+                <div class="balance-card__info">
+                    <span class="balance-card__label">Készpénz</span>
+                    <span class="balance-card__amount" id="cashAmount">$0</span>
+                </div>
+            </div>
+            <div class="balance-card balance-card--bank">
+                <i class="hgi hgi-bank balance-card__icon"></i>
+                <div class="balance-card__info">
+                    <span class="balance-card__label">Bankszámla</span>
+                    <span class="balance-card__amount" id="bankAmount">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab navigáció -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="balance"><i class="hgi hgi-chart-bar-01"></i> Egyenleg</button>
+            <button class="tab-btn" data-tab="deposit"><i class="hgi hgi-upload-04"></i> Letét</button>
+            <button class="tab-btn" data-tab="withdraw"><i class="hgi hgi-download-04"></i> Felvét</button>
+            <button class="tab-btn" data-tab="transfer"><i class="hgi hgi-transfer-horizontal"></i> Átutalás</button>
+        </div>
+
+        <!-- Egyenleg tab -->
+        <div class="tab-content active" id="tab-balance">
+            <div class="balance-overview">
+                <div class="overview-row">
+                    <span class="overview-label"><i class="hgi hgi-money-02"></i> Készpénz</span>
+                    <span class="overview-value" id="ovCash">$0</span>
+                </div>
+                <div class="overview-row">
+                    <span class="overview-label"><i class="hgi hgi-bank"></i> Bankszámla</span>
+                    <span class="overview-value" id="ovBank">$0</span>
+                </div>
+                <div class="overview-divider"></div>
+                <div class="overview-row overview-row--total">
+                    <span class="overview-label">Összesen</span>
+                    <span class="overview-value" id="ovTotal">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Letét tab -->
+        <div class="tab-content" id="tab-deposit">
+            <div class="action-form">
+                <label class="action-form__label">Befizetendő összeg (Készpénzből)</label>
+                <div class="action-form__input-wrap">
+                    <span class="action-form__prefix">$</span>
+                    <input type="number" id="depositAmount" class="action-form__input" placeholder="0" min="1">
+                </div>
+                <div class="action-form__preview" id="depositPreview"></div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" data-amount="100" data-target="depositAmount">$100</button>
+                    <button class="quick-btn" data-amount="500" data-target="depositAmount">$500</button>
+                    <button class="quick-btn" data-amount="1000" data-target="depositAmount">$1 000</button>
+                    <button class="quick-btn" data-amount="5000" data-target="depositAmount">$5 000</button>
+                    <button class="quick-btn" id="depositMax">Max</button>
+                </div>
+                <button class="action-btn" id="btnDeposit"><i class="hgi hgi-upload-04"></i> Befizetés</button>
+            </div>
+        </div>
+
+        <!-- Felvét tab -->
+        <div class="tab-content" id="tab-withdraw">
+            <div class="action-form">
+                <label class="action-form__label">Felveendő összeg (Bankból)</label>
+                <div class="action-form__input-wrap">
+                    <span class="action-form__prefix">$</span>
+                    <input type="number" id="withdrawAmount" class="action-form__input" placeholder="0" min="1">
+                </div>
+                <div class="action-form__preview" id="withdrawPreview"></div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" data-amount="100" data-target="withdrawAmount">$100</button>
+                    <button class="quick-btn" data-amount="500" data-target="withdrawAmount">$500</button>
+                    <button class="quick-btn" data-amount="1000" data-target="withdrawAmount">$1 000</button>
+                    <button class="quick-btn" data-amount="5000" data-target="withdrawAmount">$5 000</button>
+                    <button class="quick-btn" id="withdrawMax">Max</button>
+                </div>
+                <button class="action-btn" id="btnWithdraw"><i class="hgi hgi-download-04"></i> Felvét</button>
+            </div>
+        </div>
+
+        <!-- Átutalás tab -->
+        <div class="tab-content" id="tab-transfer">
+            <div class="action-form">
+                <label class="action-form__label">Célszemély Szerver ID</label>
+                <input type="number" id="transferTarget" class="action-form__input" placeholder="Pl. 12" min="1">
+
+                <label class="action-form__label" style="margin-top:12px">Összeg</label>
+                <div class="action-form__input-wrap">
+                    <span class="action-form__prefix">$</span>
+                    <input type="number" id="transferAmount" class="action-form__input" placeholder="0" min="1">
+                </div>
+
+                <label class="action-form__label" style="margin-top:12px">Megjegyzés (opcionális)</label>
+                <input type="text" id="transferReason" class="action-form__input" placeholder="pl. kölcsön visszaadás" maxlength="100">
+
+                <div class="action-form__preview" id="transferPreview"></div>
+                <button class="action-btn" id="btnTransfer"><i class="hgi hgi-transfer-horizontal"></i> Átutalás</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
