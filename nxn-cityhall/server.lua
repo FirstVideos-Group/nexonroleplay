@@ -2,11 +2,11 @@
 --  nxn-cityhall | server.lua
 -- ============================================================
 
--- ── Csekk cache ───────────────────────────────────────────────
+-- ── Csekk cache ────────────────────────────────────────────────
 --- { [src] = { {id, reason, amount, issued_at, paid} } }
 local finesCache = {}
 
--- ── Segédfüggvények ────────────────────────────────────────
+-- ── Segédfüggvények ─────────────────────────────────────────
 
 local function GetIdentifier(src)
     if GetResourceState('nxn-database') ~= 'started' then return nil end
@@ -19,7 +19,7 @@ local function Notify(src, msg, ntype)
     end
 end
 
--- ── DB init ──────────────────────────────────────────────
+-- ── DB init ─────────────────────────────────────────────
 
 AddEventHandler('onResourceStart', function(res)
     if res ~= Config.ResourceName then return end
@@ -57,7 +57,7 @@ AddEventHandler('playerDropped', function()
     finesCache[source] = nil
 end)
 
--- ── Net events ────────────────────────────────────────────
+-- ── Net events ─────────────────────────────────────────────
 
 -- Csekk lista kérés
 RegisterNetEvent('nxn-cityhall:server:getFines', function()
@@ -80,7 +80,7 @@ end)
 RegisterNetEvent('nxn-cityhall:server:payFine', function(fineId)
     local src = source
 
-    -- Típusvalidáció: fineId csak pozitív egész szám lehet
+    -- TípusvaliDáció: fineId csak pozitív egész szám lehet
     if type(fineId) ~= 'number' or math.floor(fineId) ~= fineId or fineId <= 0 then
         NXN.CityHall.Warn(('payFine: érvénytelen fineId=%s src=%d'):format(tostring(fineId), src))
         return
@@ -102,14 +102,14 @@ RegisterNetEvent('nxn-cityhall:server:payFine', function(fineId)
         return
     end
 
-    -- nxn-bank integráció: egyenleg ellenőrzés és leválásztas
-    if GetResourceState('nxn-bank') ~= 'started' then
+    -- nxn-finance integráció: egyenleg ellenőrzés és leválásztás
+    if GetResourceState('nxn-finance') ~= 'started' then
         Notify(src, 'A pénzrendszer jelenleg nem elérhető. Próbáld később!', 'danger')
-        NXN.CityHall.Warn(('payFine: nxn-bank nem fut, src=%d'):format(src))
+        NXN.CityHall.Warn(('payFine: nxn-finance nem fut, src=%d'):format(src))
         return
     end
 
-    local balance = exports['nxn-bank']:getBalance(src)
+    local balance = exports['nxn-finance']:getMoney(src, 'bank')
     if not balance or balance < fine.amount then
         Notify(src, ('Nincs elég pénzed a bírásg befizetéséhez. (Hiány: $%d)'):format(
             fine.amount - (balance or 0)
@@ -117,7 +117,12 @@ RegisterNetEvent('nxn-cityhall:server:payFine', function(fineId)
         return
     end
 
-    exports['nxn-bank']:removeBalance(src, fine.amount)
+    local ok = exports['nxn-finance']:removeMoney(src, fine.amount, 'bank', fine.reason, 'nxn-cityhall')
+    if not ok then
+        Notify(src, 'A bírásg befízetése nem sikerült!', 'danger')
+        NXN.CityHall.Warn(('payFine: removeMoney sikertelen, src=%d fineId=%d'):format(src, fineId))
+        return
+    end
 
     MySQL.update.await(
         'UPDATE `nxn_fines` SET paid = 1, paid_at = NOW() WHERE id = ?',
@@ -135,13 +140,12 @@ RegisterNetEvent('nxn-cityhall:server:payFine', function(fineId)
     end
 
     Notify(src, ('✅ Bírásg befizetve: $%d – %s'):format(fine.amount, fine.reason), 'success')
-    -- frissített lista küldése (nem nyìt új nézetet)
     TriggerClientEvent('nxn-cityhall:client:finesPaid', src, finesCache[src] or {})
     TriggerEvent('nxn-cityhall:server:finePaid', src, fine)
     NXN.CityHall.Info(('Fine fizetve: src=%d id=%d amount=%d'):format(src, fineId, fine.amount))
 end)
 
--- ── Exportok (szerver) ─────────────────────────────────────────
+-- ── Exportok (szerver) ───────────────────────────────────────────
 
 --- Bírásg kiadása (például rendőrségi script által)
 ---@param src      integer   cél játékos

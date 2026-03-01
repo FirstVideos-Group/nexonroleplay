@@ -5,6 +5,12 @@ author      'Nexon Dev Team <nexondev@firstvideosgroup.eu>'
 description 'nxn-cityhall – Önkormányzati rendszer (igazolvány, csekk, ügyek)'
 version     '1.0.0'
 
+dependencies {
+    'nxn-database',
+    'nxn-notify',
+    'nxn-finance',
+}
+
 shared_scripts {
     'config.lua',
     'shared.lua',
