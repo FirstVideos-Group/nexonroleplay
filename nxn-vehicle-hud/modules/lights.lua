@@ -1,31 +1,29 @@
 -- ============================================================
 --  nxn-vehicle-hud | modules/lights.lua
 --  Lampa allapot: position lights, full beam, veszviloglo
---  FIX: helyes GTA API, Lua SetTimeout (nem JS setTimeout)
+--  #119: hideTimerSeq szamlalo a race condition elkerulesehez
 -- ============================================================
 
-local hideTimer  = nil
-local HIDE_DELAY = 1500  -- ms, ennyi utan tunteti el a lamp ikont
+-- #119: Szekvencia szamlalos megkoezelites a SetTimeout race condition elkerulesehez.
+-- FiveM SetTimeout nem megszakithato, ezert a regi callback-ek ervenytelenitesere
+-- hideTimerSeq szamlalot hasznalunk.
+local hideTimerSeq = 0
+local HIDE_DELAY   = 1500
 
 CreateThread(function()
     local lastState = ''
 
     while true do
-        -- Lampak ritkabban valtoznak, 200ms eleg
         Wait(200)
 
-        if not inVehicle then goto continue end
-        if not moduleStates['lights'] then goto continue end
+        if not NXN.VehHUD.State.inVehicle             then goto continue end
+        if not NXN.VehHUD.State.moduleStates['lights'] then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
         if veh == 0 then goto continue end
 
-        -- GetVehicleLightsState(vehicle) -> lightsOn (bool), highbeamsOn (bool)
-        -- FiveM native: a ket return erteke a ket outparam
         local _, lightsOn, highbeamsOn = GetVehicleLightsState(veh)
-        -- Veszviloglo: IsVehicleExtraLightOn nem letezik; a hazard
-        -- GetVehicleIndicatorLights(veh) -> 0=off,1=left,2=right,3=hazard
         local indicatorState = GetVehicleIndicatorLights(veh)
         local hazard = (indicatorState == 3)
 
@@ -45,26 +43,20 @@ CreateThread(function()
                 hazard = hazard,
             })
 
-            -- Show/hide logika lampak be/kikapcsolas alapjan
             if not Config.Modules.lights.alwaysVisible then
                 if lightsOn or highbeamsOn or hazard then
-                    -- Megszakitjuk az esetleges fuggobe elo eltunetest
-                    if hideTimer then
-                        hideTimer = nil
-                    end
+                    -- Regi hideTimer callback ervenytelenitese (seq noveles)
+                    hideTimerSeq = hideTimerSeq + 1
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'lights' })
                 else
-                    -- Rovid delay utan eltunjuk (ne ugorjon el azonnal)
-                    if not hideTimer then
-                        hideTimer = true  -- flag, hogy ne inditsunk tobbszor
-                        SetTimeout(HIDE_DELAY, function()
-                            -- Csak akkor rejtjuk el ha meg mindig "off" az allapot
-                            if lastState == 'falsefalsefalse' then
-                                SendNUIMessage({ action = 'hideModuleTemporary', module = 'lights' })
-                            end
-                            hideTimer = nil
-                        end)
-                    end
+                    local mySeq = hideTimerSeq + 1
+                    hideTimerSeq = mySeq
+                    SetTimeout(HIDE_DELAY, function()
+                        -- Csak akkor rejtjuk el ha a sequence meg ervenyes
+                        if hideTimerSeq == mySeq then
+                            SendNUIMessage({ action = 'hideModuleTemporary', module = 'lights' })
+                        end
+                    end)
                 end
             end
         end

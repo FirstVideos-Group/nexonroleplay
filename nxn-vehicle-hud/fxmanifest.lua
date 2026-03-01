@@ -25,8 +25,8 @@ client_scripts {
 files {
     'html/index.html',
     'html/style.css',
-    'html/app.js',
-    'docs/index.html'
+    'html/app.js'
+    -- #123: docs/index.html eltavolitva (felesleges, nem NUI fajl)
 }
 
 ui_page 'html/index.html'

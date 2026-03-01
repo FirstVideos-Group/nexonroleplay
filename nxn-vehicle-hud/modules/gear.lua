@@ -10,8 +10,8 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval)
 
-        if not inVehicle then goto continue end
-        if not moduleStates['gear'] then goto continue end
+        if not NXN.VehHUD.State.inVehicle    then goto continue end
+        if not NXN.VehHUD.State.moduleStates['gear'] then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
@@ -19,21 +19,14 @@ CreateThread(function()
 
         local gear = GetVehicleCurrentGear(veh)
 
-        -- Hatra: GetVehicleCurrentGear == 0 ES a jarmű hatrafele halad
-        -- GetEntitySpeedVector z-tengely nem megbizható, ezert
-        -- a GetVehicleLastGear() + negatív gas kombót ellenőrizzük
+        -- Hatra-eszleles: vector3 mezo-hozzaferes (.x/.y) GetEntityForwardVector/Velocity
+        -- #118: table.unpack(vector3) runtime hibat dobott (vector3 != Lua table)
         local reverse = false
         if gear == 0 then
-            -- Ha a gaz-pedal lenyomva es az auto nem megy elore: hatra
             local speed = GetEntitySpeed(veh)
-            local throttle = GetVehicleThrottleOffset(veh)
-            -- ha sebesseg ~0 es gas lenyomva hatra
-            -- Legjobb check: GetVehicleTransmissionMode visszater 0=drive,1=neutral,2=reverse
-            -- de ez nem minden jarmuben mukodik. Biztosabb:
-            -- negatív sebesség vektor dot forward
-            local fwdX, fwdY, _ = table.unpack(GetEntityForwardVector(veh))
-            local velX, velY, _ = table.unpack(GetEntityVelocity(veh))
-            local dot = fwdX * velX + fwdY * velY
+            local fwd   = GetEntityForwardVector(veh)
+            local vel   = GetEntityVelocity(veh)
+            local dot   = fwd.x * vel.x + fwd.y * vel.y
             reverse = speed > 0.5 and dot < -0.1
         end
 

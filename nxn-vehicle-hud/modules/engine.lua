@@ -1,27 +1,28 @@
 -- ============================================================
 --  nxn-vehicle-hud | modules/engine.lua
 --  Motor allapot: ok / damaged / critical / off
---  FIX: Lua SetTimeout (nem JS clearTimeout/setTimeout)
+--  #120: hideTimerSeq szamlalo a race condition elkerulesehez
 -- ============================================================
 
-local hideTimer = nil
-local lastState = ''
-local cfg       = Config.Modules.engine
+-- #120: Szekvencia szamlalos megkozelites (ugyanaz mint lights.lua #119)
+local hideTimerSeq = 0
+local lastState    = ''
+local cfg          = Config.Modules.engine
 
-local HIDE_DELAY = 3000  -- ms, ennyi utan tunjuk el az 'ok' allapotot
+local HIDE_DELAY = 3000
 
 CreateThread(function()
     while true do
-        Wait(Config.PollInterval * 5)  -- ~500ms, ritkan valtozik
+        Wait(Config.PollInterval * 5)
 
-        if not inVehicle then goto continue end
-        if not moduleStates['engine'] then goto continue end
+        if not NXN.VehHUD.State.inVehicle              then goto continue end
+        if not NXN.VehHUD.State.moduleStates['engine'] then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
         if veh == 0 then goto continue end
 
-        local engineHealth = GetVehicleEngineHealth(veh)  -- 0-1000
+        local engineHealth = GetVehicleEngineHealth(veh)
         local engineOn     = GetIsVehicleEngineRunning(veh)
 
         local state
@@ -39,7 +40,6 @@ CreateThread(function()
             lastState = state
             NXN.VehHUD.Log(('engine: state=%s health=%.0f'):format(state, engineHealth))
 
-            -- Kozvetlenul kuldi, mindig (show/hide a HUD-on belul van kezelve)
             SendNUIMessage({
                 action = 'updateModule',
                 module = 'engine',
@@ -49,20 +49,17 @@ CreateThread(function()
 
             if not cfg.alwaysVisible then
                 if state == 'damaged' or state == 'critical' or state == 'off' then
-                    -- Megszakitjuk a fuggobe levo eltunest
-                    hideTimer = nil
+                    -- Regi hideTimer callback ervenytelenitese
+                    hideTimerSeq = hideTimerSeq + 1
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'engine' })
                 else
-                    -- 'ok': rovid delay utan eltunik
-                    if not hideTimer then
-                        hideTimer = true
-                        SetTimeout(HIDE_DELAY, function()
-                            if lastState == 'ok' then
-                                SendNUIMessage({ action = 'hideModuleTemporary', module = 'engine' })
-                            end
-                            hideTimer = nil
-                        end)
-                    end
+                    local mySeq = hideTimerSeq + 1
+                    hideTimerSeq = mySeq
+                    SetTimeout(HIDE_DELAY, function()
+                        if hideTimerSeq == mySeq then
+                            SendNUIMessage({ action = 'hideModuleTemporary', module = 'engine' })
+                        end
+                    end)
                 end
             end
         end
