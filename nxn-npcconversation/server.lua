@@ -3,14 +3,10 @@
 --  Szerver oldali esemenyforwardolas
 -- ============================================================
 
-NXN     = NXN or {}
-NXN.NPC = NXN.NPC or {}
-
-function NXN.NPC.Log(msg)
-    if Config.Debug then
-        print(('[nxn-npcconversation] [DEBUG] %s'):format(tostring(msg)))
-    end
-end
+-- #84: NXN.NPC.Log / Info / Warn / Error ujradefinicio ELTAVOLITVA
+-- A shared.lua (mindket oldalon betoltodik) mar definialta ezeket
+-- helyes formatumban. A server.lua felulirasai megakadalyoztak, hogy
+-- NXN.NPC.Warn es NXN.NPC.Error szerver oldalon mukodjenek.
 
 -- Ha egy NPC opcio szerver eventet var, ide lehet forward-olni
 -- Pelda:

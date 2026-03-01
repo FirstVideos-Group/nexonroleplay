@@ -21,8 +21,8 @@ server_scripts {
 files {
     'html/index.html',
     'html/style.css',
-    'html/app.js',
-    'docs/index.html'
+    'html/app.js'
+    -- #91: docs/index.html eltavolitva – statikus dokumentacio nem kell a files szekcioban
 }
 
 ui_page 'html/index.html'
