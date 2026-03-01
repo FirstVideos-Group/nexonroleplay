@@ -16,7 +16,6 @@
 | Resource | Leírás |
 |---|---|
 | [`nxn-database`](./nxn-database) | Központi adatbázis-kezelő modul minden script számára |
-| [`nxn-engine`](./nxn-engine) | Szerver core engine — alaprendszer és közös logika |
 | [`nxn-example`](./nxn-example) | Boilerplate / sablon resource új scriptek készítéséhez |
 
 ### 🖼️ UI / HUD
@@ -53,6 +52,7 @@
 
 | Resource | Leírás |
 |---|---|
+| [`nxn-engine`](./nxn-engine) | Jármű motor kezelése — motor indítás, leállítás és állapot logika |
 | [`nxn-seatbelt`](./nxn-seatbelt) | Biztonsági öv rendszer — állapot nyilvántartás és logika |
 | [`nxn-autoseatbelt`](./nxn-autoseatbelt) | Automatikus biztonsági öv felcsatolása járműbe szállásnál |
 | [`nxn-seatbelt-extras`](./nxn-seatbelt-extras) | Kiegészítők az `nxn-seatbelt` scripthez |
@@ -86,7 +86,6 @@
 ```cfg
 # Core
 ensure nxn-database
-ensure nxn-engine
 
 # UI / HUD
 ensure nxn-loading
@@ -110,6 +109,7 @@ ensure nxn-shop
 ensure nxn-food
 
 # Járművek
+ensure nxn-engine
 ensure nxn-seatbelt
 ensure nxn-autoseatbelt
 ensure nxn-seatbelt-extras
@@ -120,7 +120,7 @@ ensure nxn-signs
 ensure nxn-npcconversation
 ```
 
-> ⚠️ Az `nxn-database` és `nxn-engine` resourceket mindig **elsőként** kell elindítani, mivel a többi script ezektől függ.
+> ⚠️ Az `nxn-database` resourcet mindig **elsőként** kell elindítani, mivel a többi script etől függ.
 
 ---
 
