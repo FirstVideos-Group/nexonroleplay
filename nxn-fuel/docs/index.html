@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-fuel – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:#5b6af0; --bg:#0e0f14; --surface:#16181f;
+            --border:#2a2d3a; --text:#e4e6f0; --muted:#6b6f85;
+            --success:#3ecf8e; --danger:#f05b5b; --warning:#f0b55b;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;line-height:1.7}
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;gap:14px}
+        header i{font-size:28px;color:var(--warning)}
+        header h1{font-size:22px;font-weight:700}
+        header span{color:var(--muted);font-size:13px;margin-left:10px}
+        main{max-width:920px;margin:40px auto;padding:0 24px 60px}
+        h2{font-size:17px;color:var(--accent);margin:36px 0 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        p{color:var(--muted);font-size:14px;margin-bottom:12px}
+        pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:13px;margin-bottom:16px}
+        code{color:var(--success)}
+        table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+        th{background:var(--surface);color:var(--accent);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
+        td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted)}
+        td:first-child{color:var(--text);font-family:monospace}
+        .flow-step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+        .flow-step:last-child{border-bottom:none}
+        .flow-num{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
+        .flow-text{font-size:13px}
+        .flow-text strong{color:var(--text)}
+        .tabs{display:flex;gap:4px}
+        .tab{padding:8px 18px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--muted)}
+        .tab.active{color:var(--text);background:#1e2030}
+        .tab-content{display:none;background:#1e2030;border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:16px;margin-bottom:20px}
+        .tab-content.active{display:block}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:4px;vertical-align:middle}
+        .req{background:rgba(240,91,91,.15);border:1px solid rgba(240,91,91,.3);color:var(--danger)}
+        .opt{background:rgba(240,181,91,.12);border:1px solid rgba(240,181,91,.3);color:var(--warning)}
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-petrol"></i>
+    <div><h1>nxn-fuel <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-fuel</strong> a Nexon RP üzemanyag-kezelő rendszere. Fogyasztásszimulációt, DB-perzisztenciát és HUD-integrációt biztosít. <strong>Nincs NUI</strong> – csak adatot kezel és pushol a HUD scriptek felé. A töltőállomásokat és a fizikai tankálást a jövőbeli <code>nxn-gasstation</code> script kezeli.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-fuel/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── docs/
+    └── index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.PollInterval</td><td>2000</td><td>Fogyasztás frissítési intervallum (ms)</td></tr>
+        <tr><td>Config.DefaultTankSize</td><td>65.0</td><td>Tankmeret fallback (liter)</td></tr>
+        <tr><td>Config.BaseConsumption</td><td>0.003</td><td>Alap fogyasztás (liter/mp)</td></tr>
+        <tr><td>Config.SpeedMultiplier</td><td>0.0001</td><td>Sebesség-arányos fogyasztás (liter/km/h)</td></tr>
+        <tr><td>Config.IdleConsumption</td><td>0.0008</td><td>Alapjárati fogyasztás (liter/mp)</td></tr>
+        <tr><td>Config.StallOnEmpty</td><td>true</td><td>Motor leállítása üres tanknál</td></tr>
+        <tr><td>Config.LowFuelThreshold</td><td>15.0</td><td>Alacsony üzemanyag küszöb (%)</td></tr>
+        <tr><td>Config.LowFuelNotifyCooldown</td><td>60</td><td>Figyelmeztetés cooldown (mp)</td></tr>
+        <tr><td>Config.SaveInterval</td><td>30000</td><td>DB mentési intervallum (ms)</td></tr>
+        <tr><td>Config.DefaultFuelOnSpawn</td><td>'random'</td><td>'random' | 'full' | 'last'</td></tr>
+        <tr><td>Config.SpawnFuelMin</td><td>30.0</td><td>Random spawn min (%)</td></tr>
+        <tr><td>Config.SpawnFuelMax</td><td>90.0</td><td>Random spawn max (%)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Param.</th><th>Return</th><th>Leírás</th></tr>
+        <tr><td>getFuel(plate)</td><td>string</td><td>float</td><td>Aktuális üzemanyagszint (0–100)</td></tr>
+        <tr><td>setFuel(plate, amount)</td><td>string, float</td><td>boolean</td><td>Szint beállítása (clamp 0–100)</td></tr>
+        <tr><td>addFuel(plate, amount)</td><td>string, float</td><td>float</td><td>Üzemanyag hozzáadása</td></tr>
+        <tr><td>removeFuel(plate, amount)</td><td>string, float</td><td>float</td><td>Üzemanyag elvonása</td></tr>
+        <tr><td>getTankSize(plate)</td><td>string</td><td>float</td><td>Tank kapacitás (liter)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>getCurrentFuel()</td><td>Aktuális üzemanyagszint vagy nil ha nem vezet</td></tr>
+        <tr><td>isFuelLow()</td><td>true ha szint &lt; Config.LowFuelThreshold</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events &amp; lokális eventek</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-fuel:server:requestFuel</td><td>C → S</td><td>Üzemanyagszint lekérés járműbe szálláskor</td></tr>
+        <tr><td>nxn-fuel:server:saveFuel</td><td>C → S</td><td>Szint mentése DB-be (throttle-zott)</td></tr>
+        <tr><td>nxn-fuel:client:sync</td><td>S → C</td><td>Szint szinkron (requestFuel válasz / addFuel push)</td></tr>
+        <tr><td>nxn-fuel:updated</td><td>lokális</td><td>Értékváltozás – nxn-vehicle-hud és nxn-hud figyeli</td></tr>
+        <tr><td>nxn-fuel:low</td><td>lokális</td><td>Alacsony üzemanyag küszöb elérve</td></tr>
+        <tr><td>nxn-fuel:empty</td><td>lokális</td><td>Tank üres – nxn-engine motor leállítás</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Kódpéldák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="sw(this,'e1')">Szerver (nxn-gasstation)</div>
+        <div class="tab" onclick="sw(this,'e2')">Kliens</div>
+        <div class="tab" onclick="sw(this,'e3')">nxn-vehicle-hud integráció</div>
+    </div>
+    <div class="tab-content active" id="e1"><pre><code>-- nxn-gasstation/server.lua (jövőbeli script)
+RegisterNetEvent('nxn-gasstation:server:refuel', function(plate, amount)
+    local src = source
+    local newLevel = exports['nxn-fuel']:addFuel(plate, amount)
+    TriggerClientEvent('nxn-fuel:client:sync', src, { plate=plate, level=newLevel })
+end)
+
+-- Tank méret lekérdezés
+local tankSize = exports['nxn-fuel']:getTankSize('ABC-123')
+
+-- Szint lekérdezés/beállítás
+local level = exports['nxn-fuel']:getFuel('ABC-123')
+exports['nxn-fuel']:setFuel('ABC-123', 75.0)</code></pre></div>
+    <div class="tab-content" id="e2"><pre><code>-- Aktuális szint (nil ha nem vezet)
+local level = exports['nxn-fuel']:getCurrentFuel()
+
+-- Alacsony-e?
+if exports['nxn-fuel']:isFuelLow() then
+    print('Alacsony üzemanyag!')
+end
+
+-- Üres tank figyelés
+AddEventHandler('nxn-fuel:empty', function(plate)
+    print('Tank üres: ' .. tostring(plate))
+end)</code></pre></div>
+    <div class="tab-content" id="e3"><pre><code>-- nxn-vehicle-hud automatikusan kap push-t az nxn-fuel:updated eventre:
+-- Az nxn-fuel maga hívja:
+--   exports['nxn-vehicle-hud']:setModule('fuel', true/false)
+--   exports['nxn-vehicle-hud']:setFuel(level)
+--   exports['nxn-hud']:updateModuleData('fuel', { value=math.floor(level), unit='L%' })
+-- Nem kell külön figyelni az nxn-vehicle-hud részéről!</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-link-chain"></i> Fogyasztási képlet</h2>
+    <pre><code>-- Mozgás közben:
+consumption = (Config.BaseConsumption + speed_kmh * Config.SpeedMultiplier) * elapsed_sec
+
+-- Alapjáraton (speed < 2 km/h):
+consumption = Config.IdleConsumption * elapsed_sec
+
+-- Pl. 80 km/h-n, 2 másodpercenként:
+-- (0.003 + 80 * 0.0001) * 2 = (0.003 + 0.008) * 2 = 0.022 liter / tick</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-shield-check"></i> Adatfolyam</h2>
+    <div>
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Járműbe szállás</strong><span> – requestFuel szerver event, HUD modul megjelenítés</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Szerver válasz</strong><span> – DB SELECT + client:sync visszaküldés</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Fogyasztási loop</strong><span> – PollInterval ms-onként, sebességarányos számítás</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>HUD push</strong><span> – ≥0.1L változásnál setFuel() + updateModuleData() hívás</span></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Low fuel</strong><span> – &lt;15% esetén nxn-notify warning (60mp cooldown)</span></div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>Empty</strong><span> – nxn-engine:forceOff vagy natív SetVehicleEngineOn(false)</span></div></div>
+        <div class="flow-step"><div class="flow-num">7</div><div class="flow-text"><strong>DB mentés</strong><span> – 30mp-onként throttle-zva + kiszálláskor azonnali mentés</span></div></div>
+    </div>
+</main>
+<script>
+function sw(el,id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
