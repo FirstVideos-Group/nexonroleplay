@@ -8,9 +8,28 @@ const npcIconEl    = document.getElementById('npc-icon');
 const optionsEl    = document.getElementById('npc-options');
 const responseWrap = document.getElementById('npc-response-wrap');
 const responseEl   = document.getElementById('npc-response');
+const interactHint = document.getElementById('nxn-interact-hint');
+const hintKeyEl    = document.getElementById('hint-key');
+const hintLabelEl  = document.getElementById('hint-label');
 
 let currentNpcId   = null;
 let currentOptions = [];
+
+// ── Interact hint ──────────────────────────────────────────────────
+
+function showHint(data) {
+    hintKeyEl.textContent   = data.key   || 'E';
+    hintLabelEl.textContent = data.label || 'NPC';
+    // Animáció újraindítása
+    interactHint.classList.remove('hidden');
+    interactHint.style.animation = 'none';
+    void interactHint.offsetWidth;
+    interactHint.style.animation = 'hintSlideUp .2s ease forwards';
+}
+
+function hideHint() {
+    interactHint.classList.add('hidden');
+}
 
 // ── Megnyitás ──────────────────────────────────────────────────
 
@@ -22,6 +41,7 @@ function openUI(data) {
     responseWrap.style.display = 'none';
     responseEl.textContent     = '';
 
+    hideHint();
     renderOptions(currentOptions);
     overlay.classList.remove('hidden');
 }
@@ -104,7 +124,7 @@ function showResponse(text) {
     responseEl.textContent = text;
     responseWrap.style.display = '';
     responseWrap.style.animation = 'none';
-    void responseWrap.offsetWidth;  // reflow
+    void responseWrap.offsetWidth;
     responseWrap.style.animation = 'npcFadeIn .2s ease forwards';
 }
 
@@ -131,9 +151,11 @@ window.addEventListener('message', function(e) {
     const d = e.data;
     if (!d || !d.action) return;
     switch (d.action) {
-        case 'open':            openUI(d);              break;
-        case 'close':           closeUI();              break;
-        case 'showResponse':    showResponse(d.response); break;
+        case 'open':            openUI(d);                   break;
+        case 'close':           closeUI();                   break;
+        case 'showResponse':    showResponse(d.response);    break;
         case 'updateDialogues': updateDialogues(d.dialogues); break;
+        case 'showHint':        showHint(d);                 break;
+        case 'hideHint':        hideHint();                  break;
     }
 });

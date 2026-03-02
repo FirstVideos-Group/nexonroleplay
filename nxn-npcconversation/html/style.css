@@ -28,7 +28,73 @@ html, body {
     pointer-events: none;
 }
 
-/* ── Overlay pozició ────────────────────────────────────────── */
+/* ── Interact hint ──────────────────────────────────────────── */
+
+#nxn-interact-hint {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-left: 3px solid var(--nxn-accent);
+    border-radius: var(--nxn-radius);
+    padding: 10px 16px 10px 12px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: hintSlideUp .2s ease forwards;
+}
+
+#nxn-interact-hint.hidden {
+    display: none;
+}
+
+.hint-key {
+    min-width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--nxn-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    letter-spacing: .02em;
+    flex-shrink: 0;
+    padding: 0 6px;
+}
+
+.hint-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.hint-action {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--nxn-accent);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.hint-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nxn-text);
+}
+
+.hint-icon {
+    font-size: 20px;
+    color: var(--nxn-muted);
+    margin-left: auto;
+}
+
+/* ── Overlay pozicio ────────────────────────────────────────── */
 
 #npc-overlay {
     position: fixed;
@@ -194,7 +260,7 @@ html, body {
     letter-spacing: .04em;
 }
 
-/* ── Hint ───────────────────────────────────────────────────── */
+/* ── Alsó hint (ESC bezárás) ───────────────────────────────── */
 
 .npc-hint {
     text-align: center;
@@ -230,4 +296,9 @@ html, body {
 @keyframes npcFadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
+}
+
+@keyframes hintSlideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }

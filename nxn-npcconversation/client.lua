@@ -57,16 +57,12 @@ local function SpawnNPC(npcId, cfg)
     while not HasModelLoaded(modelHash) do
         Wait(100)
         t = t + 1
-        -- Timeout 150 iter x 100ms = 15 masodperc.
-        -- Korabban 50 iter (5s) volt, ami lassabb klienseken / nagy szerveren
-        -- nem volt eleg a GTA streaming engine-nek, ezert dobta a WARN-t.
         if t > 150 or resourceStopped then
             if t > 150 then NXN.NPC.Warn(('Model betoltesi timeout: %s'):format(cfg.model)) end
             return
         end
     end
 
-    -- #87: extra ellenorzes a Wait utan
     if resourceStopped then return end
 
     local c   = cfg.coords
@@ -138,6 +134,9 @@ local function OpenConversation(npcId)
     isUIOpen     = true
     SetNuiFocus(true, true)
 
+    -- Hint elrejtese UI megnyitaskor
+    NUISend('hideHint', {})
+
     local ped    = PlayerPedId()
     local coords = GetEntityCoords(ped)
     TaskTurnPedToFaceCoord(entry.ped, coords.x, coords.y, coords.z, -1)
@@ -208,7 +207,8 @@ end)
 -- ── Kozelitesi interakcios loop ─────────────────────────────────────────────
 
 -- #86: Proximity check kulonvalasztva az input check-tol
-local nearestNPC = nil
+local nearestNPC  = nil
+local hintVisible = false  -- NUI hint aktualis allapota
 
 CreateThread(function()
     while true do
@@ -241,19 +241,25 @@ CreateThread(function()
         if resourceStopped then return end
 
         local nearest = nearestNPC
-        if nearest and not isUIOpen then
-            if nearest.dist < Config.InteractDistance then
-                local txt = ('[%s] Beszelgetes: %s'):format(
-                    Config.InteractKeyLabel,
-                    nearest.entry.config.label
-                )
-                SetTextComponentFormat('STRING')
-                AddTextComponentString(txt)
-                DisplayHelpTextFromStringLabel(0, false, true, -1)
 
-                if IsControlJustReleased(0, Config.InteractKey) then
-                    OpenConversation(nearest.id)
-                end
+        if nearest and not isUIOpen and nearest.dist < Config.InteractDistance then
+            -- NXN NUI hint megjelenítése GTA natív helyett
+            if not hintVisible then
+                NUISend('showHint', {
+                    key   = Config.InteractKeyLabel,
+                    label = nearest.entry.config.label,
+                })
+                hintVisible = true
+            end
+
+            if IsControlJustReleased(0, Config.InteractKey) then
+                OpenConversation(nearest.id)
+            end
+        else
+            -- Hint elrejtése ha nincs közel NPC vagy UI nyitva
+            if hintVisible then
+                NUISend('hideHint', {})
+                hintVisible = false
             end
         end
 
@@ -267,8 +273,6 @@ end)
 
 AddEventHandler('playerSpawned', function()
     NXN.NPC.Log('playerSpawned – NPCek inicializalasa')
-    -- 3000ms delay: a GTA streaming engine-nek tobb idot adunk inicializalodni,
-    -- igy elkeruljuk a korai model-betoltesi timeoutokat (korabban 1000ms volt).
     Wait(3000)
     for npcId, cfg in pairs(Config.NPCs) do
         if cfg.enabled ~= false then
