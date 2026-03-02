@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-trunk</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="nxn-trunk-panel" class="trunk-panel hidden">
+
+    <!-- Fejléc -->
+    <div class="trunk-header">
+        <div class="trunk-title">
+            <i class="hgi hgi-stroke hgi-car-01"></i>
+            <span>Csomagtartó</span>
+            <span class="trunk-plate" id="trunk-plate"></span>
+        </div>
+        <button class="nxn-btn-icon" id="btn-close">
+            <i class="hgi hgi-stroke hgi-cancel-01"></i>
+        </button>
+    </div>
+
+    <!-- Két-paneles nézet -->
+    <div class="trunk-body">
+
+        <!-- Bal panel: Csomagtartó -->
+        <div class="trunk-col">
+            <div class="col-header">
+                <span><i class="hgi hgi-stroke hgi-briefcase-01"></i> Csomagtartó</span>
+                <span class="weight-badge" id="trunk-weight">0 / 0 kg</span>
+            </div>
+            <div class="weight-bar-wrap">
+                <div class="weight-bar" id="trunk-weight-bar"></div>
+            </div>
+            <div class="item-grid" id="trunk-grid"></div>
+            <button class="nxn-btn move-btn" id="btn-move-all-to-inv" title="Mindent inventoryba">
+                <i class="hgi hgi-stroke hgi-arrow-right-02"></i> Mindent átrak
+            </button>
+        </div>
+
+        <!-- Elválasztó -->
+        <div class="trunk-divider"></div>
+
+        <!-- Jobb panel: Hátizsak / Inventory -->
+        <div class="trunk-col">
+            <div class="col-header">
+                <span><i class="hgi hgi-stroke hgi-backpack-01"></i> Hátizsak</span>
+                <span class="weight-badge" id="inv-weight">0 / 30 kg</span>
+            </div>
+            <div class="weight-bar-wrap">
+                <div class="weight-bar" id="inv-weight-bar"></div>
+            </div>
+            <div class="item-grid" id="inv-grid"></div>
+            <button class="nxn-btn move-btn" id="btn-move-all-to-trunk" title="Mindent csomagtartóba">
+                <i class="hgi hgi-stroke hgi-arrow-left-02"></i> Mindent átrak
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Visszajelzés -->
+    <div id="trunk-feedback" class="trunk-feedback hidden"></div>
+
+    <!-- Item menü (jobb-klikk) -->
+    <div id="item-ctx-menu" class="ctx-menu hidden">
+        <button id="ctx-move" class="ctx-item"></button>
+        <button id="ctx-cancel" class="ctx-item danger">Mégse</button>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

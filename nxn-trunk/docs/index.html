@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-trunk – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span.sub { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 880px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab  { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .dep-badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+        .dep-req  { background: #f05b5b22; color: var(--danger);  border: 1px solid #f05b5b44; }
+        .dep-opt  { background: #5b6af022; color: var(--accent);  border: 1px solid #5b6af044; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-car-01"></i>
+    <div>
+        <h1>nxn-trunk <span class="sub">v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-trunk</strong> egy jármű csomagtartó-kezelő script, amely az <code>nxn-inventory</code> rendszerére épít. Két-paneles NUI felületen teszi lehetővé az inventory â csomagtartó átmozgatást, járműtípusonként állítható kapacitással.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-trunk/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── html/
+    ├── index.html
+    ├── style.css
+    └── app.js</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-plug-02"></i> Függőségek</h2>
+    <p>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-inventory</code> – addItem, removeItem, hasItem, getInventory, syncInventory<br/>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-database</code> – registerTable, nxn_trunks tábla<br/>
+        <span class="dep-badge dep-req">Kötelező</span> <code>nxn-notify</code> – visszajelzések<br/>
+        <span class="dep-badge dep-opt">Opcionális</span> <code>nxn-keys / nxn-engine</code> – zár-ellenőrzés (jövőbeli integráció)
+    </p>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.DefaultMaxWeight</td><td>50.0</td><td>Alap kapacitás ismertlen járműosztálynál (kg)</td></tr>
+        <tr><td>Config.TrunkSizes</td><td>osztályonként</td><td>GetVehicleClass() alapján beállított max súly</td></tr>
+        <tr><td>Config.InteractDistance</td><td>2.5</td><td>Interakció hatósugara méterben</td></tr>
+        <tr><td>Config.OpenKey</td><td>47 (G)</td><td>GTA control code a csomagtartó nyitásához</td></tr>
+        <tr><td>Config.AllowMotorcycleTrunk</td><td>false</td><td>Motorkerékpár csomagtartó engedélyezése</td></tr>
+        <tr><td>Config.RequireNetworkVehicle</td><td>true</td><td>NPC járművek tiltása</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getTrunk(plate)</td><td>string</td><td>table|nil</td><td>Csomagtartó tartalmának visszaadása</td></tr>
+        <tr><td>addToTrunk(plate, itemName, count, weight?)</td><td>str, str, int, float?</td><td>bool, string</td><td>Item hozzáadása súlyellenorzéssel</td></tr>
+        <tr><td>removeFromTrunk(plate, itemName, count)</td><td>str, str, int</td><td>boolean</td><td>Item eltávolítása</td></tr>
+        <tr><td>hasTrunkItem(plate, itemName, count)</td><td>str, str, int</td><td>boolean</td><td>Van-e elég item a trunkban</td></tr>
+        <tr><td>getTrunkWeight(plate)</td><td>string</td><td>number</td><td>Jelenlegi súly (kg)</td></tr>
+        <tr><td>clearTrunk(plate)</td><td>string</td><td>boolean</td><td>Csomagtartó kiürítése</td></tr>
+        <tr><td>setMaxWeight(plate, weight)</td><td>string, number</td><td>boolean</td><td>Max súly beállítása</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>openTrunk(vehicle)</td><td>Csomagtartó megnyitása programmatikusan (entity handle)</td></tr>
+        <tr><td>closeTrunk()</td><td>Panel bezárása</td></tr>
+        <tr><td>isOpen()</td><td>Nyitva van-e a trunk panel</td></tr>
+        <tr><td>getNearbyVehicle()</td><td>Legközelebbi jármű entity a jármű hátánál</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Szerver – trunk adat</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Szerver – item mozgás</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Kliens – panel</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Szerver – belső hook</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- Trunk tartalmának lekérése
+local trunk = exports['nxn-trunk']:getTrunk('ABC123')
+if trunk then
+    for _, item in ipairs(trunk.items) do
+        print(item.name, item.count, item.weight)
+    end
+end
+
+-- Jelenlegi súly
+local w = exports['nxn-trunk']:getTrunkWeight('ABC123')
+print('Trunk súly: ' .. w .. ' kg')</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Item hozzáadása csomagtartóhoz (pl. loot spawnalnál)
+local ok, msg = exports['nxn-trunk']:addToTrunk('ABC123', 'water_bottle', 3, 0.5)
+if not ok then print('Hiba: ' .. msg) end
+
+-- Item eltávolítása
+exports['nxn-trunk']:removeFromTrunk('ABC123', 'water_bottle', 1)
+
+-- Van-e benne?
+if exports['nxn-trunk']:hasTrunkItem('ABC123', 'bandage', 2) then
+    print('Van legalább 2 kötöszer')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Csomagtartó megnyitása entity handle-lel
+local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+exports['nxn-trunk']:openTrunk(vehicle)
+
+-- Bezárás
+exports['nxn-trunk']:closeTrunk()
+
+-- Legközelebbi jármű hátsó részénél
+local v = exports['nxn-trunk']:getNearbyVehicle()
+if v then print('Közeli jármű: ' .. v) end</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- Figyeljél az item mozgás esemire más scriptekből:
+AddEventHandler('nxn-trunk:server:itemMoved', function(src, plate, itemName, count, direction)
+    print(('Játékos %d átrakhott: %d x %s (%s) plate=%s'):format(
+        src, count, itemName, direction, plate
+    ))
+end)
+
+-- Trunk megnyitás event:
+AddEventHandler('nxn-trunk:server:opened', function(src, plate)
+    print(('Játékos %d megnyitotta: %s'):format(src, plate))
+end)</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Paraméterek</th></tr>
+        <tr><td>nxn-trunk:server:open</td><td>Client → Server</td><td>plate, vehicleClass, invItemDefs</td></tr>
+        <tr><td>nxn-trunk:server:close</td><td>Client → Server</td><td>plate</td></tr>
+        <tr><td>nxn-trunk:server:moveToInventory</td><td>Client → Server</td><td>plate, itemName, count, itemWeight</td></tr>
+        <tr><td>nxn-trunk:server:moveToTrunk</td><td>Client → Server</td><td>plate, itemName, count, itemWeight</td></tr>
+        <tr><td>nxn-trunk:client:sync</td><td>Server → Client</td><td>{ plate, items, maxWeight, currentWeight }</td></tr>
+        <tr><td>nxn-trunk:client:moveResult</td><td>Server → Client</td><td>{ ok, message, direction }</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-database-02"></i> Adatbázis tábla</h2>
+    <pre><code>CREATE TABLE IF NOT EXISTS `nxn_trunks` (
+    `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `plate`      VARCHAR(16)  NOT NULL UNIQUE,
+    `items`      JSON         NOT NULL DEFAULT '[]',
+    `max_weight` FLOAT        NOT NULL DEFAULT 50.0,
+    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_plate` (`plate`)
+);</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th></tr>
+        <tr><td>nxn-inventory</td><td>addItem, removeItem, hasItem, syncInventory (szerver); getLocalInventory, getLocalWeight (kliens)</td></tr>
+        <tr><td>nxn-database</td><td>registerTable (nxn_trunks tábla)</td></tr>
+        <tr><td>nxn-notify</td><td>nxn-notify:client:show visszajelzések</td></tr>
+        <tr><td>nxn-keys / nxn-engine</td><td>Jövőbeli zár-integráció (GetResourceState guard előkészítve)</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
