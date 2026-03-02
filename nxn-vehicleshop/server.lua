@@ -81,7 +81,6 @@ RegisterNetEvent('nxn-vehicleshop:server:buy', function(model, dealerId, useFina
         local total = math.floor(price * (1 + Config.Financing.InterestRate * (mths / 12)))
         local monthly = math.ceil(total / mths)
 
-        -- Elég pénz az első részlethez
         local balance = exports['nxn-finance']:getMoney(src, 'bank')
         if balance < monthly then
             Notify(src, ('Nincs elég pénz az első részlethez! (Szükséges: $%d)'):format(monthly), 'danger')
@@ -122,7 +121,6 @@ RegisterNetEvent('nxn-vehicleshop:server:buy', function(model, dealerId, useFina
 
     -- Jármű regisztrálása
     if GetResourceState('nxn-vehicles') ~= 'started' then
-        -- Visszatérítés ha a vehicles script nem fut
         exports['nxn-finance']:addMoney(src, price, 'bank', 'Visszatérítés – nxn-vehicles nem fut', 'nxn-vehicleshop')
         Notify(src, 'Jármű rendszer nem elérhető!', 'danger')
         return
@@ -154,6 +152,18 @@ RegisterNetEvent('nxn-vehicleshop:server:buy', function(model, dealerId, useFina
 
     TriggerEvent('nxn-vehicleshop:server:purchased', src, model, plate, item.price)
     NXN.VehicleShop.Info(('Vásárlás: src=%d model=%s plate=%s price=%d'):format(src, model, plate, item.price))
+end)
+
+-- ── Egyenleg lekérés (UI-hoz) ────────────────────────────────
+
+RegisterNetEvent('nxn-vehicleshop:server:requestBalance', function()
+    local src = source
+    if GetResourceState('nxn-finance') ~= 'started' then
+        TriggerClientEvent('nxn-vehicleshop:client:balanceUpdate', src, { bank = 0, cash = 0 })
+        return
+    end
+    local balances = exports['nxn-finance']:getBalances(src)
+    TriggerClientEvent('nxn-vehicleshop:client:balanceUpdate', src, balances)
 end)
 
 -- ── Teszt-menet jármű törlés (disconnect) ───────────────────
