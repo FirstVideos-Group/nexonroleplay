@@ -2,19 +2,17 @@
 --  nxn-keys | server.lua
 -- ============================================================
 
--- ── Segédfüggvények ──────────────────────────────────────────
+-- ── Segédfüggvények ──────────────────────────────────────────────
 
 local function Notify(src, msg, ntype)
     if GetResourceState('nxn-notify') ~= 'started' then return end
     exports['nxn-notify']:notify(src, msg, ntype or 'info')
 end
 
+-- Az identifier kezelés kizárólag nxn-database feladata.
+-- nxn-identity nem exportal getIdentifier-t, csak karakter adatokat.
 local function GetIdentifier(src)
     if GetResourceState('nxn-database') ~= 'started' then return nil end
-    -- nxn-identity előnyben, fallback: nxn-database
-    if GetResourceState('nxn-identity') == 'started' then
-        return exports['nxn-identity']:getIdentifier(src)
-    end
     return exports['nxn-database']:getIdentifier(src)
 end
 
@@ -49,7 +47,7 @@ AddEventHandler('onResourceStart', function(res)
     end)
 end)
 
--- ── Szerver exportok ─────────────────────────────────────────
+-- ── Szerver exportok ────────────────────────────────────────────
 
 --- Kulcs adása játékosnak (DB insert + kliens cache frissítés)
 ---@param src   integer  játékos server source
@@ -71,7 +69,6 @@ exports('giveKey', function(src, plate, isOwner)
     )
     if ok then
         NXN.Keys.Log(('giveKey: src=%d plate=%s owner=%s'):format(src, plate, tostring(isOwner)))
-        -- Cache frissítés a kliensnek
         local keys = exports['nxn-keys']:getKeys(src)
         TriggerClientEvent('nxn-keys:client:syncKeys', src, keys)
         return true
@@ -119,7 +116,7 @@ exports('hasKey', function(src, plate)
     return row ~= nil
 end)
 
---- Játékos összes kulcsa (jármű adatokkal bővítve ha nxn-vehicles férhethető)
+--- Játékos összes kulcsa (jármű adatokkal bővítve ha nxn-vehicles férhető)
 ---@param src integer
 ---@return table[]
 exports('getKeys', function(src)
@@ -137,7 +134,6 @@ exports('getKeys', function(src)
             label    = nil,
             model    = nil,
         }
-        -- Jármű adatok hozzáadva ha nxn-vehicles fut
         if GetResourceState('nxn-vehicles') == 'started' then
             local veh = exports['nxn-vehicles']:getVehicle(row.plate)
             if veh then
@@ -156,12 +152,10 @@ end)
 exports('revokeAllKeys', function(plate)
     plate = NXN.Keys.NormalizePlate(plate)
     if not ValidatePlate(plate) then return false end
-    -- Kulcstulajdonosok értesítése mielőtt törlünk
     local holders = exports['nxn-keys']:getKeyHolders(plate)
     MySQL.update.await(
         'DELETE FROM `nxn_vehicle_keys` WHERE plate = ?', { plate }
     )
-    -- Online játékosok cache frissítése
     for _, h in ipairs(holders) do
         for _, pid in ipairs(GetPlayers()) do
             local id = GetIdentifier(tonumber(pid))
@@ -196,16 +190,14 @@ exports('getKeyHolders', function(plate)
     return result
 end)
 
--- ── Net eventek (szerver) ────────────────────────────────────
+-- ── Net eventek (szerver) ──────────────────────────────────────────
 
--- Kulcslista kérés
 RegisterNetEvent('nxn-keys:server:getKeys', function()
     local src  = source
     local keys = exports['nxn-keys']:getKeys(src)
     TriggerClientEvent('nxn-keys:client:syncKeys', src, keys)
 end)
 
--- Zárolás
 RegisterNetEvent('nxn-keys:server:lock', function(plate)
     local src = source
     plate = NXN.Keys.NormalizePlate(plate)
@@ -217,11 +209,8 @@ RegisterNetEvent('nxn-keys:server:lock', function(plate)
         return
     end
 
-    -- nxn-engine setLocked – a kliens oldali engine a lock állapotot kezeli
-    -- Szerver oldalon broadcastolunk minden kulcstulajdonosnak
     TriggerClientEvent('nxn-keys:client:lockResult', src, { ok = true, plate = plate, locked = true })
 
-    -- Értesítés minden kulcstulajdonosnak
     local holders = exports['nxn-keys']:getKeyHolders(plate)
     for _, h in ipairs(holders) do
         for _, pid in ipairs(GetPlayers()) do
@@ -236,7 +225,6 @@ RegisterNetEvent('nxn-keys:server:lock', function(plate)
     NXN.Keys.Log(('lock: src=%d plate=%s'):format(src, plate))
 end)
 
--- Nyitás
 RegisterNetEvent('nxn-keys:server:unlock', function(plate)
     local src = source
     plate = NXN.Keys.NormalizePlate(plate)
@@ -264,7 +252,6 @@ RegisterNetEvent('nxn-keys:server:unlock', function(plate)
     NXN.Keys.Log(('unlock: src=%d plate=%s'):format(src, plate))
 end)
 
--- Kulcsátadás
 RegisterNetEvent('nxn-keys:server:giveKey', function(targetSrc, plate)
     local src = source
     plate = NXN.Keys.NormalizePlate(plate)
@@ -272,13 +259,11 @@ RegisterNetEvent('nxn-keys:server:giveKey', function(targetSrc, plate)
     targetSrc = tonumber(targetSrc)
     if not targetSrc or targetSrc == src then return end
 
-    -- Biztonság: küldőnek legyen kulcsa
     if not exports['nxn-keys']:hasKey(src, plate) then
         Notify(src, 'Nincs kulcsod ehhez a járműhöz!', 'danger')
         return
     end
 
-    -- Csak tulajdonos oszthat (ha config engedélyezve)
     if Config.OnlyOwnerCanShare then
         if GetResourceState('nxn-vehicles') == 'started' then
             if not exports['nxn-vehicles']:isOwner(src, plate) then
@@ -288,19 +273,17 @@ RegisterNetEvent('nxn-keys:server:giveKey', function(targetSrc, plate)
         end
     end
 
-    -- Célpont már rendelkezik kulccsal?
     if exports['nxn-keys']:hasKey(targetSrc, plate) then
         Notify(src, 'Ennek a játékosnak már van kulcsa ehhez a járműhöz!', 'warning')
         return
     end
 
-    -- Közelség ellenőrzés szerveroldalon
     local srcPed    = GetPlayerPed(src)
     local tgtPed    = GetPlayerPed(targetSrc)
     local sx, sy, sz = GetEntityCoords(srcPed)
     local tx, ty, tz = GetEntityCoords(tgtPed)
     local dist = #(vector3(sx, sy, sz) - vector3(tx, ty, tz))
-    if dist > (Config.GiveKeyDistance * 2 + 2.0) then   -- 2m tolerancia
+    if dist > (Config.GiveKeyDistance * 2 + 2.0) then
         Notify(src, 'Túl messze vagy a célpont játékostól!', 'warning')
         return
     end
@@ -318,7 +301,6 @@ RegisterNetEvent('nxn-keys:server:giveKey', function(targetSrc, plate)
     NXN.Keys.Info(('giveKey: src=%d -> target=%d plate=%s'):format(src, targetSrc, plate))
 end)
 
--- Kulcsmegvonás (tulajdonos által)
 RegisterNetEvent('nxn-keys:server:removeKey', function(targetSrc, plate)
     local src = source
     plate = NXN.Keys.NormalizePlate(plate)
@@ -326,7 +308,6 @@ RegisterNetEvent('nxn-keys:server:removeKey', function(targetSrc, plate)
     targetSrc = tonumber(targetSrc)
     if not targetSrc then return end
 
-    -- Csak tulajdonos vonhat meg
     if GetResourceState('nxn-vehicles') == 'started' then
         if not exports['nxn-vehicles']:isOwner(src, plate) then
             Notify(src, 'Csak a jármű tulajdonosa vonhat meg kulcsot!', 'danger')
@@ -334,7 +315,6 @@ RegisterNetEvent('nxn-keys:server:removeKey', function(targetSrc, plate)
         end
     end
 
-    -- Tulajdonos kulcsa védett
     if GetResourceState('nxn-vehicles') == 'started' then
         if exports['nxn-vehicles']:isOwner(targetSrc, plate) then
             Notify(src, 'A tulajdonos kulcsát nem lehet megvonni!', 'danger')
@@ -351,7 +331,6 @@ RegisterNetEvent('nxn-keys:server:removeKey', function(targetSrc, plate)
     end
 end)
 
--- Kulcsértesítés fogadásakor kliens oldali cache kérés
 RegisterNetEvent('nxn-keys:server:requestSync', function()
     local src  = source
     local keys = exports['nxn-keys']:getKeys(src)
