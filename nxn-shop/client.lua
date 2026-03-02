@@ -5,7 +5,7 @@
 local isShopUIOpen = false
 local currentMode  = 'buy'  -- 'buy' | 'sell'
 
--- ── Segédfüggvény: nxn-npcconversation args kompatibilitás ───
+-- ── Segédfüggvény: nxn-npcconversation args kompatibilitás ───────
 -- Az nxn-npcconversation az args táblát egyben adja át az esemény
 -- első paramétereként, ezért szükséges a szétbontás.
 local function ResolveShopArgs(shopId, mode)
@@ -16,7 +16,7 @@ local function ResolveShopArgs(shopId, mode)
     return shopId, mode
 end
 
--- ── NPC regisztrálás ────────────────────────────────────────
+-- ── NPC regisztrálás ────────────────────────────────────────────
 
 AddEventHandler('onClientResourceStart', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
@@ -68,22 +68,20 @@ AddEventHandler('onClientResourceStop', function(resourceName)
     end
 end)
 
--- ── Shop megnyitás handler ───────────────────────────────────────
--- Az nxn-npcconversation TriggerEvent()-tel (lokális esemény) hívja meg
--- a dialógus event-jét, nem TriggerNetEvent()-tel. Korábban csak
--- RegisterNetEvent volt, ami a lokális TriggerEvent-et nem kapta el,
--- ezért shopId=nil értelemmel érkezett a WARN-hoz.
--- Megoldás: közös HandleOpenShop függvény, amit mind a lokális
--- AddEventHandler, mind a RegisterNetEvent meghív.
+-- ── Shop megnyitás handler ──────────────────────────────────────
+-- A kliens NEM ellenorzi Config.Shops-ban, hogy letezik-e a bolt.
+-- Ez az ellenorzes kizárólag a szerver feladata (GetShopDef),
+-- mert a runtimeShops (registerShop exporton hozzaadott boltok)
+-- csak szerver oldalon elerheto. Ha a kliens guard eldobja a
+-- kerest, a szerver sosem kapja meg -> nil valasz a vasarlas UI-ban.
 local function HandleOpenShop(shopId, mode)
     shopId, mode = ResolveShopArgs(shopId, mode)
-
-    local shop = Config.Shops[shopId]
-    if not shop then
-        NXN.Shop.Warn(('Ismeretlen bolt: %s'):format(tostring(shopId)))
+    if not shopId or shopId == '' then
+        NXN.Shop.Warn('HandleOpenShop: shopId hianyzik')
         return
     end
     currentMode = mode or 'buy'
+    NXN.Shop.Log(('HandleOpenShop: shopId=%s mode=%s'):format(shopId, currentMode))
     TriggerServerEvent('nxn-shop:server:requestShop', shopId, currentMode)
 end
 
@@ -112,7 +110,7 @@ RegisterNetEvent('nxn-shop:client:sellResult', function(ok, msg, newBalance)
     SendNUIMessage({ action = 'sellResult', ok = ok, msg = msg, newBalance = newBalance })
 end)
 
--- ── NUI callbacks ────────────────────────────────────────────
+-- ── NUI callbacks ──────────────────────────────────────────────
 
 RegisterNUICallback('closeShop', function(_, cb)
     isShopUIOpen = false
@@ -139,12 +137,13 @@ RegisterNetEvent('nxn-shop:client:inventoryData', function(invData)
     SendNUIMessage({ action = 'inventoryData', items = invData })
 end)
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ──────────────────────────────────────────────────
 
+-- openShop export: szintén nem ellenorzi Config.Shops-t,
+-- hogy runtime boltok is megnyithatók legyenek.
 exports('openShop', function(shopId, mode)
     shopId, mode = ResolveShopArgs(shopId, mode)
-    local shop = Config.Shops[shopId]
-    if not shop then return end
+    if not shopId or shopId == '' then return end
     TriggerServerEvent('nxn-shop:server:requestShop', shopId, mode or 'buy')
 end)
 
