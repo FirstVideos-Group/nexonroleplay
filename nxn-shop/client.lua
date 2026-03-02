@@ -5,6 +5,17 @@
 local isShopUIOpen = false
 local currentMode  = 'buy'  -- 'buy' | 'sell'
 
+-- ── Segédfüggvény: nxn-npcconversation args kompatibilitás ───
+-- Az nxn-npcconversation az args táblát egyben adja át az esemény
+-- első paramétereként, ezért szükséges a szétbontás.
+local function ResolveShopArgs(shopId, mode)
+    if type(shopId) == 'table' then
+        mode   = shopId.mode or mode
+        shopId = shopId.shopId
+    end
+    return shopId, mode
+end
+
 -- ── NPC regisztrálás ─────────────────────────────────────────
 
 AddEventHandler('onClientResourceStart', function(resourceName)
@@ -60,6 +71,8 @@ end)
 -- ── Net events ───────────────────────────────────────────────
 
 RegisterNetEvent('nxn-shop:client:openShop', function(shopId, mode)
+    shopId, mode = ResolveShopArgs(shopId, mode)
+
     local shop = Config.Shops[shopId]
     if not shop then
         NXN.Shop.Warn(('Ismeretlen bolt: %s'):format(tostring(shopId)))
@@ -120,6 +133,7 @@ end)
 -- ── Exportok ─────────────────────────────────────────────────
 
 exports('openShop', function(shopId, mode)
+    shopId, mode = ResolveShopArgs(shopId, mode)
     local shop = Config.Shops[shopId]
     if not shop then return end
     TriggerServerEvent('nxn-shop:server:requestShop', shopId, mode or 'buy')
