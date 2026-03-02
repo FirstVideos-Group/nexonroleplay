@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-cartheft – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+            --warning: #f0b55b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 920px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 17px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p  { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px; vertical-align: middle; }
+        .badge-req { background: rgba(240,91,91,.15);  border: 1px solid rgba(240,91,91,.3);  color: var(--danger); }
+        .badge-opt { background: rgba(240,181,91,.12); border: 1px solid rgba(240,181,91,.3); color: var(--warning); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .flow-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .flow-step:last-child { border-bottom: none; }
+        .flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+        .flow-text { font-size: 13px; }
+        .flow-text strong { color: var(--text); }
+        .flow-text span { color: var(--muted); }
+        .tabs { display: flex; gap: 4px; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; margin-bottom: 20px; }
+        .tab-content.active { display: block; }
+        .chain { display: flex; align-items: center; gap: 10px; padding: 14px 0; }
+        .chain-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; }
+        .chain-arrow { color: var(--accent); font-size: 20px; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-car-lock-01"></i>
+    <div><h1>nxn-cartheft <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-cartheft</strong> a Nexon RP szerver autófeltörési rendszere. Két interaktív minijátékot tartalmaz (lockpick és keypad/Simon Says), és szorosan integrálódik az <code>nxn-engine</code>, <code>nxn-keys</code> és <code>nxn-vehicles</code> scriptekkel.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-link-chain"></i> 2 lépéses autólopás folyamat</h2>
+    <div class="chain">
+        <div class="chain-box">🔓 nxn-cartheft<br><small style="color:var(--muted)">Fizikai behatolás</small></div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">🚗 Játékos belül<br><small style="color:var(--muted)">TaskEnterVehicle</small></div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">🔧 nxn-hotwire<br><small style="color:var(--muted)">Motor beindítás</small></div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-cartheft/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/
+    └── index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.DefaultMinigame</td><td>'lockpick'</td><td>'lockpick' | 'keypad' | 'random'</td></tr>
+        <tr><td>Config.InteractDistance</td><td>2.5</td><td>Max interakciós távolság (m)</td></tr>
+        <tr><td>Config.AttemptCooldown</td><td>30</td><td>Cooldown próbálkozások között (mp)</td></tr>
+        <tr><td>Config.MaxAttemptsPerVehicle</td><td>5</td><td>Max kísérlet járművenként (0=korlátlan)</td></tr>
+        <tr><td>Config.PoliceAlertChance</td><td>0.35</td><td>Rendőrségi riasztás esélye siker esetén</td></tr>
+        <tr><td>Config.PoliceAlertOnFail</td><td>0.15</td><td>Riasztás esélye kudarc esetén</td></tr>
+        <tr><td>Config.LogAttempts</td><td>true</td><td>DB logolás engedélyezése</td></tr>
+        <tr><td>Config.Lockpick.rounds</td><td>3</td><td>Hány zárt kell feltörni</td></tr>
+        <tr><td>Config.Lockpick.speed</td><td>1.2</td><td>Tű forgási sebesség multiplikátor</td></tr>
+        <tr><td>Config.Lockpick.successZone</td><td>15</td><td>Célzóna szélessége (fokban)</td></tr>
+        <tr><td>Config.Lockpick.timeLimit</td><td>10</td><td>Időlimit körönként (mp)</td></tr>
+        <tr><td>Config.Keypad.sequenceLength</td><td>5</td><td>Sorozat hossza</td></tr>
+        <tr><td>Config.Keypad.showTime</td><td>3000</td><td>Sorozat megjelenítési idő (ms)</td></tr>
+        <tr><td>Config.Keypad.inputTime</td><td>6000</td><td>Beviteli időlimit (ms)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Param.</th><th>Return</th><th>Leírás</th></tr>
+        <tr><td>isBeingBrokenInto(plate)</td><td>string</td><td>boolean</td><td>Folyamatban van-e épp feltörés?</td></tr>
+        <tr><td>getAttemptCount(plate, ident)</td><td>string, string</td><td>int</td><td>Hány kísérlet volt adott azonosítótól?</td></tr>
+        <tr><td>lockVehicleAgain(plate)</td><td>string</td><td>boolean</td><td>Visszazárja a járművet (rendőr/admin)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>startBreakIn(vehicleEntity)</td><td>Feltörési folyamat indítása külső scriptből</td></tr>
+        <tr><td>isBreakingIn()</td><td>Folyamatban van-e jelenleg feltörés</td></tr>
+        <tr><td>cancelBreakIn()</td><td>Aktív feltörés megszakítása</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-cartheft:server:startAttempt</td><td>C → S</td><td>Feltörési kísérlet indítása</td></tr>
+        <tr><td>nxn-cartheft:server:attemptResult</td><td>C → S</td><td>Kísérlet eredménye (siker/kudarc)</td></tr>
+        <tr><td>nxn-cartheft:client:attemptAllowed</td><td>S → C</td><td>Engedélyezési visszajelzés</td></tr>
+        <tr><td>nxn-cartheft:client:doUnlock</td><td>S → C</td><td>Jármű kinyitási parancs sikeres feltörés után</td></tr>
+        <tr><td>nxn-cartheft:client:forceLock</td><td>S → C</td><td>Visszazárás (rendőr/admin)</td></tr>
+        <tr><td>nxn-cartheft:server:vehicleBreached</td><td>Server event</td><td>Sikeres feltörés broadcast</td></tr>
+        <tr><td>nxn-cartheft:server:attemptLogged</td><td>Server event</td><td>Kísérlet logolva (nxn-police figyelheti)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Szerver (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Kliens (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t3')">nxn-police integráció</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- Folyamatban van-e feltörés egy adott járművön?
+if exports['nxn-cartheft']:isBeingBrokenInto('ABC-123') then
+    print('Feltörés folyamatban!')
+end
+
+-- Kísérletek száma
+local count = exports['nxn-cartheft']:getAttemptCount('ABC-123', identifier)
+
+-- Visszazárás (rendőr parancsra)
+exports['nxn-cartheft']:lockVehicleAgain('ABC-123')</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Feltörés indítása egy adott járművön
+local veh = GetClosestVehicle(...)  -- saját logika
+exports['nxn-cartheft']:startBreakIn(veh)
+
+-- Van-e aktív feltörés?
+if exports['nxn-cartheft']:isBreakingIn() then
+    print('Éppen feltör valamit')
+end
+
+-- Megszakítás
+exports['nxn-cartheft']:cancelBreakIn()</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- nxn-police/server.lua
+AddEventHandler('nxn-cartheft:server:attemptLogged', function(src, plate, success, coords)
+    if success then
+        TriggerClientEvent('nxn-police:client:alert', -1, {
+            type    = 'cartheft',
+            message = 'Járműfeltörés – rendszám: ' .. plate,
+            coords  = coords,
+        })
+    end
+end)</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-shield-check"></i> Biztonsági ellenőrzések</h2>
+    <div>
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Cooldown</strong><span> – AttemptCooldown másodperc várakozás próbálkozások között</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>nxn-keys:hasKey</strong><span> – ha van kulcsa, nem indulhat el a feltörés</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>nxn-vehicles:isOwner</strong><span> – saját járművet nem tör fel</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>isBeingBrokenInto</strong><span> – konkurens feltörés megakadályozása</span></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>MaxAttemptsPerVehicle</strong><span> – kísérletszám limit járművenként</span></div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>Közelség re-ellenőrzés</strong><span> – szerver oldali coords ellenőrzés</span></div></div>
+    </div>
+</main>
+<script>
+function switchTab(el, id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>

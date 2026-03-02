@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-cartheft</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="overlay" class="hidden">
+
+    <!-- Fejléc -->
+    <div id="header" class="ct-header">
+        <i class="hgi hgi-stroke hgi-car-lock-01"></i>
+        <span id="header-title">Jármű feltörése</span>
+        <span id="header-sub" class="ct-sub"></span>
+    </div>
+
+    <!-- ════════ LOCKPICK MINIJÁTÉK ════════ -->
+    <div id="mg-lockpick" class="minigame hidden">
+        <div class="lp-ring-wrap">
+            <svg id="lp-svg" viewBox="0 0 200 200" class="lp-svg">
+                <!-- Külső kör -->
+                <circle cx="100" cy="100" r="88" fill="none" stroke="#2a2d3a" stroke-width="16"/>
+                <!-- Célzóna arc (dinamikusan rajzolt JS-ből) -->
+                <path id="lp-zone" fill="none" stroke="#3ecf8e" stroke-width="16" stroke-linecap="round"/>
+                <!-- Mutató vonal -->
+                <line id="lp-needle" x1="100" y1="100" x2="100" y2="18"
+                      stroke="#e4e6f0" stroke-width="3" stroke-linecap="round"/>
+                <!-- Középpont -->
+                <circle cx="100" cy="100" r="8" fill="#5b6af0"/>
+            </svg>
+        </div>
+        <p class="ct-hint"><kbd>E</kbd> – Megállít</p>
+    </div>
+
+    <!-- ════════ KEYPAD MINIJÁTÉK ════════ -->
+    <div id="mg-keypad" class="minigame hidden">
+        <!-- Sorozat megjelenítés -->
+        <div id="kp-sequence" class="kp-sequence"></div>
+        <!-- Beviteli helyek -->
+        <div id="kp-input" class="kp-input"></div>
+        <!-- Gombok -->
+        <div id="kp-buttons" class="kp-buttons hidden"></div>
+        <p id="kp-hint" class="ct-hint">Jegyezd meg a sorozatot!</p>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="ct-timer-wrap">
+        <div id="ct-timer-bar" class="ct-timer-bar"></div>
+        <span id="ct-timer-label" class="ct-timer-label">10.0mp</span>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

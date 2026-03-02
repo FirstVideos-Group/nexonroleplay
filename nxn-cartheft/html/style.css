@@ -1,0 +1,224 @@
+/* ── Nexon Design System – nxn-cartheft ── */
+:root {
+    --nxn-bg:       #0e0f14cc;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-accent2:  #7b87ff;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   12px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: transparent;
+    font-family: var(--nxn-font);
+    color: var(--nxn-text);
+    overflow: hidden;
+    user-select: none;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hidden { display: none !important; }
+
+/* ── Fullscreen overlay ── */
+#overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    animation: ctFadeIn .25s ease;
+}
+
+/* ── Fejléc ── */
+.ct-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: .5px;
+}
+.ct-header i { color: var(--nxn-accent); font-size: 26px; }
+.ct-sub {
+    font-size: 14px;
+    color: var(--nxn-muted);
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+/* ── Minijáték konténer ── */
+.minigame {
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-width: 320px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+
+/* ── Lockpick ── */
+.lp-ring-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+.lp-svg {
+    width: 200px;
+    height: 200px;
+}
+
+/* ── Keypad ── */
+.kp-sequence {
+    display: flex;
+    gap: 10px;
+    min-height: 52px;
+    align-items: center;
+    justify-content: center;
+}
+.kp-sym {
+    width: 48px;
+    height: 48px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 8px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s;
+}
+.kp-sym.active {
+    background: rgba(91,106,240,.2);
+    border-color: var(--nxn-accent);
+}
+.kp-sym.correct {
+    background: rgba(62,207,142,.15);
+    border-color: var(--nxn-success);
+    color: var(--nxn-success);
+}
+.kp-sym.wrong {
+    background: rgba(240,91,91,.15);
+    border-color: var(--nxn-danger);
+    color: var(--nxn-danger);
+}
+
+.kp-input {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+.kp-slot {
+    width: 44px;
+    height: 44px;
+    background: var(--nxn-surface2);
+    border: 2px solid var(--nxn-border);
+    border-radius: 8px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s;
+}
+.kp-slot.filled  { border-color: var(--nxn-accent); }
+.kp-slot.correct { border-color: var(--nxn-success); color: var(--nxn-success); }
+.kp-slot.wrong   { border-color: var(--nxn-danger);  color: var(--nxn-danger);  }
+
+.kp-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+}
+.kp-btn {
+    width: 52px;
+    height: 52px;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 8px;
+    font-size: 20px;
+    color: var(--nxn-text);
+    cursor: pointer;
+    transition: background .12s, border-color .12s, transform .08s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kp-btn:hover  { background: rgba(91,106,240,.15); border-color: var(--nxn-accent); }
+.kp-btn:active { transform: scale(.92); }
+
+/* ── Hint ── */
+.ct-hint {
+    font-size: 13px;
+    color: var(--nxn-muted);
+    letter-spacing: .3px;
+}
+.ct-hint kbd {
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 12px;
+    color: var(--nxn-text);
+    font-family: var(--nxn-font);
+}
+
+/* ── Timer ── */
+.ct-timer-wrap {
+    width: 320px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ct-timer-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--nxn-border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+.ct-timer-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: var(--pct, 100%);
+    background: var(--bar-color, var(--nxn-success));
+    border-radius: 6px;
+    transition: width .1s linear, background .3s;
+}
+.ct-timer-label {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    min-width: 42px;
+    text-align: right;
+}
+
+/* ── Flash animáció ── */
+.flash-success { animation: flashGreen .35s ease; }
+.flash-fail    { animation: flashRed   .35s ease, ctShake .35s ease; }
+
+@keyframes ctFadeIn   { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+@keyframes flashGreen { 0%,100% { box-shadow: none; } 50% { box-shadow: 0 0 30px 8px rgba(62,207,142,.5); } }
+@keyframes flashRed   { 0%,100% { box-shadow: none; } 50% { box-shadow: 0 0 30px 8px rgba(240,91,91,.5); } }
+@keyframes ctShake    { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
