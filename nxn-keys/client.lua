@@ -40,23 +40,17 @@ local function GetCacheAsList()
     return list
 end
 
--- ── nxn-engine auth callback regisztrálása ────────────────────────────
--- Retry mechanizmus: az nxn-engine client-oldali exportjai csak az erőforrás
--- teljes betöltése után elérhetőek. Az onClientResourceStart esemény
--- korábban tülhet el mint az export registráció megtörténik, ezért
--- rövid várakozást (Wait) alkalmazünk a biztonságos regisztrációhoz.
+-- ── nxn-engine auth callback regisztrálása ──────────────────────────
 
 local function RegisterEngineAuth()
     if GetResourceState('nxn-engine') ~= 'started' then
         NXN.Keys.Warn('RegisterEngineAuth: nxn-engine nem fut, kihagyva')
         return
     end
-    -- Retry: max 10x 200ms-onként várunk amig az export elérhető lesz
     CreateThread(function()
         local attempts = 0
         local maxAttempts = 10
         while attempts < maxAttempts do
-            -- Tesztelünk: sikeres-e a regisztráció?
             local ok = exports['nxn-engine']:registerStartAuthCallback(function(vehicleEntity)
                 local plate = NXN.Keys.NormalizePlate(GetVehicleNumberPlateText(vehicleEntity))
                 local has   = keyCache[plate] ~= nil
@@ -67,7 +61,6 @@ local function RegisterEngineAuth()
                 NXN.Keys.Info('Engine auth callback regisztrálva')
                 return
             end
-            -- Ha nem sikerült (false/nil visszatérési érték), újrapróbáljuk
             attempts = attempts + 1
             NXN.Keys.Warn(('RegisterEngineAuth: sikertelen próba %d/%d, újrapróbálás...'):format(attempts, maxAttempts))
             Wait(200)
@@ -83,20 +76,27 @@ AddEventHandler('onClientResourceStart', function(res)
     end
 end)
 
--- ── Zárolás / Nyitás ────────────────────────────────────────────────
+-- ── Zárolás / Nyitás ──────────────────────────────────────────────
 
 local function GetClosestVehicle(maxDist)
-    local ped   = PlayerPedId()
+    local ped = PlayerPedId()
     local px, py, pz = GetEntityCoords(ped)
-    local closest = 0
+    local closest     = 0
     local closestDist = maxDist
-    local vehicles = GetGamePool('CVehicle')
+    local vehicles    = GetGamePool('CVehicle')
     for _, veh in ipairs(vehicles) do
-        local vx, vy, vz = GetEntityCoords(veh)
-        local d = #(vector3(px, py, pz) - vector3(vx, vy, vz))
-        if d < closestDist then
-            closest     = veh
-            closestDist = d
+        -- A GetGamePool nha invalid/torolt entity handle-eket is visszaad.
+        -- DoesEntityExist + nil guard vedelem nelkul a GetEntityCoords nil-t
+        -- adhat vissza, ami vector3(nil,...) -> bad argument #2 crash-t okoz.
+        if DoesEntityExist(veh) and not IsEntityDead(veh) then
+            local vx, vy, vz = GetEntityCoords(veh)
+            if vx then
+                local d = #(vector3(px, py, pz) - vector3(vx, vy, vz))
+                if d < closestDist then
+                    closest     = veh
+                    closestDist = d
+                end
+            end
         end
     end
     return closest
@@ -225,7 +225,7 @@ RegisterNetEvent('nxn-keys:client:lockResult', function(data)
 end)
 
 RegisterNetEvent('nxn-keys:client:keyReceived', function(data)
-    Notify(('Köszöntöd %s – átadta a(z) %s kulcsát!'):format(data.giverName, data.plate), 'success')
+    Notify(('Üdvözlöd %s – átadta a(z) %s kulcsát!'):format(data.giverName, data.plate), 'success')
     TriggerServerEvent('nxn-keys:server:requestSync')
 end)
 
