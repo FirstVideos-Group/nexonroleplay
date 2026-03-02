@@ -66,6 +66,16 @@ Config.Jobs = {
             [2] = { label = 'Flottavezető',      salary = 3100 },
         },
     },
+    -- [nxn-delivery] Teljesítményalapú munkakör – salary=0, az nxn-delivery fizet
+    ['delivery'] = {
+        label  = 'Szállító',
+        color  = '#e67e22',
+        grades = {
+            [0] = { label = 'Futár',            salary = 0 },
+            [1] = { label = 'Tapasztalt Futár', salary = 0 },
+            [2] = { label = 'Főfutár',          salary = 0 },
+        },
+    },
 }
 
 -- Admin ACE jog módosításhoz
