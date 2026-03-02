@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-garage</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="overlay" class="hidden">
+    <div id="panel">
+        <div id="panel-header">
+            <div class="header-left">
+                <i class="hgi hgi-stroke hgi-car-01"></i>
+                <div>
+                    <div id="garage-title">Garázs</div>
+                    <div id="vehicle-count" class="sub">0 jármű</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="btn-refresh" title="Frissítés">
+                    <i class="hgi hgi-stroke hgi-refresh"></i>
+                </button>
+                <button class="icon-btn" id="btn-close" title="Bezárás">
+                    <i class="hgi hgi-stroke hgi-cancel-01"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="panel-body">
+            <div id="loading" class="state-msg">
+                <i class="hgi hgi-stroke hgi-loading-01 spin"></i>
+                <span>Járművek betöltése...</span>
+            </div>
+            <div id="empty" class="state-msg hidden">
+                <i class="hgi hgi-stroke hgi-car-01"></i>
+                <span>Nincs járműved.</span>
+            </div>
+            <div id="vehicle-grid"></div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

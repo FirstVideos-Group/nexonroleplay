@@ -1,0 +1,254 @@
+/* nxn-garage | style.css – Nexon Design System */
+:root {
+    --accent:   #5b6af0;
+    --accent-h: #7b8af8;
+    --bg:       #0e0f14;
+    --surface:  #16181f;
+    --surface2: #1e2030;
+    --border:   #2a2d3a;
+    --text:     #e4e6f0;
+    --muted:    #6b6f85;
+    --success:  #3ecf8e;
+    --danger:   #f05b5b;
+    --warning:  #f0b429;
+    --radius:   10px;
+    --shadow:   0 8px 32px rgba(0,0,0,.55);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: transparent;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+    user-select: none;
+}
+
+/* ── Overlay ── */
+#overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+#overlay.hidden { display: none; }
+
+/* ── Panel ── */
+#panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 780px;
+    max-width: 95vw;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Header ── */
+#panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    gap: 10px;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.header-left i {
+    font-size: 22px;
+    color: var(--accent);
+}
+#garage-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+}
+.sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+.header-right {
+    display: flex;
+    gap: 6px;
+}
+.icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    font-size: 15px;
+}
+.icon-btn:hover { background: var(--border); color: var(--text); }
+
+/* ── Body ── */
+#panel-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* ── State messages ── */
+.state-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+.state-msg i { font-size: 32px; }
+.state-msg.hidden { display: none; }
+
+/* ── Vehicle grid ── */
+#vehicle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+/* ── Vehicle card ── */
+.veh-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color .15s;
+}
+.veh-card:hover { border-color: var(--accent); }
+.veh-card.impounded {
+    opacity: .5;
+    pointer-events: none;
+    border-color: var(--danger);
+}
+.veh-card.out-of-range .btn-despawn { opacity: .4; pointer-events: none; }
+
+.card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+}
+.card-icon {
+    font-size: 20px;
+    color: var(--accent);
+}
+.card-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+}
+.card-plate {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: monospace;
+    letter-spacing: .04em;
+}
+
+/* ── Status badge ── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.badge-stored  { background: #3ecf8e22; color: var(--success); border: 1px solid #3ecf8e44; }
+.badge-out     { background: #5b6af022; color: var(--accent);  border: 1px solid #5b6af044; }
+.badge-impound { background: #f05b5b22; color: var(--danger);  border: 1px solid #f05b5b44; }
+
+/* ── HP bar ── */
+.hp-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.hp-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+}
+.hp-bar-bg {
+    height: 5px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+}
+.hp-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .3s;
+}
+.hp-ok     { background: var(--success); }
+.hp-warn   { background: var(--warning); }
+.hp-danger { background: var(--danger);  }
+.hp-dead   { background: var(--muted);   }
+
+/* ── Card buttons ── */
+.card-btns {
+    display: flex;
+    gap: 6px;
+}
+.card-btns button {
+    flex: 1;
+    padding: 7px 0;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .15s, opacity .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+.btn-spawn {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+.btn-spawn:hover { background: var(--accent-h); }
+.btn-despawn {
+    background: transparent;
+    color: var(--danger);
+    border-color: var(--danger);
+}
+.btn-despawn:hover { background: #f05b5b22; }
+button:disabled {
+    opacity: .38 !important;
+    pointer-events: none;
+}
+
+/* ── Scrollbar ── */
+#panel-body::-webkit-scrollbar { width: 5px; }
+#panel-body::-webkit-scrollbar-track { background: transparent; }
+#panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── Spin anim ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin .9s linear infinite; }

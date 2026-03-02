@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-garage – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+            --warning: #f0b429;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span.sub { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 960px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 17px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p  { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+        .req  { background: #f05b5b22; color: var(--danger);  border: 1px solid #f05b5b44; }
+        .opt  { background: #5b6af022; color: var(--accent);  border: 1px solid #5b6af044; }
+        .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tab  { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .info-box { background: #5b6af011; border: 1px solid #5b6af044; border-radius: 8px; padding: 14px 18px; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+        .info-box strong { color: var(--accent); }
+        .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 13px; color: var(--muted); white-space: pre; font-family: monospace; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-garage"></i>
+    <div>
+        <h1>nxn-garage <span class="sub">v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <div class="info-box">
+        <strong>⚠️ Architektúra:</strong> Az <code>nxn-garage</code> kizárólag az <code>nxn-vehicles</code> exportjain át kommunikál az adatbázissal.
+        Nem ír és nem olvas közvetlenül járműadatokat.
+    </div>
+    <p>Az <code>nxn-garage</code> felelős a járművek spawn/despawn UX-ért, garázs-panel NUI-jáért, NPC interakcióért és helyszínek kezeléséért.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-garage/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── html/
+    ├── index.html
+    ├── style.css
+    └── app.js</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-plug-02"></i> Függőségek</h2>
+    <p>
+        <span class="badge req">Kötelező</span> <code>nxn-vehicles</code> – adatréteg (getVehicles, setStored, isOwner, getEngineHP...)<br/>
+        <span class="badge req">Kötelező</span> <code>nxn-database</code> – getIdentifier<br/>
+        <span class="badge req">Kötelező</span> <code>nxn-notify</code> – visszajelzések<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-engine</code> – setEngineHP / getEngineHP<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-keys</code> – giveKey(src/plate)<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-trunk</code> – clearTrunk(plate)<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-npcconversation</code> – registerNPC / unregisterNPC<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-signs</code> – registerZone
+    </p>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapérték</th><th>Leírás</th></tr>
+        <tr><td>Config.Garages</td><td>Lásd config.lua</td><td>Garázs helyszínek tömbe</td></tr>
+        <tr><td>Config.InteractDistance</td><td>5.0</td><td>Panel megnyitási távolság (m)</td></tr>
+        <tr><td>Config.OpenKey</td><td>38 (E)</td><td>Panel megnyitó billentyű</td></tr>
+        <tr><td>Config.AutoGiveKey</td><td>true</td><td>nxn-keys giveKey spawn után</td></tr>
+        <tr><td>Config.ClearTrunkOnDespawn</td><td>false</td><td>nxn-trunk clearTrunk despawnkor</td></tr>
+        <tr><td>Config.PersistEngineHP</td><td>true</td><td>Motor HP perzistencia</td></tr>
+        <tr><td>Config.SpawnCooldown</td><td>2000</td><td>Spawn cooldown (ms)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>spawnVehicle(src, plate, garageId?)</td><td>int, str, str?</td><td>bool, str</td><td>Jármű spawn programatikusan</td></tr>
+        <tr><td>despawnVehicle(src, plate)</td><td>int, str</td><td>bool</td><td>Jármű despawn programatikusan</td></tr>
+        <tr><td>getGarage(garageId)</td><td>string</td><td>table|nil</td><td>Garázs konfig lekérés</td></tr>
+        <tr><td>getAllGarages()</td><td>–</td><td>table[]</td><td>Összes garázs</td></tr>
+        <tr><td>registerGarage(id, cfg)</td><td>str, table</td><td>bool</td><td>Runtime garázs regisztráció</td></tr>
+        <tr><td>unregisterGarage(id)</td><td>string</td><td>bool</td><td>Runtime garázs törlés</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>openGarage(garageId?)</td><td>–</td><td>Garázs panel megnyitás (nil = legközelebbi)</td></tr>
+        <tr><td>closeGarage()</td><td>–</td><td>Panel bezárás</td></tr>
+        <tr><td>isGarageOpen()</td><td>boolean</td><td>Nyitva van-e a panel</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Paraméterek</th><th>Leírás</th></tr>
+        <tr><td>nxn-garage:server:getVehicles</td><td>C→S</td><td>garageId</td><td>Járműlista NUI-nak</td></tr>
+        <tr><td>nxn-garage:server:spawn</td><td>C→S</td><td>plate, garageId</td><td>Spawn kérés</td></tr>
+        <tr><td>nxn-garage:server:despawn</td><td>C→S</td><td>plate, hp</td><td>Despawn kérés HP-vel</td></tr>
+        <tr><td>nxn-garage:client:vehicleList</td><td>S→C</td><td>{ vehicles[], garageLabel, garageId }</td><td>Járműlista NUI frissítés</td></tr>
+        <tr><td>nxn-garage:client:spawnResult</td><td>S→C</td><td>{ ok, plate, model, hp, spawnCoords, message }</td><td>Spawn eredmény</td></tr>
+        <tr><td>nxn-garage:client:despawnResult</td><td>S→C</td><td>{ ok, message }</td><td>Despawn eredmény</td></tr>
+        <tr><td>nxn-garage:client:openFromNPC</td><td>Event</td><td>{ garageId }</td><td>NPC dialóg hívás</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Működési folyamat</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'f1')">Spawn</div>
+        <div class="tab" onclick="switchTab(this,'f2')">Despawn</div>
+        <div class="tab" onclick="switchTab(this,'f3')">NPC regisztráció</div>
+    </div>
+    <div class="tab-content active" id="f1">
+        <pre><code>Játékos → NUI "Kivesz"
+    → nxn-garage:server:spawn { plate, garageId }
+Szerver:
+  isOwner(src, plate)        ✅
+  getVehicle(plate).stored   ✅
+  getVehicle(plate).impounded ✅
+  getGarage(garageId)         ✅
+  setStored(plate, false)
+  getEngineHP(plate) → hp
+  giveKey(src, plate)         (nxn-keys, opcionális)
+  TriggerEvent('nxn-vehicles:server:spawned', src, plate, model)
+Kliens:
+  CreateVehicle(model, spawnCoords)
+  SetVehicleNumberPlateText(plate)
+  setEngineHP(hp)             (nxn-engine, opcionális)</code></pre>
+    </div>
+    <div class="tab-content" id="f2">
+        <pre><code>Játékos → NUI "Elrak"
+    → nxn-garage:server:despawn { plate, hp }
+Szerver:
+  isOwner(src, plate)  ✅
+  saveEngineHP(plate, hp)
+  setStored(plate, true)
+  clearTrunk(plate)    (nxn-trunk, ha ClearTrunkOnDespawn)
+  TriggerEvent('nxn-vehicles:server:despawned', src, plate)
+Kliens:
+  DeleteVehicle(veh)
+  Notify('Jármű elrakva', 'success')</code></pre>
+    </div>
+    <div class="tab-content" id="f3">
+        <pre><code>-- nxn-npcconversation integráció:
+exports['nxn-npcconversation']:registerNPC('main_garage_npc', {
+    label    = 'Fő Garázs',
+    model    = 'a_m_y_vinewood_01',
+    coords   = vector4(215.7, -809.3, 30.7, 180.0),
+    scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
+    dialogues = {
+        { id='open_garage', label='Járműveim', icon='hgi-car-01',
+          action='event', event='nxn-garage:client:openFromNPC',
+          data = { garageId = 'main_garage' } }
+    }
+})</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th></tr>
+        <tr><td>nxn-vehicles</td><td>getVehicles, getVehicle, setStored, isOwner, getEngineHP, saveEngineHP, addVehicle</td></tr>
+        <tr><td>nxn-database</td><td>getIdentifier</td></tr>
+        <tr><td>nxn-engine</td><td>setEngineHP (kliens), getEngineHP (kliens)</td></tr>
+        <tr><td>nxn-keys</td><td>giveKey(src, plate) szerver, giveKey(plate) kliens</td></tr>
+        <tr><td>nxn-trunk</td><td>clearTrunk(plate) despawnkor</td></tr>
+        <tr><td>nxn-npcconversation</td><td>registerNPC / unregisterNPC</td></tr>
+        <tr><td>nxn-signs</td><td>registerZone (opcionális)</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
