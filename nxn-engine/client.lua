@@ -2,7 +2,7 @@
 --  nxn-engine | client.lua
 -- ============================================================
 
--- ── Állapot ───────────────────────────────────────────────────
+-- ── Állapot ──────────────────────────────────────────────────
 
 local engineRunning    = false
 local engineLocked     = false
@@ -12,13 +12,18 @@ local engineHPPercent  = 100.0
 local lastHUDState     = ''
 local hudSyncTimer     = 0.0
 
-local startAuthCallback = nil
+-- Auth rendszer: resource nev -> true/false tabla
+-- Egy resource regisztrálhat magaát auth providernek.
+-- Indításkor minden regisztrált provider-t megkérdezünk
+-- esemeny-alapon (nem function atadással, ami FiveM-ben
+-- kliens-kliens kozott nem mukodik).
+local authProviders    = {}  -- { resourceName = true }
 
 local vehicleEngineStateCache = {}
 local ENGINE_CACHE_MAX        = 30
 local engineCacheOrder        = {}
 
--- ── Degradáció belső állapot ───────────────────────────────────
+-- ── Degradació belső állapot ─────────────────────────────────
 
 local stutterTimer       = 0.0
 local isStuttering       = false
@@ -28,7 +33,7 @@ local activeEffectHandle = -1
 local activeEffectType   = nil
 local lastPerfMod        = 1.0
 
--- ── Túlhévülés belső állapot ─────────────────────────────────────
+-- ── Túlhévülés belső állapot ────────────────────────────────
 
 local ovheatTimer    = 0.0
 local critStallTimer = 0.0
@@ -49,7 +54,7 @@ local function Notify(msg, ntype)
     end
 end
 
--- ── HP konverzió ───────────────────────────────────────────
+-- ── HP konverzió ────────────────────────────────────────────
 
 local function PercentToGTA(pct)
     return math.max(0, pct / 100.0 * 1000.0)
@@ -91,7 +96,50 @@ local function WriteEngineHP(vehicle, pct)
     SetVehicleEngineHealth(vehicle, PercentToGTA(engineHPPercent))
 end
 
--- ── Motor indítás / leállítás ──────────────────────────────────────
+-- ── Auth rendszer ────────────────────────────────────────────
+-- FiveM kliensen export-on keresztul function-t atadni
+-- mas resource-nak NEM mukodik (table-kent erkezik).
+-- Megoldas: esemeny-alapu ketszepes protokoll:
+--   1. nxn-engine kiszori: 'nxn-engine:authQuery' (vehicle)
+--   2. auth provider visszajelez: 'nxn-engine:authResponse' (allowed)
+-- A StartEngine() blokkolva var a valaszra (max Config.AuthTimeout ms).
+
+local authPending  = false
+local authResult   = nil
+local AUTH_TIMEOUT = 300  -- ms
+
+AddEventHandler('nxn-engine:authResponse', function(allowed)
+    if authPending then
+        authResult  = allowed
+        authPending = false
+    end
+end)
+
+---@param vehicle number
+---@return boolean
+local function RunAuthCheck(vehicle)
+    if not next(authProviders) then return true end  -- ha nincs provider, szabad
+
+    authPending = true
+    authResult  = nil
+
+    TriggerEvent('nxn-engine:authQuery', vehicle)
+
+    local t = 0
+    while authPending and t < AUTH_TIMEOUT do
+        Wait(10)
+        t = t + 10
+    end
+
+    if authResult == nil then
+        NXN.Engine.Warn('RunAuthCheck: timeout, hozzaferes megtagadva')
+        return false
+    end
+
+    return authResult == true
+end
+
+-- ── Motor indítás / leállítás ──────────────────────────────────
 
 ---@param vehicle number
 ---@param silent  boolean
@@ -102,12 +150,9 @@ local function StartEngine(vehicle, silent)
         return false
     end
 
-    if startAuthCallback then
-        local allowed = startAuthCallback(vehicle)
-        if not allowed then
-            if not silent then Notify(Config.Notify.noKey, 'danger') end
-            return false
-        end
+    if not RunAuthCheck(vehicle) then
+        if not silent then Notify(Config.Notify.noKey, 'danger') end
+        return false
     end
 
     ReadEngineHP(vehicle)
@@ -143,7 +188,7 @@ local function StopEngine(vehicle, silent)
     TriggerEvent('nxn-engine:stopped', { vehicle = vehicle })
 end
 
--- ── Sérülés ─────────────────────────────────────────────────────
+-- ── Sérülés ──────────────────────────────────────────────────
 
 local function ApplyDamage(vehicle, dmgPct, reason)
     if not Config.EngineDamage.enabled then return end
@@ -169,7 +214,7 @@ local function ApplyDamage(vehicle, dmgPct, reason)
     })
 end
 
--- ── Kritikus leállás ─────────────────────────────────────────────
+-- ── Kritikus leállás ───────────────────────────────────────────
 
 local function CheckCriticalStall(vehicle, dt)
     if engineHPPercent > Config.EngineDamage.criticalThreshold then
@@ -187,7 +232,7 @@ local function CheckCriticalStall(vehicle, dt)
     end
 end
 
--- ── Túlhévülés ────────────────────────────────────────────────
+-- ── Túlhévülés ─────────────────────────────────────────────
 
 local function ProcessOverheat(vehicle, dt)
     local cfg = Config.EngineDamage.overheat
@@ -213,7 +258,7 @@ local function ProcessOverheat(vehicle, dt)
 end
 
 -- ============================================================
---  DEGRADÁCIÓ RENDSZER
+--  DEGRADACIÓ RENDSZER
 -- ============================================================
 
 local function ApplyPerformanceDegradation(vehicle)
@@ -347,7 +392,7 @@ local function ProcessVisualEffects(vehicle)
     end
 end
 
--- ── nxn-seatbelt-extras integráció ──────────────────────────────────
+-- ── nxn-seatbelt-extras integráció ──────────────────────────────
 
 AddEventHandler('nxn-seatbelt-extras:collision', function(data)
     if not inVehicle then return end
@@ -365,7 +410,7 @@ AddEventHandler('nxn-seatbelt-extras:collision', function(data)
     end
 end)
 
--- ── Fő loop ─────────────────────────────────────────────────────
+-- ── Fő loop ──────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -485,7 +530,7 @@ CreateThread(function()
     end
 end)
 
--- ── Exportok ─────────────────────────────────────────────────
+-- ── Exportok ──────────────────────────────────────────────────
 
 exports('startEngine', function(silent)
     if not inVehicle then return false end
@@ -532,26 +577,25 @@ exports('isLocked', function()
     return engineLocked
 end)
 
--- registerStartAuthCallback: hívó resource nevét is logoljuk a jobb debugolhatóságért.
--- Korábban csak azt jelezte a WARN, hogy nem function tipusú az érték, de nem volt
--- egyértelmű melyik resource okozta. Most a GetInvokingResource() hívással
--- pontosan azonosítható a hibás hívó.
-exports('registerStartAuthCallback', function(fn)
+-- registerStartAuthCallback – esemeny-alapu auth regisztracio.
+-- A hivo resource nevet eltaroljuk authProviders-ben.
+-- Az auth ellenorzeskor a 'nxn-engine:authQuery' esemenyt sugarozzuk,
+-- a providerek a 'nxn-engine:authResponse' esemennyel valaszolnak.
+exports('registerStartAuthCallback', function()
     local caller = GetInvokingResource() or 'ismeretlen'
-    if type(fn) ~= 'function' then
-        NXN.Engine.Warn(('registerStartAuthCallback: nem function tipusu ertek! Hivo resource: %s (kapott tipus: %s)'):format(
-            caller, type(fn)
-        ))
+    if caller == 'ismeretlen' then
+        NXN.Engine.Warn('registerStartAuthCallback: nem azonosithato hivo resource')
         return false
     end
-    startAuthCallback = fn
-    NXN.Engine.Info(('Inditas-auth callback regisztralva, hivo: %s'):format(caller))
+    authProviders[caller] = true
+    NXN.Engine.Info(('Auth provider regisztralva: %s'):format(caller))
     return true
 end)
 
 exports('clearStartAuthCallback', function()
-    startAuthCallback = nil
-    NXN.Engine.Log('startAuthCallback torolve')
+    local caller = GetInvokingResource() or 'ismeretlen'
+    authProviders[caller] = nil
+    NXN.Engine.Log(('Auth provider torolve: %s'):format(caller))
 end)
 
 ---@param vehicle number|nil

@@ -40,33 +40,34 @@ local function GetCacheAsList()
     return list
 end
 
--- ── nxn-engine auth callback regisztrálása ──────────────────────────
+-- ── nxn-engine esemeny-alapu auth provider regisztració ──────────────
+-- FiveM-ben kliens-kliens kozott export-on at function-t atadni
+-- NEM mukodik (table-kent erkezik).
+-- Megoldas: az nxn-engine esemeny-alapu auth protokollt hasznal:
+--   1. nxn-engine kiszori: 'nxn-engine:authQuery' (vehicleEntity)
+--   2. nxn-keys visszajelez: 'nxn-engine:authResponse' (allowed bool)
+
+AddEventHandler('nxn-engine:authQuery', function(vehicleEntity)
+    if GetResourceState('nxn-engine') ~= 'started' then return end
+    local plate = NXN.Keys.NormalizePlate(GetVehicleNumberPlateText(vehicleEntity))
+    local has   = keyCache[plate] ~= nil
+    NXN.Keys.Log(('authQuery: plate=%s has=%s'):format(plate, tostring(has)))
+    TriggerEvent('nxn-engine:authResponse', has)
+end)
 
 local function RegisterEngineAuth()
     if GetResourceState('nxn-engine') ~= 'started' then
         NXN.Keys.Warn('RegisterEngineAuth: nxn-engine nem fut, kihagyva')
         return
     end
-    CreateThread(function()
-        local attempts = 0
-        local maxAttempts = 10
-        while attempts < maxAttempts do
-            local ok = exports['nxn-engine']:registerStartAuthCallback(function(vehicleEntity)
-                local plate = NXN.Keys.NormalizePlate(GetVehicleNumberPlateText(vehicleEntity))
-                local has   = keyCache[plate] ~= nil
-                NXN.Keys.Log(('AuthCallback: plate=%s has=%s'):format(plate, tostring(has)))
-                return has
-            end)
-            if ok then
-                NXN.Keys.Info('Engine auth callback regisztrálva')
-                return
-            end
-            attempts = attempts + 1
-            NXN.Keys.Warn(('RegisterEngineAuth: sikertelen próba %d/%d, újrapróbálás...'):format(attempts, maxAttempts))
-            Wait(200)
-        end
-        NXN.Keys.Warn('RegisterEngineAuth: nem sikerült regisztrálni ' .. maxAttempts .. ' próba után sem!')
-    end)
+    -- Az export most csak a resource nevet regisztralja,
+    -- nem var function argumentumot – nincs szukseg retry-ra.
+    local ok = exports['nxn-engine']:registerStartAuthCallback()
+    if ok then
+        NXN.Keys.Info('Engine auth provider regisztralva (esemeny-alapu)')
+    else
+        NXN.Keys.Warn('RegisterEngineAuth: regisztracio sikertelen')
+    end
 end
 
 AddEventHandler('onClientResourceStart', function(res)
@@ -85,9 +86,6 @@ local function GetClosestVehicle(maxDist)
     local closestDist = maxDist
     local vehicles    = GetGamePool('CVehicle')
     for _, veh in ipairs(vehicles) do
-        -- A GetGamePool nha invalid/torolt entity handle-eket is visszaad.
-        -- DoesEntityExist + nil guard vedelem nelkul a GetEntityCoords nil-t
-        -- adhat vissza, ami vector3(nil,...) -> bad argument #2 crash-t okoz.
         if DoesEntityExist(veh) and not IsEntityDead(veh) then
             local vx, vy, vz = GetEntityCoords(veh)
             if vx then
