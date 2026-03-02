@@ -2,13 +2,12 @@
 --  nxn-keys | client.lua
 -- ============================================================
 
--- ── Lokális kulcs cache ────────────────────────────────────────────
+-- ── Lokális kulcs cache ──────────────────────────────────────────────
 
--- { [plate] = { is_owner = bool, label = string, model = string } }
 local keyCache   = {}
 local isRingOpen = false
 
--- ── Segédfüggvények ────────────────────────────────────────────────
+-- ── Segédfüggvények ──────────────────────────────────────────────
 
 local function Notify(msg, ntype)
     if GetResourceState('nxn-notify') ~= 'started' then return end
@@ -41,27 +40,45 @@ local function GetCacheAsList()
     return list
 end
 
--- ── nxn-engine auth callback regisztrálása ────────────────────────
+-- ── nxn-engine auth callback regisztrálása ────────────────────────────
+-- Retry mechanizmus: az nxn-engine client-oldali exportjai csak az erőforrás
+-- teljes betöltése után elérhetőek. Az onClientResourceStart esemény
+-- korábban tülhet el mint az export registráció megtörténik, ezért
+-- rövid várakozást (Wait) alkalmazünk a biztonságos regisztrációhoz.
 
 local function RegisterEngineAuth()
     if GetResourceState('nxn-engine') ~= 'started' then
         NXN.Keys.Warn('RegisterEngineAuth: nxn-engine nem fut, kihagyva')
         return
     end
-    exports['nxn-engine']:registerStartAuthCallback(function(vehicleEntity)
-        local plate = NXN.Keys.NormalizePlate(GetVehicleNumberPlateText(vehicleEntity))
-        local has   = keyCache[plate] ~= nil
-        NXN.Keys.Log(('AuthCallback: plate=%s has=%s'):format(plate, tostring(has)))
-        return has
+    -- Retry: max 10x 200ms-onként várunk amig az export elérhető lesz
+    CreateThread(function()
+        local attempts = 0
+        local maxAttempts = 10
+        while attempts < maxAttempts do
+            -- Tesztelünk: sikeres-e a regisztráció?
+            local ok = exports['nxn-engine']:registerStartAuthCallback(function(vehicleEntity)
+                local plate = NXN.Keys.NormalizePlate(GetVehicleNumberPlateText(vehicleEntity))
+                local has   = keyCache[plate] ~= nil
+                NXN.Keys.Log(('AuthCallback: plate=%s has=%s'):format(plate, tostring(has)))
+                return has
+            end)
+            if ok then
+                NXN.Keys.Info('Engine auth callback regisztrálva')
+                return
+            end
+            -- Ha nem sikerült (false/nil visszatérési érték), újrapróbáljuk
+            attempts = attempts + 1
+            NXN.Keys.Warn(('RegisterEngineAuth: sikertelen próba %d/%d, újrapróbálás...'):format(attempts, maxAttempts))
+            Wait(200)
+        end
+        NXN.Keys.Warn('RegisterEngineAuth: nem sikerült regisztrálni ' .. maxAttempts .. ' próba után sem!')
     end)
-    NXN.Keys.Info('Engine auth callback regisztrálva')
 end
 
--- Induláskor és ha az nxn-engine / nxn-keys később indul
 AddEventHandler('onClientResourceStart', function(res)
     if res == 'nxn-engine' or res == GetCurrentResourceName() then
         RegisterEngineAuth()
-        -- Kulcslista szinkronizálás szerverről
         TriggerServerEvent('nxn-keys:server:requestSync')
     end
 end)
@@ -105,14 +122,12 @@ CreateThread(function()
     while true do
         Wait(0)
         if not isRingOpen then
-            -- [L] gómb: zárolás/nyitás
             if IsControlJustPressed(0, Config.LockKey) and not lockCooldown then
                 local veh = GetClosestVehicle(Config.InteractDistance)
                 if veh ~= 0 then
                     local plate = NXN.Keys.NormalizePlate(GetVehicleNumberPlateText(veh))
                     if keyCache[plate] then
                         lockCooldown = true
-                        -- Zárállapot lekérdezés az nxn-engine-től
                         local isLocked = false
                         if GetResourceState('nxn-engine') == 'started' then
                             isLocked = exports['nxn-engine']:isLocked()
@@ -125,7 +140,6 @@ CreateThread(function()
                             SendNUIMessage({ action = 'playSound', sound = snd })
                         end
 
-                        -- Engine zárállapot belíttés kliensen
                         if GetResourceState('nxn-engine') == 'started' then
                             exports['nxn-engine']:setLocked(not isLocked)
                         end
@@ -146,16 +160,13 @@ CreateThread(function()
                 end
             end
 
-            -- [K] gómb: kulcskarika
             if IsControlJustPressed(0, Config.KeyringKey) then
                 TriggerServerEvent('nxn-keys:server:getKeys')
-                -- A syncKeys event megkapása után a UI megnyílik
             end
         end
     end
 end)
 
--- Közelségben lévő játékosok listája (kulcsátadáshoz)
 local nearbyPlayers = {}
 
 CreateThread(function()
@@ -187,22 +198,17 @@ CreateThread(function()
     end
 end)
 
--- ── Net Events (kliens) ─────────────────────────────────────────
+-- ── Net Events (kliens) ────────────────────────────────────────────
 
 RegisterNetEvent('nxn-keys:client:syncKeys', function(keys)
     BuildCacheFromList(keys)
     if isRingOpen then
-        -- Zárállapot lekérés az nxn-engine-től minden kulcshoz
         local enriched = {}
         for _, k in ipairs(keys) do
-            local locked = false
-            -- Megjegyzés: az nxn-engine isLocked() csak az aktuális járműre adja vissza
-            -- A UI-ban ez a mező inkább szimbolikus marad hacsak nem fejlesztjük ki per-plate lock state-et
-            k.locked = locked
+            k.locked = false
             table.insert(enriched, k)
         end
         SendNUIMessage({ action = 'setKeys', keys = enriched })
-        -- Kulcskarika megnyitása szinkronizálás után
         SetNuiFocus(true, true)
         SendNUIMessage({ action = 'setVisible', visible = true })
     end
@@ -219,8 +225,7 @@ RegisterNetEvent('nxn-keys:client:lockResult', function(data)
 end)
 
 RegisterNetEvent('nxn-keys:client:keyReceived', function(data)
-    Notify(('Köszöntöd %s – átadták a(z) %s kulcsát!'):format(data.giverName, data.plate), 'success')
-    -- Cache frissítés szinkronizálással
+    Notify(('Köszöntöd %s – átadta a(z) %s kulcsát!'):format(data.giverName, data.plate), 'success')
     TriggerServerEvent('nxn-keys:server:requestSync')
 end)
 
@@ -235,7 +240,7 @@ RegisterNetEvent('nxn-keys:client:keyRevoked', function(data)
     end
 end)
 
--- ── NUI Callbacks ────────────────────────────────────────────────
+-- ── NUI Callbacks ───────────────────────────────────────────────
 
 RegisterNUICallback('close', function(_, cb)
     isRingOpen = false
@@ -277,9 +282,8 @@ RegisterNUICallback('getNearby', function(_, cb)
     cb(nearbyPlayers)
 end)
 
--- ── Exportok (kliens) ───────────────────────────────────────────
+-- ── Exportok (kliens) ─────────────────────────────────────────────
 
---- Szinkron kulcsellenőrzés (auth callback-hez)
 ---@param plate string
 ---@return boolean
 exports('hasKeyForPlate', function(plate)
@@ -287,21 +291,17 @@ exports('hasKeyForPlate', function(plate)
     return keyCache[plate] ~= nil
 end)
 
---- Kulcskarika UI megnyitása
 exports('openKeyring', function()
     isRingOpen = true
     TriggerServerEvent('nxn-keys:server:getKeys')
-    -- syncKeys event megjövetele után a setVisible action megnyítja
 end)
 
---- Kulcskarika UI bezárása
 exports('closeKeyring', function()
     isRingOpen = false
     SetNuiFocus(false, false)
     SendNUIMessage({ action = 'setVisible', visible = false })
 end)
 
---- Nyitva van-e a kulcskarika
 ---@return boolean
 exports('isKeyringOpen', function()
     return isRingOpen

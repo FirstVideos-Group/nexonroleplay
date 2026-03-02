@@ -2,7 +2,7 @@
 --  nxn-engine | client.lua
 -- ============================================================
 
--- ── Állapot ─────────────────────────────────────────────────
+-- ── Állapot ───────────────────────────────────────────────────
 
 local engineRunning    = false
 local engineLocked     = false
@@ -14,28 +14,25 @@ local hudSyncTimer     = 0.0
 
 local startAuthCallback = nil
 
--- Motorállapot-tár: megjegyzi hogy az adott jármű motorja járt-e
--- amikor a játékos kiszallt belole.
--- Kulcs: jármű network ID (int), érték: boolean (futott-e a motor)
 local vehicleEngineStateCache = {}
-local ENGINE_CACHE_MAX        = 30   -- max bejegyzes szama (FIFO)
-local engineCacheOrder        = {}   -- FIFO sorrend kovetese
+local ENGINE_CACHE_MAX        = 30
+local engineCacheOrder        = {}
 
--- ── Degradáció belső állapot ─────────────────────────────────
+-- ── Degradáció belső állapot ───────────────────────────────────
 
 local stutterTimer       = 0.0
 local isStuttering       = false
 local stutterEndTime     = 0.0
 local effectsActive      = false
 local activeEffectHandle = -1
-local activeEffectType   = nil   -- 'smoke' | 'spark' | nil – effekt-váltás optimalizáció
+local activeEffectType   = nil
 local lastPerfMod        = 1.0
 
--- ── Túlhévülés belső állapot ──────────────────────────────────
+-- ── Túlhévülés belső állapot ─────────────────────────────────────
 
 local ovheatTimer    = 0.0
 local critStallTimer = 0.0
-local ovheatNotified = false   -- nehogy tobbszor kuldjon ertesitest tultevuleskent
+local ovheatNotified = false
 
 -- ── Segéd: notify ────────────────────────────────────────────
 
@@ -94,7 +91,7 @@ local function WriteEngineHP(vehicle, pct)
     SetVehicleEngineHealth(vehicle, PercentToGTA(engineHPPercent))
 end
 
--- ── Motor indítás / leállítás ───────────────────────────────────
+-- ── Motor indítás / leállítás ──────────────────────────────────────
 
 ---@param vehicle number
 ---@param silent  boolean
@@ -146,7 +143,7 @@ local function StopEngine(vehicle, silent)
     TriggerEvent('nxn-engine:stopped', { vehicle = vehicle })
 end
 
--- ── Sérülés ────────────────────────────────────────────────────
+-- ── Sérülés ─────────────────────────────────────────────────────
 
 local function ApplyDamage(vehicle, dmgPct, reason)
     if not Config.EngineDamage.enabled then return end
@@ -172,7 +169,7 @@ local function ApplyDamage(vehicle, dmgPct, reason)
     })
 end
 
--- ── Kritikus leállás ───────────────────────────────────────────
+-- ── Kritikus leállás ─────────────────────────────────────────────
 
 local function CheckCriticalStall(vehicle, dt)
     if engineHPPercent > Config.EngineDamage.criticalThreshold then
@@ -200,18 +197,15 @@ local function ProcessOverheat(vehicle, dt)
         ovheatTimer = ovheatTimer + dt
         if ovheatTimer > 5.0 then
             ApplyDamage(vehicle, cfg.heatRate * dt, 'overheat')
-            -- Értesítés küldése ha engedélyezett és még nem küldtük
             if cfg.notifyOnCritical and not ovheatNotified then
                 Notify(cfg.criticalMsg, 'danger')
                 ovheatNotified = true
             end
         end
     else
-        -- Hűlés: cooldownRate config értékét használjuk (fix 2x helyett)
         if ovheatTimer > 0 then
             ovheatTimer = math.max(0, ovheatTimer - dt * (cfg.cooldownRate * 100))
         end
-        -- Ha lehűlt, az értesítési flag-et reseteljük
         if ovheatTimer == 0 then
             ovheatNotified = false
         end
@@ -316,8 +310,6 @@ local function ProcessVisualEffects(vehicle)
     end
 
     local ecfg = dcfg.effects
-
-    -- Meghatározzuk az új kívánt effektus típusát
     local newType = nil
     if engineHPPercent <= ecfg.sparkThreshold then
         newType = 'spark'
@@ -325,7 +317,6 @@ local function ProcessVisualEffects(vehicle)
         newType = 'smoke'
     end
 
-    -- Csak akkor indítjuk újra ha a típus ténylegesen megváltozott
     if newType == activeEffectType then return end
 
     StopVehicleEffect()
@@ -354,10 +345,9 @@ local function ProcessVisualEffects(vehicle)
         effectsActive = true
         NXN.Engine.Log(('Füst effekt: hp=%.1f%% intensity=%.2f'):format(engineHPPercent, intensity))
     end
-    -- newType == nil: StopVehicleEffect már meghívtuk fentebb
 end
 
--- ── nxn-seatbelt-extras integráció ───────────────────────────────
+-- ── nxn-seatbelt-extras integráció ──────────────────────────────────
 
 AddEventHandler('nxn-seatbelt-extras:collision', function(data)
     if not inVehicle then return end
@@ -375,7 +365,7 @@ AddEventHandler('nxn-seatbelt-extras:collision', function(data)
     end
 end)
 
--- ── Fő loop ───────────────────────────────────────────────────
+-- ── Fő loop ─────────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -384,7 +374,6 @@ CreateThread(function()
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
 
-        -- Járműbe szállás
         if veh ~= 0 and not inVehicle then
             inVehicle      = true
             currentVehicle = veh
@@ -417,25 +406,20 @@ CreateThread(function()
                 ))
             end
 
-            -- Felhasznált cache törlése (egyszeri visszatöltés)
             vehicleEngineStateCache[netId] = nil
-            -- FIFO listaból is kivesszük ha benne van
             for i, id in ipairs(engineCacheOrder) do
                 if id == netId then table.remove(engineCacheOrder, i); break end
             end
             SyncHUD(true)
 
-        -- Kiszallás
         elseif veh == 0 and inVehicle then
             local wasRunning = engineRunning
             local lastVeh    = currentVehicle
             local netId      = NetworkGetNetworkIdFromEntity(lastVeh)
 
-            -- Motorállapot mentése a jármű network ID-jához
             if netId and netId ~= 0 then
                 vehicleEngineStateCache[netId] = wasRunning
                 table.insert(engineCacheOrder, netId)
-                -- FIFO: ha túl sok, a legrégebbi bejegyzést töröljük
                 if #engineCacheOrder > ENGINE_CACHE_MAX then
                     local oldest = table.remove(engineCacheOrder, 1)
                     vehicleEngineStateCache[oldest] = nil
@@ -463,7 +447,6 @@ CreateThread(function()
             SyncHUD(true)
         end
 
-        -- In-vehicle logika
         if inVehicle and currentVehicle ~= 0 then
 
             if not engineRunning and not isStuttering and IsVehicleEngineOn(currentVehicle) then
@@ -502,7 +485,7 @@ CreateThread(function()
     end
 end)
 
--- ── Exportok ───────────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────
 
 exports('startEngine', function(silent)
     if not inVehicle then return false end
@@ -549,25 +532,32 @@ exports('isLocked', function()
     return engineLocked
 end)
 
+-- registerStartAuthCallback: hívó resource nevét is logoljuk a jobb debugolhatóságért.
+-- Korábban csak azt jelezte a WARN, hogy nem function tipusú az érték, de nem volt
+-- egyértelmű melyik resource okozta. Most a GetInvokingResource() hívással
+-- pontosan azonosítható a hibás hívó.
 exports('registerStartAuthCallback', function(fn)
+    local caller = GetInvokingResource() or 'ismeretlen'
     if type(fn) ~= 'function' then
-        NXN.Engine.Warn('registerStartAuthCallback: nem function tipusu ertek!')
-        return
+        NXN.Engine.Warn(('registerStartAuthCallback: nem function tipusu ertek! Hivo resource: %s (kapott tipus: %s)'):format(
+            caller, type(fn)
+        ))
+        return false
     end
     startAuthCallback = fn
-    NXN.Engine.Info('Inditas-auth callback regisztralva')
+    NXN.Engine.Info(('Inditas-auth callback regisztralva, hivo: %s'):format(caller))
+    return true
 end)
 
 exports('clearStartAuthCallback', function()
     startAuthCallback = nil
+    NXN.Engine.Log('startAuthCallback torolve')
 end)
 
---- Jarmű éledtését biztosító hotwire export
---- @param vehicle number|nil  cél jármű (nil = aktuális)
---- @param silent  boolean|nil való-e értesítés
+---@param vehicle number|nil
+---@param silent  boolean|nil
 exports('hotwireStart', function(vehicle, silent)
     local targetVeh = vehicle or currentVehicle
-    -- Guard: járműben kell lenni és érvényes handle kell
     if not inVehicle or targetVeh == 0 then
         NXN.Engine.Warn('hotwireStart: nincs jarmuben vagy ervenytelen vehicle')
         return false
