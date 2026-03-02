@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-keys – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+            --danger: #f05b5b;
+            --warning: #f0b55b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 17px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p  { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px; vertical-align: middle; }
+        .badge-req  { background: rgba(240,91,91,.15);  border: 1px solid rgba(240,91,91,.3);  color: var(--danger); }
+        .badge-opt  { background: rgba(240,181,91,.12); border: 1px solid rgba(240,181,91,.3); color: var(--warning); }
+        .badge-srv  { background: rgba(91,106,240,.15); border: 1px solid rgba(91,106,240,.3); color: var(--accent); }
+        .badge-cli  { background: rgba(62,207,142,.12); border: 1px solid rgba(62,207,142,.3); color: var(--success); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; margin-bottom: 20px; }
+        .tab-content.active { display: block; }
+        .flow-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .flow-step:last-child { border-bottom: none; }
+        .flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+        .flow-text { font-size: 13px; }
+        .flow-text strong { color: var(--text); }
+        .flow-text span { color: var(--muted); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-key-01"></i>
+    <div><h1>nxn-keys <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-keys</strong> a Nexon RP szerver járműkulcs- és zárolásrendszere. Kezeli a játékosok kulcsait, a jármű zárolás/nyitás logikát, kulcsátadást más játékosoknak, és az <code>nxn-engine</code> motorindítás-hitelesítését az auth callback mechanizmuson keresztül.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-keys/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/
+    └── index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.KeyringKey</td><td>75 (K)</td><td>Kulcskarika megnyitó billentyű</td></tr>
+        <tr><td>Config.LockKey</td><td>76 (L)</td><td>Zárolás/nyitás billentyű</td></tr>
+        <tr><td>Config.InteractDistance</td><td>5.0</td><td>Max táv zároláshoz (m)</td></tr>
+        <tr><td>Config.GiveKeyDistance</td><td>3.0</td><td>Max táv kulcsátadáshoz (m)</td></tr>
+        <tr><td>Config.OnlyOwnerCanShare</td><td>true</td><td>Csak tulajdonos oszthat kulcsot</td></tr>
+        <tr><td>Config.LockAnim.enabled</td><td>true</td><td>Zárásanimáció engedélyezése</td></tr>
+        <tr><td>Config.LockSound.enabled</td><td>true</td><td>Záráshang engedélyezése</td></tr>
+        <tr><td>Config.AutoRevokeOnDespawn</td><td>true</td><td>Despawnkor cache-ből törölés</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-database-01"></i> Adatbázis tábla</h2>
+    <pre><code>CREATE TABLE IF NOT EXISTS `nxn_vehicle_keys` (
+    `id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `plate`       VARCHAR(20)  NOT NULL,
+    `identifier`  VARCHAR(100) NOT NULL,
+    `is_owner`    TINYINT(1)   DEFAULT 0,
+    `created_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_plate_ident` (`plate`, `identifier`)
+);</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Paraméterek</th><th>Return</th><th>Leírás</th></tr>
+        <tr><td>giveKey(src, plate, isOwner?)</td><td>int, string, bool?</td><td>boolean</td><td>Kulcs adása DB-be + cache frissítés</td></tr>
+        <tr><td>removeKey(src, plate)</td><td>int, string</td><td>boolean</td><td>Kulcs megvonása (is_owner=0 sor)</td></tr>
+        <tr><td>hasKey(src, plate)</td><td>int, string</td><td>boolean</td><td>Van-e kulcsa a játékosnak?</td></tr>
+        <tr><td>getKeys(src)</td><td>int</td><td>table[]</td><td>Játékos összes kulcsa + járműadatok</td></tr>
+        <tr><td>revokeAllKeys(plate)</td><td>string</td><td>boolean</td><td>Összes kulcs törlése (eladásnál)</td></tr>
+        <tr><td>getKeyHolders(plate)</td><td>string</td><td>table[]</td><td>Kik rendelkeznek kulccsal</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>hasKeyForPlate(plate)</td><td>Szinkron cache-alapú kulcsellenőrzés (auth callback-hez)</td></tr>
+        <tr><td>openKeyring()</td><td>Kulcskarika UI megnyitása</td></tr>
+        <tr><td>closeKeyring()</td><td>Kulcskarika UI bezárása</td></tr>
+        <tr><td>isKeyringOpen()</td><td>Nyitva van-e a kulcskarika</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-link-chain"></i> Auth callback folyamat</h2>
+    <div>
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>nxn-engine registerStartAuthCallback</strong><span> – nxn-keys regisztrálja az engine auth callbackjét</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Játékos motort akar indítani</strong><span> – az nxn-engine meghívja a callbacket</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>hasKeyForPlate(plate)</strong><span> – szinkron cache-ellenőrzés, true/false return</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>false → nxn-engine megtagadja</strong><span> az indítást, notify jelenik meg</span></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>nxn-hotwire bypass</strong><span> – a hotwireStart() kikerüli ezt az ellenőrzést</span></div></div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Kliens (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Szerver (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t3')">nxn-garage / nxn-vehicleshop</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- Kulcskarika megnyitása
+exports['nxn-keys']:openKeyring()
+
+-- Van-e kulcsa az aktuális járműhöz? (szinkron)
+local plate = GetVehicleNumberPlateText(GetVehiclePedIsIn(PlayerPedId(), false))
+if exports['nxn-keys']:hasKeyForPlate(plate) then
+    print('Van kulcsom!')
+end</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Kulcs adása (pl. spawn után)
+exports['nxn-keys']:giveKey(src, plate, true)  -- true = tulajdonosi kulcs
+
+-- Van-e kulcsa?
+if exports['nxn-keys']:hasKey(src, plate) then
+    print('Van kulcsa')
+end
+
+-- Összes kulcs megvonása (eladásnál)
+exports['nxn-keys']:revokeAllKeys(plate)
+
+-- Kulcstulajdonosok lekérése
+local holders = exports['nxn-keys']:getKeyHolders(plate)
+for _, h in ipairs(holders) do
+    print(h.identifier, h.is_owner)
+end</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- nxn-garage server.lua-ban (spawn után):
+if GetResourceState('nxn-keys') == 'started' then
+    exports['nxn-keys']:giveKey(src, plate, false)  -- nem tulajdonosi kulcs
+end
+
+-- nxn-vehicleshop server.lua-ban (vásárlás után):
+if GetResourceState('nxn-keys') == 'started' then
+    exports['nxn-keys']:giveKey(src, plate, true)   -- tulajdonosi kulcs
+end</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-keys:server:lock</td><td>C → S</td><td>Zárolás kérelem</td></tr>
+        <tr><td>nxn-keys:server:unlock</td><td>C → S</td><td>Nyitás kérelem</td></tr>
+        <tr><td>nxn-keys:server:giveKey</td><td>C → S</td><td>Kulcsátadás</td></tr>
+        <tr><td>nxn-keys:server:removeKey</td><td>C → S</td><td>Kulcsmegvonás (tulajdonos)</td></tr>
+        <tr><td>nxn-keys:server:getKeys</td><td>C → S</td><td>Kulcslista lekérés</td></tr>
+        <tr><td>nxn-keys:server:requestSync</td><td>C → S</td><td>Teljes cache szinkronizálás</td></tr>
+        <tr><td>nxn-keys:client:syncKeys</td><td>S → C</td><td>Kulcslista szinkron</td></tr>
+        <tr><td>nxn-keys:client:lockResult</td><td>S → C</td><td>Zár/nyit eredmény</td></tr>
+        <tr><td>nxn-keys:client:keyReceived</td><td>S → C</td><td>Kulcs érkezett értesítés</td></tr>
+        <tr><td>nxn-keys:client:keyRevoked</td><td>S → C</td><td>Kulcs megvonva értesítés</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-link-chain"></i> Integrációk</h2>
+    <table>
+        <tr><th>Script</th><th>Export / Event</th><th>Kötelező?</th></tr>
+        <tr><td>nxn-engine</td><td>registerStartAuthCallback, setLocked, isLocked</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-vehicles</td><td>isOwner(src, plate), getVehicle(plate)</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-database</td><td>registerTable, getIdentifier</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-notify</td><td>notify / success / danger / warning</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-identity</td><td>getIdentifier(src) – előny, fallback: nxn-database</td><td><span class="badge badge-opt">Opcionális</span></td></tr>
+        <tr><td>nxn-garage</td><td>giveKey(src, plate) hívása spawn után</td><td><span class="badge badge-opt">Integrálódó</span></td></tr>
+        <tr><td>nxn-vehicleshop</td><td>giveKey(src, plate, true) hívása vásárlás után</td><td><span class="badge badge-opt">Integrálódó</span></td></tr>
+    </table>
+</main>
+<script>
+function switchTab(el, id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>

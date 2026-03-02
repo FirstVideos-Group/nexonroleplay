@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-keys</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="keyring-panel" class="nxn-panel hidden">
+
+    <div class="nxn-panel__header">
+        <div class="header-left">
+            <i class="hgi hgi-stroke hgi-key-01"></i>
+            <span>Kulcskarika</span>
+        </div>
+        <div class="header-right">
+            <span id="key-count" class="count-badge">0 kulcs</span>
+            <button class="nxn-btn-icon" id="btn-close">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="panel-body">
+        <!-- Üres állapot -->
+        <div id="empty-state" class="empty-state hidden">
+            <i class="hgi hgi-stroke hgi-key-01"></i>
+            <p>Nincsenek kulcsaid</p>
+        </div>
+
+        <!-- Kulcs lista -->
+        <div id="key-list"></div>
+    </div>
+
+    <!-- Közelségátadás panel (inline, egy adott kártyán) -->
+    <div id="give-drawer" class="give-drawer hidden">
+        <div class="give-drawer__header">
+            <span id="give-plate-label"></span>
+            <button class="nxn-btn-icon" id="give-close">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i>
+            </button>
+        </div>
+        <div id="nearby-list" class="nearby-list"></div>
+        <p id="nearby-empty" class="nearby-empty hidden">Nincs közeli játékos</p>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

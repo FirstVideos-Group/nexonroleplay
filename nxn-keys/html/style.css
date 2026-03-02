@@ -1,0 +1,278 @@
+/* ── Nexon Design System – nxn-keys ── */
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-surface2: #1e2030;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-accent2:  #7b87ff;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0b55b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: transparent;
+    font-family: var(--nxn-font);
+    color: var(--nxn-text);
+    overflow: hidden;
+    user-select: none;
+}
+
+.hidden { display: none !important; }
+
+/* ── Panel ── */
+.nxn-panel {
+    position: fixed;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%);
+    width: 380px;
+    max-height: 80vh;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.7);
+    display: flex;
+    flex-direction: column;
+    animation: nxnFadeIn .2s ease;
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.nxn-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--nxn-border);
+    flex-shrink: 0;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+}
+.header-left i { color: var(--nxn-accent); font-size: 18px; }
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.count-badge {
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 11px;
+    color: var(--nxn-muted);
+}
+
+/* ── Panel body ── */
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--nxn-border); border-radius: 4px; }
+
+/* ── Üres állapot ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 0;
+    color: var(--nxn-muted);
+    font-size: 13px;
+}
+.empty-state i { font-size: 36px; opacity: .3; }
+
+/* ── Kulcs kártya ── */
+.key-card {
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color .15s;
+}
+.key-card:hover { border-color: rgba(91,106,240,.4); }
+
+.key-card__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.key-card__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(91,106,240,.12);
+    border: 1px solid rgba(91,106,240,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--nxn-accent);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.key-card__info {
+    flex: 1;
+    min-width: 0;
+}
+.key-card__name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.key-card__plate {
+    font-size: 11px;
+    color: var(--nxn-muted);
+    font-family: monospace;
+    margin-top: 2px;
+}
+.key-card__badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+.badge-owner {
+    background: rgba(240,181,91,.12);
+    border: 1px solid rgba(240,181,91,.3);
+    color: var(--nxn-warning);
+}
+.badge-shared {
+    background: rgba(107,111,133,.15);
+    border: 1px solid var(--nxn-border);
+    color: var(--nxn-muted);
+}
+.badge-locked {
+    background: rgba(240,91,91,.10);
+    border: 1px solid rgba(240,91,91,.3);
+    color: var(--nxn-danger);
+}
+.badge-unlocked {
+    background: rgba(62,207,142,.10);
+    border: 1px solid rgba(62,207,142,.3);
+    color: var(--nxn-success);
+}
+
+.key-card__actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.nxn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--nxn-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+    white-space: nowrap;
+}
+.nxn-btn:hover { opacity: .85; }
+.nxn-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--nxn-border);
+    color: var(--nxn-muted);
+}
+.nxn-btn--ghost:hover { color: var(--nxn-text); border-color: var(--nxn-text); opacity: 1; }
+.nxn-btn--danger { background: var(--nxn-danger); }
+.nxn-btn--success { background: var(--nxn-success); color: #0e0f14; }
+.nxn-btn-icon {
+    background: none;
+    border: none;
+    color: var(--nxn-muted);
+    font-size: 18px;
+    cursor: pointer;
+    transition: color .15s;
+    line-height: 1;
+    padding: 2px;
+}
+.nxn-btn-icon:hover { color: var(--nxn-text); }
+
+/* ── Give drawer ── */
+.give-drawer {
+    border-top: 1px solid var(--nxn-border);
+    padding: 12px;
+    background: var(--nxn-bg);
+    flex-shrink: 0;
+    animation: nxnFadeIn .15s ease;
+}
+.give-drawer__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--nxn-muted);
+}
+.nearby-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+}
+.nearby-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--nxn-surface2);
+    border: 1px solid var(--nxn-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+.nearby-item__name { color: var(--nxn-text); }
+.nearby-item__dist { color: var(--nxn-muted); font-size: 11px; margin-right: 8px; }
+.nearby-empty {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    text-align: center;
+    padding: 12px 0;
+}
+
+/* ── Animations ── */
+@keyframes nxnFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
