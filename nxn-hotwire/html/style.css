@@ -1,0 +1,219 @@
+/* ── Nexon Design System – nxn-hotwire ── */
+:root {
+    --nxn-bg:      #0e0f14;
+    --nxn-surface: #16181f;
+    --nxn-surf2:   #1e2030;
+    --nxn-border:  #2a2d3a;
+    --nxn-accent:  #5b6af0;
+    --nxn-text:    #e4e6f0;
+    --nxn-muted:   #6b6f85;
+    --nxn-success: #3ecf8e;
+    --nxn-danger:  #f05b5b;
+    --nxn-warning: #f0b55b;
+    --nxn-radius:  12px;
+    --nxn-font:    'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Wire colours */
+--wire-red:    #e05555;
+--wire-blue:   #5588e0;
+--wire-yellow: #e0c055;
+--wire-green:  #55c07a;
+--wire-white:  #d0d5e8;
+--wire-black:  #4a4a5a;
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: transparent;
+    font-family: var(--nxn-font);
+    color: var(--nxn-text);
+    overflow: hidden;
+    user-select: none;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hidden { display: none !important; }
+
+/* ── Overlay ── */
+#overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.58);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    animation: hwFadeIn .22s ease;
+}
+
+/* ── Fejléc ── */
+.hw-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 700;
+}
+.hw-header i { color: var(--nxn-warning); font-size: 26px; }
+.hw-sub { font-size: 13px; color: var(--nxn-muted); font-weight: 400; margin-left: 4px; }
+
+/* ── Minijáték konténer ── */
+.minigame {
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-radius: var(--nxn-radius);
+    padding: 30px 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.65);
+}
+
+.hw-hint {
+    font-size: 13px;
+    color: var(--nxn-muted);
+    letter-spacing: .3px;
+}
+
+/* ── WireChoice ── */
+.wire-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+}
+
+.wire-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 10px;
+    background: var(--nxn-surf2);
+    border: 2px solid var(--nxn-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s, opacity .2s;
+    position: relative;
+    overflow: hidden;
+}
+.wire-card:hover:not(.dead) {
+    border-color: var(--nxn-accent);
+    transform: translateY(-2px);
+}
+.wire-card:active:not(.dead) { transform: scale(.95); }
+.wire-card.dead {
+    opacity: .35;
+    cursor: default;
+    pointer-events: none;
+}
+
+.wire-swatch {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.wire-label {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    font-weight: 600;
+    letter-spacing: .3px;
+}
+
+.wire-feedback {
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 22px;
+    transition: color .2s;
+}
+.wire-feedback.neutral { color: var(--nxn-warning); }
+.wire-feedback.shock   { color: var(--nxn-danger);  }
+.wire-feedback.success { color: var(--nxn-success); }
+
+/* ── Sequence ── */
+.seq-step {
+    width: 100px;
+    height: 100px;
+    background: var(--nxn-surf2);
+    border: 2px solid var(--nxn-accent);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--nxn-text);
+    animation: seqPulse .4s ease infinite alternate;
+}
+
+.seq-progress {
+    width: 100%;
+    height: 6px;
+    background: var(--nxn-border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+.seq-progress::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: var(--spct, 100%);
+    background: var(--nxn-accent);
+    border-radius: 6px;
+    transition: width .08s linear;
+}
+.seq-label {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    margin-top: 6px;
+    display: block;
+    text-align: center;
+}
+
+/* ── Timer ── */
+.hw-timer-wrap {
+    width: 340px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.hw-timer-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--nxn-border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.hw-timer-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: var(--pct, 100%);
+    background: var(--bar-color, var(--nxn-success));
+    border-radius: 6px;
+    transition: width .1s linear, background .3s;
+}
+.hw-timer-label { font-size: 12px; color: var(--nxn-muted); min-width: 42px; text-align: right; }
+
+/* ── Animációk ── */
+.flash-success { animation: hwFlashGreen .4s ease; }
+.flash-fail    { animation: hwFlashRed .4s ease, hwShake .35s ease; }
+.flash-neutral { animation: hwFlashYellow .35s ease; }
+
+@keyframes hwFadeIn     { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+@keyframes hwFlashGreen { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 32px 10px rgba(62,207,142,.5)} }
+@keyframes hwFlashRed   { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 32px 10px rgba(240,91,91,.5)} }
+@keyframes hwFlashYellow{ 0%,100%{box-shadow:none} 50%{box-shadow:0 0 24px 6px rgba(240,181,91,.4)} }
+@keyframes hwShake      { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+@keyframes seqPulse     { from{box-shadow:0 0 0 0 rgba(91,106,240,.3)} to{box-shadow:0 0 0 10px rgba(91,106,240,0)} }

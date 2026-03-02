@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-hotwire – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0; --bg: #0e0f14; --surface: #16181f;
+            --border:  #2a2d3a; --text: #e4e6f0; --muted: #6b6f85;
+            --success: #3ecf8e; --danger: #f05b5b; --warning: #f0b55b;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; line-height:1.7; }
+        header { background:var(--surface); border-bottom:1px solid var(--border); padding:24px 40px; display:flex; align-items:center; gap:14px; }
+        header i { font-size:28px; color:var(--warning); }
+        header h1 { font-size:22px; font-weight:700; }
+        header span { color:var(--muted); font-size:13px; margin-left:10px; }
+        main { max-width:920px; margin:40px auto; padding:0 24px 60px; }
+        h2 { font-size:17px; color:var(--accent); margin:36px 0 12px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+        p  { color:var(--muted); font-size:14px; margin-bottom:12px; }
+        pre { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; overflow-x:auto; font-size:13px; margin-bottom:16px; }
+        code { color:var(--success); }
+        table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; }
+        th { background:var(--surface); color:var(--accent); text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); }
+        td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--muted); }
+        td:first-child { color:var(--text); font-family:monospace; }
+        .chain { display:flex; align-items:center; gap:10px; padding:14px 0; flex-wrap:wrap; }
+        .chain-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; }
+        .chain-arrow { color:var(--accent); font-size:20px; }
+        .flow-step { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); }
+        .flow-step:last-child { border-bottom:none; }
+        .flow-num { background:var(--accent); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; margin-top:2px; }
+        .flow-text { font-size:13px; }
+        .flow-text strong { color:var(--text); }
+        .tabs { display:flex; gap:4px; }
+        .tab { padding:8px 18px; background:var(--surface); border:1px solid var(--border); border-bottom:none; border-radius:8px 8px 0 0; cursor:pointer; font-size:13px; color:var(--muted); }
+        .tab.active { color:var(--text); background:#1e2030; }
+        .tab-content { display:none; background:#1e2030; border:1px solid var(--border); border-radius:0 8px 8px 8px; padding:16px; margin-bottom:20px; }
+        .tab-content.active { display:block; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-electric"></i>
+    <div><h1>nxn-hotwire <span>v1.0.0</span></h1></div>
+</header>
+<main>
+    <p>Az <strong>nxn-hotwire</strong> a Nexon RP szerver kulcs nélküli motorindítási rendszere. Az <code>nxn-engine:hotwireStart()</code> exporton keresztül kerüli meg az <code>nxn-keys</code> auth callbacket. Két interaktív minijátékkát tartalmaz (wirechoice és sequence/QTE).</p>
+
+    <h2><i class="hgi hgi-stroke hgi-link-chain"></i> 2 lépéses autólopás folyamat</h2>
+    <div class="chain">
+        <div class="chain-box">🔓 nxn-cartheft<br><small style="color:var(--muted)">Fizikai behatolás</small></div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">🚗 Játékos belül</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">⚡ nxn-hotwire<br><small style="color:var(--muted)">Motor beindítás</small></div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-box">🔧 nxn-engine:hotwireStart()</div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-hotwire/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/
+    └── index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapért.</th><th>Leírás</th></tr>
+        <tr><td>Config.DefaultMinigame</td><td>'wirechoice'</td><td>'wirechoice' | 'sequence' | 'random'</td></tr>
+        <tr><td>Config.MinEngineHP</td><td>0.15</td><td>Min. motor HP hotwire-hoz (0.0–1.0)</td></tr>
+        <tr><td>Config.DamageOnFail</td><td>true</td><td>Motor kár alkalmazása kudarc esetén</td></tr>
+        <tr><td>Config.FailDamageAmount</td><td>0.08</td><td>Levonandó motor HP arány</td></tr>
+        <tr><td>Config.AttemptCooldown</td><td>20</td><td>Cooldown próbálkozások között (mp)</td></tr>
+        <tr><td>Config.PoliceAlertChance</td><td>0.50</td><td>Rendőrségi riasztás esélye sikerén</td></tr>
+        <tr><td>Config.PoliceAlertOnFail</td><td>0.20</td><td>Riasztás esélye kudarc esetén</td></tr>
+        <tr><td>Config.WireChoice.totalWires</td><td>6</td><td>Drótok száma</td></tr>
+        <tr><td>Config.WireChoice.shockWires</td><td>2</td><td>Áramtolás drótok száma</td></tr>
+        <tr><td>Config.WireChoice.timeLimit</td><td>20</td><td>Időlimit (mp)</td></tr>
+        <tr><td>Config.Sequence.steps</td><td>6</td><td>QTE lépésszám</td></tr>
+        <tr><td>Config.Sequence.timePerStep</td><td>1.5</td><td>Idő lépésenként (mp)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Param.</th><th>Return</th><th>Leírás</th></tr>
+        <tr><td>isBeingHotwired(plate)</td><td>string</td><td>boolean</td><td>Folyamatban van-e hotwire?</td></tr>
+        <tr><td>getAttemptCount(plate, ident)</td><td>string, string</td><td>int</td><td>Hány kísérlet volt adott játékostól</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Leírás</th></tr>
+        <tr><td>startHotwire(vehicleEntity)</td><td>Hotwire indítása külső scriptből</td></tr>
+        <tr><td>isHotwiring()</td><td>Folyamatban van-e hotwire</td></tr>
+        <tr><td>cancelHotwire()</td><td>Aktív hotwire megszakítása</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-hotwire:server:startAttempt</td><td>C → S</td><td>Hotwire kísérlet indítása</td></tr>
+        <tr><td>nxn-hotwire:server:attemptResult</td><td>C → S</td><td>Kísérlet eredménye</td></tr>
+        <tr><td>nxn-hotwire:client:attemptAllowed</td><td>S → C</td><td>Engedélyezési válasz</td></tr>
+        <tr><td>nxn-hotwire:client:hotwireSuccess</td><td>S → C</td><td>Motor beindult</td></tr>
+        <tr><td>nxn-hotwire:client:hotwireFailed</td><td>S → C</td><td>Kudarc (kár/cooldown)</td></tr>
+        <tr><td>nxn-hotwire:server:vehicleHotwired</td><td>Server event</td><td>Sikeres hotwire broadcast</td></tr>
+        <tr><td>nxn-hotwire:server:attemptLogged</td><td>Server event</td><td>Kísérlet logolva (nxn-police figyelheti)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Kódpéldák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="sw(this,'e1')">Szerver (Lua)</div>
+        <div class="tab" onclick="sw(this,'e2')">Kliens (Lua)</div>
+        <div class="tab" onclick="sw(this,'e3')">nxn-police integráció</div>
+    </div>
+    <div class="tab-content active" id="e1"><pre><code>-- Folyamatban van-e hotwire?
+if exports['nxn-hotwire']:isBeingHotwired('ABC-123') then
+    print('Hotwire folyamatban!')
+end
+
+-- Kísérletek száma
+local count = exports['nxn-hotwire']:getAttemptCount('ABC-123', identifier)</code></pre></div>
+    <div class="tab-content" id="e2"><pre><code>-- Hotwire indítása
+local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+exports['nxn-hotwire']:startHotwire(veh)
+
+-- Megszakítás
+exports['nxn-hotwire']:cancelHotwire()</code></pre></div>
+    <div class="tab-content" id="e3"><pre><code>-- nxn-police/server.lua
+AddEventHandler('nxn-hotwire:server:attemptLogged', function(src, plate, success, coords)
+    if success then
+        TriggerClientEvent('nxn-police:client:alert', -1, {
+            type     = 'hotwire',
+            message  = 'Jármű beindítás kulcs nélkül – rendszám: ' .. plate,
+            coords   = coords,
+            priority = 'high',
+        })
+    end
+end)</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-shield-check"></i> Biztonsági ellenőrzések</h2>
+    <div>
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>IsPedInVehicle</strong><span> – játékosnak a vezétő ülésben kell ülni</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>hasKeyForPlate</strong><span> – kliens oldali gyors szűrő</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>getEngineHP</strong><span> – motor HP előellenőrzés kliensen</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>isOwner (szerver)</strong><span> – re-ellenőrzés</span></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>hasKey (szerver)</strong><span> – kulcs re-ellenőrzés</span></div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>isBeingHotwired</strong><span> – konkurens hotwire megakadályozása</span></div></div>
+        <div class="flow-step"><div class="flow-num">7</div><div class="flow-text"><strong>Cooldown</strong><span> – AttemptCooldown másodperc várakozás</span></div></div>
+    </div>
+</main>
+<script>
+function sw(el, id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>

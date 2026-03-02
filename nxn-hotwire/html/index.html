@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-hotwire</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="overlay" class="hidden">
+
+    <!-- Fejléc -->
+    <div class="hw-header">
+        <i class="hgi hgi-stroke hgi-electric"></i>
+        <span id="hw-title">Hotwire</span>
+        <span id="hw-sub" class="hw-sub"></span>
+    </div>
+
+    <!-- ════ WIRECHOICE ════ -->
+    <div id="mg-wirechoice" class="minigame hidden">
+        <p class="hw-hint">Válassz egy drótot!</p>
+        <div id="wire-grid" class="wire-grid"></div>
+        <div id="wire-feedback" class="wire-feedback"></div>
+    </div>
+
+    <!-- ════ SEQUENCE ════ -->
+    <div id="mg-sequence" class="minigame hidden">
+        <p class="hw-hint">Nyomd le a mutatott gombot!</p>
+        <div id="seq-step" class="seq-step"></div>
+        <div id="seq-progress" class="seq-progress">
+            <span id="seq-label" class="seq-label">1 / 6</span>
+        </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="hw-timer-wrap">
+        <div id="hw-timer-bar" class="hw-timer-bar"></div>
+        <span id="hw-timer-label" class="hw-timer-label"></span>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
