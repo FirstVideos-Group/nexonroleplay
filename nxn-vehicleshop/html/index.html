@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxn-vehicleshop</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ── Teszt-menet overlay ── -->
+<div id="testdrive-overlay" class="hidden">
+    <div class="td-badge">
+        <i class="hgi hgi-stroke hgi-steering"></i>
+        <span>Teszt-menet</span>
+        <span id="td-timer" class="td-timer">0:00</span>
+        <button id="td-stop" class="nxn-btn nxn-btn--sm nxn-btn--danger">
+            <i class="hgi hgi-stroke hgi-stop"></i> Visszatér
+        </button>
+    </div>
+</div>
+
+<!-- ── Shop panel ── -->
+<div id="shop-panel" class="nxn-panel hidden">
+
+    <!-- Header -->
+    <div class="nxn-panel__header">
+        <div class="header-left">
+            <i class="hgi hgi-stroke hgi-car-01"></i>
+            <span id="shop-title">Járműkereskedés</span>
+        </div>
+        <div class="header-right">
+            <div class="balance-badge">
+                <i class="hgi hgi-stroke hgi-bank"></i>
+                <span id="balance-display">$0</span>
+            </div>
+            <button class="nxn-btn-icon" id="btn-close">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="shop-filters">
+        <div class="filter-cats" id="filter-cats"></div>
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label>Rendezés</label>
+                <select id="sort-select">
+                    <option value="price_asc">Ár ↑</option>
+                    <option value="price_desc">Ár ↓</option>
+                    <option value="name">Névsor</option>
+                    <option value="hp">Teljesítmény</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Max ár: <span id="price-val">$∞</span></label>
+                <input type="range" id="price-range" min="0" max="5000000" step="10000" value="5000000"/>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="shop-tabs">
+        <button class="shop-tab active" data-tab="browse">
+            <i class="hgi hgi-stroke hgi-grid-view"></i> Böngészés
+        </button>
+        <button class="shop-tab" data-tab="detail" id="tab-detail" style="display:none">
+            <i class="hgi hgi-stroke hgi-information-circle"></i> Részletek
+        </button>
+        <button class="shop-tab" data-tab="finance" id="tab-finance">
+            <i class="hgi hgi-stroke hgi-credit-card"></i> Finanszírozás
+        </button>
+    </div>
+
+    <!-- Browse tab -->
+    <div class="shop-tab-content active" id="tab-content-browse">
+        <div class="vehicle-grid" id="vehicle-grid"></div>
+    </div>
+
+    <!-- Detail tab -->
+    <div class="shop-tab-content" id="tab-content-detail">
+        <div id="vehicle-detail"></div>
+    </div>
+
+    <!-- Finance tab -->
+    <div class="shop-tab-content" id="tab-content-finance">
+        <div class="finance-panel" id="finance-panel">
+            <p class="finance-hint">Válassz járművet a böngészés fülön, majd ide visszatérve számítsd ki a részletet.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Vásárlás megerősítő modal ── -->
+<div id="confirm-modal" class="nxn-modal hidden">
+    <div class="nxn-modal__box">
+        <div class="nxn-modal__header">
+            <i class="hgi hgi-stroke hgi-checkmark-circle-02"></i>
+            <span>Vásárlás megerősítése</span>
+        </div>
+        <div class="nxn-modal__body" id="confirm-body"></div>
+        <div class="nxn-modal__footer">
+            <button class="nxn-btn nxn-btn--ghost" id="confirm-cancel">Mégsem</button>
+            <button class="nxn-btn" id="confirm-ok">
+                <i class="hgi hgi-stroke hgi-shopping-bag-01"></i> Megveszem
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

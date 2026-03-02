@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-vehicleshop – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+            --danger: #f05b5b;
+            --warning: #f0b55b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 17px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px; vertical-align: middle; }
+        .badge-req  { background: rgba(240,91,91,.15); border: 1px solid rgba(240,91,91,.3); color: var(--danger); }
+        .badge-opt  { background: rgba(240,181,91,.12); border: 1px solid rgba(240,181,91,.3); color: var(--warning); }
+        .badge-srv  { background: rgba(91,106,240,.15); border: 1px solid rgba(91,106,240,.3); color: var(--accent); }
+        .badge-cli  { background: rgba(62,207,142,.12); border: 1px solid rgba(62,207,142,.3); color: var(--success); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; margin-bottom: 20px; }
+        .tab-content.active { display: block; }
+        .flow-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .flow-step:last-child { border-bottom: none; }
+        .flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+        .flow-text { font-size: 13px; }
+        .flow-text strong { color: var(--text); }
+        .flow-text span { color: var(--muted); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-car-01"></i>
+    <div>
+        <h1>nxn-vehicleshop <span>v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-vehicleshop</strong> egy önálló járműkereskedési script, amely lehetővé teszi a játékosok számára, hogy járműveket vásároljanak vagy tesztelhessenek NPC-alapú kereskedéseknél. Kizárólag az ökoszisztéma exportjain keresztül kommunikál más scriptekkel.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-vehicleshop/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+├── html/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── docs/
+    └── index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.AllowDuplicatePurchase</td><td>false</td><td>Lehet-e kétszer ugyanolyan modellt venni</td></tr>
+        <tr><td>Config.RequireLicense</td><td>true</td><td>Jogosítvány szükséges-e vásárláshoz</td></tr>
+        <tr><td>Config.FinancingEnabled</td><td>true</td><td>Részletfizetés engedélyezése</td></tr>
+        <tr><td>Config.TestDriveCooldown</td><td>600</td><td>Teszt-menet cooldown másodpercben</td></tr>
+        <tr><td>Config.BlipEnabled</td><td>true</td><td>Kereskedők blipje a térképen</td></tr>
+        <tr><td>Config.Financing.InterestRate</td><td>0.05</td><td>Éves kamatláb (5%)</td></tr>
+        <tr><td>Config.Financing.MinMonths</td><td>3</td><td>Minimum futamidő (hó)</td></tr>
+        <tr><td>Config.Financing.MaxMonths</td><td>60</td><td>Maximum futamidő (hó)</td></tr>
+        <tr><td>Config.Dealers</td><td>[ ... ]</td><td>Kereskedők tömbje (ld. alább)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-store-01"></i> Kereskedő konfiguráció</h2>
+    <pre><code>Config.Dealers = {
+    {
+        id           = 'premium_deluxe',
+        label        = 'Premium Deluxe Motorsport',
+        blip         = { sprite = 523, color = 27, scale = 0.8 },
+        npc          = { model = 'ig_carmercs', coords = vector4(...), enabled = true },
+        spawnCoord   = vector4(...),
+        testDrive    = { enabled = true, duration = 180, spawnCoord = vector4(...) },
+        categories   = { 'sport', 'super', 'sedan', 'suv' },
+        defaultGarage = 'main_garage',
+        vehicles     = {
+            { model = 'adder', label = 'Truffade Adder', price = 1000000, category = 'super', hp = 900, maxSpeed = 250, weight = 1500 },
+            -- ...
+        }
+    },
+}</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-shopping-cart-01"></i> Vásárlás folyamata</h2>
+    <div>
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Jogosítvány ellenőrzés</strong> <span>– ha Config.RequireLicense = true, nxn-licenses:hasLicense() hívás</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Duplikát ellenőrzés</strong> <span>– nxn-vehicles:getVehicles() alapján</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Egyenleg ellenőrzés</strong> <span>– nxn-finance:getMoney(src, 'bank')</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Pénzlevonás</strong> <span>– nxn-finance:removeMoney(src, price, 'bank')</span></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Jármű regisztrálása</strong> <span>– nxn-vehicles:addVehicle(identifier, model, label, 0)</span></div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>Garázsba mentés</strong> <span>– nxn-vehicles:setStored(plate, true) + setGarage()</span></div></div>
+        <div class="flow-step"><div class="flow-num">7</div><div class="flow-text"><strong>Visszajelzés</strong> <span>– nxn-notify:notify() + UI bezárás</span></div></div>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Leírás</th></tr>
+        <tr><td>getShopItems(dealerId)</td><td><span class="badge badge-srv">server</span></td><td>Kereskedő teljes járműkínálata</td></tr>
+        <tr><td>getShopItem(dealerId, model)</td><td><span class="badge badge-srv">server</span></td><td>Egy konkrét jármű adatai</td></tr>
+        <tr><td>openShop(dealerId)</td><td><span class="badge badge-cli">client</span></td><td>Shop UI megnyitása külső resource-ból</td></tr>
+        <tr><td>closeShop()</td><td><span class="badge badge-cli">client</span></td><td>Shop UI bezárása</td></tr>
+        <tr><td>startTestDrive(model, dealerId)</td><td><span class="badge badge-cli">client</span></td><td>Teszt-menet indítása kívülről</td></tr>
+        <tr><td>isTestDriving()</td><td><span class="badge badge-cli">client</span></td><td>Aktív teszt-menet ellenőrzése</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Kliens (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Szerver (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Más resource-ból</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- Shop megnyitása
+exports['nxn-vehicleshop']:openShop('premium_deluxe')
+
+-- Teszt-menet indítása
+exports['nxn-vehicleshop']:startTestDrive('adder', 'premium_deluxe')
+
+-- Aktív teszt-menet ellenőrzése
+if exports['nxn-vehicleshop']:isTestDriving() then
+    print('Épp tesztmenetben van a játékos')
+end
+
+-- Bezárás
+exports['nxn-vehicleshop']:closeShop()</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Kereskedő összes járműve
+local items = exports['nxn-vehicleshop']:getShopItems('premium_deluxe')
+for _, v in ipairs(items) do
+    print(v.label, v.price)
+end
+
+-- Egy konkrét jármű adatai
+local item = exports['nxn-vehicleshop']:getShopItem('premium_deluxe', 'adder')
+if item then
+    print('Ár:', item.price)
+end</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- Más nxn-* resource kliens oldaláról:
+exports['nxn-vehicleshop']:openShop('simeon_motors')
+
+-- Szerver oldaláról (pl. nxn-job):
+local vehicles = exports['nxn-vehicleshop']:getShopItems('premium_deluxe')</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-link-chain"></i> Integrációk</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th><th>Kötelező?</th></tr>
+        <tr><td>nxn-vehicles</td><td>addVehicle, getVehicles, setStored, setGarage</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-finance</td><td>getMoney, removeMoney, addMoney, addDebt</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-notify</td><td>notify() – visszajelzések</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-garage</td><td>GetResourceState ellenőrzés – setStored hívás</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+        <tr><td>nxn-licenses</td><td>hasLicense(src, 'drivers_license')</td><td><span class="badge badge-opt">Opcionális</span></td></tr>
+        <tr><td>nxn-npcconversation</td><td>registerNPC – kereskedő dialóg</td><td><span class="badge badge-opt">Opcionális</span></td></tr>
+        <tr><td>nxn-database</td><td>getIdentifier(src)</td><td><span class="badge badge-req">Kötelező</span></td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-vehicleshop:server:buy</td><td>Client → Server</td><td>Vásárlás kérelem küldése</td></tr>
+        <tr><td>nxn-vehicleshop:server:requestBalance</td><td>Client → Server</td><td>Egyenleg lekérés</td></tr>
+        <tr><td>nxn-vehicleshop:client:purchased</td><td>Server → Client</td><td>Sikeres vásárlás visszajelzés</td></tr>
+        <tr><td>nxn-vehicleshop:client:balanceUpdate</td><td>Server → Client</td><td>Egyenleg frissítés a UI-hoz</td></tr>
+        <tr><td>nxn-vehicleshop:server:purchased</td><td>Server event</td><td>Vásárlás esemény (más scripteknek)</td></tr>
+    </table>
+</main>
+<script>
+function switchTab(el, id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
