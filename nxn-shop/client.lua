@@ -16,7 +16,7 @@ local function ResolveShopArgs(shopId, mode)
     return shopId, mode
 end
 
--- ── NPC regisztrálás ─────────────────────────────────────────
+-- ── NPC regisztrálás ────────────────────────────────────────
 
 AddEventHandler('onClientResourceStart', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
@@ -68,9 +68,14 @@ AddEventHandler('onClientResourceStop', function(resourceName)
     end
 end)
 
--- ── Net events ───────────────────────────────────────────────
-
-RegisterNetEvent('nxn-shop:client:openShop', function(shopId, mode)
+-- ── Shop megnyitás handler ───────────────────────────────────────
+-- Az nxn-npcconversation TriggerEvent()-tel (lokális esemény) hívja meg
+-- a dialógus event-jét, nem TriggerNetEvent()-tel. Korábban csak
+-- RegisterNetEvent volt, ami a lokális TriggerEvent-et nem kapta el,
+-- ezért shopId=nil értelemmel érkezett a WARN-hoz.
+-- Megoldás: közös HandleOpenShop függvény, amit mind a lokális
+-- AddEventHandler, mind a RegisterNetEvent meghív.
+local function HandleOpenShop(shopId, mode)
     shopId, mode = ResolveShopArgs(shopId, mode)
 
     local shop = Config.Shops[shopId]
@@ -80,7 +85,12 @@ RegisterNetEvent('nxn-shop:client:openShop', function(shopId, mode)
     end
     currentMode = mode or 'buy'
     TriggerServerEvent('nxn-shop:server:requestShop', shopId, currentMode)
-end)
+end
+
+RegisterNetEvent('nxn-shop:client:openShop', HandleOpenShop)
+AddEventHandler('nxn-shop:client:openShop', HandleOpenShop)
+
+-- ── Net events ───────────────────────────────────────────────
 
 RegisterNetEvent('nxn-shop:client:shopData', function(shopId, shopData, currentMoney, mode)
     isShopUIOpen = true
@@ -125,7 +135,6 @@ RegisterNUICallback('requestInventory', function(_, cb)
     cb('ok')
 end)
 
--- Szerver küldi vissza az inventory adatokat (sell tab-hoz)
 RegisterNetEvent('nxn-shop:client:inventoryData', function(invData)
     SendNUIMessage({ action = 'inventoryData', items = invData })
 end)
