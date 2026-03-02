@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-delivery – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent: #5b6af0;
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --border: #2a2d3a;
+            --text: #e4e6f0;
+            --muted: #6b6f85;
+            --success: #3ecf8e;
+            --warning: #f0a05b;
+            --danger: #f05b5b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 900px; margin: 40px auto; padding: 0 24px 60px; }
+        h2 { font-size: 17px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+        .badge.warn { background: var(--warning); }
+        .badge.danger { background: var(--danger); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 2; }
+        .flow span { color: var(--accent); font-weight: 600; }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-truck-01"></i>
+    <div>
+        <h1>nxn-delivery <span>v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-delivery</strong> a Nexon RP szerver első önálló, játékható munkája – egy teljesítményalapú szállítási/futármunka rendszer. A játékosok csomagokat szállítanak diszpécserponttól célállomásra, jutalmat kapnak az elvégzett feladatokért.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-information-circle"></i> Függőségek</h2>
+    <table>
+        <tr><th>Script</th><th>Típus</th><th>Szerep</th></tr>
+        <tr><td>nxn-job</td><td><span class="badge">Kötelező</span></td><td>hasJob(), getJob(), delivery munkakör</td></tr>
+        <tr><td>nxn-jobwork</td><td><span class="badge">Kötelező</span></td><td>isOnDuty(), clockedOut event</td></tr>
+        <tr><td>nxn-finance</td><td><span class="badge">Kötelező</span></td><td>addMoney() – teljesítményalapú fizetés</td></tr>
+        <tr><td>nxn-database</td><td><span class="badge">Kötelező</span></td><td>nxn_delivery_tasks tábla</td></tr>
+        <tr><td>nxn-identity</td><td><span class="badge">Kötelező</span></td><td>getIdentifier() – azonosító</td></tr>
+        <tr><td>nxn-notify</td><td><span class="badge">Kötelező</span></td><td>Értesítések</td></tr>
+        <tr><td>nxn-npcconversation</td><td><span class="badge">Kötelező</span></td><td>Diszpécser NPC regisztráció</td></tr>
+        <tr><td>nxn-needs</td><td><span class="badge warn">Opcionális</span></td><td>modifyNeed() – fáradtság, stressz</td></tr>
+        <tr><td>nxn-vehicles</td><td><span class="badge warn">Opcionális</span></td><td>spawnVehicle(), deleteVehicle()</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.TaskCategories</td><td>small/medium/large</td><td>Feladat kategóriák, jutalmak, időlimitek</td></tr>
+        <tr><td>Config.DispatchLocations</td><td>downtown, airport, sandy</td><td>Diszpécser NPC helyek</td></tr>
+        <tr><td>Config.DeliveryTargets</td><td>15 célpont</td><td>Lehetséges leadási helyek</td></tr>
+        <tr><td>Config.VehicleEnabled</td><td>true</td><td>Munkajármű kiosztás engedélyezése</td></tr>
+        <tr><td>Config.VehicleModel</td><td>'mule'</td><td>Munkajármű modelje</td></tr>
+        <tr><td>Config.MaxTasksPerShift</td><td>0</td><td>Műszakra vonatkozó feladatlimit (0 = korlátlan)</td></tr>
+        <tr><td>Config.TimeBonusMultiplier</td><td>1.25</td><td>Gyors teljesítés bónusz szorzója</td></tr>
+        <tr><td>Config.StressOnTimeout</td><td>15</td><td>Stressznövekedés időtúllépéskor</td></tr>
+        <tr><td>Config.FatigueEnabled</td><td>true</td><td>Fáradtság integráció</td></tr>
+        <tr><td>Config.PickupDistance</td><td>5.0</td><td>Interakciós távolság csomagfelvételhez</td></tr>
+        <tr><td>Config.DropoffDistance</td><td>5.0</td><td>Interakciós távolság leadáshoz</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-arrow-right-double"></i> Működési folyamat</h2>
+    <div class="flow">
+        <span>1.</span> Játékos diszpécser NPC-hez megy (delivery munkakör + aktív műszak szükséges)<br>
+        <span>2.</span> "Feladat kérése" → szerver generál véletlenszerű célpontot és kategóriát<br>
+        <span>3.</span> <span>PICKUP marker</span> jelenik meg a diszpécser közelében → [E] csomag felvétele (animációval)<br>
+        <span>4.</span> <span>DROPOFF blip + marker</span> jelenik meg a célállomáson → [E] leadás<br>
+        <span>5.</span> Szerver ellenőrzi az időt → jutalom kiszámítása (alap + távolság + esetleges bónusz)<br>
+        <span>6.</span> Fizetés az nxn-finance-on keresztül, DB mentés, fáradtság növelés
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>hasActiveTask(src)</td><td>number</td><td>boolean</td><td>Van-e aktív szállítási feladata</td></tr>
+        <tr><td>getActiveTask(src)</td><td>number</td><td>table|nil</td><td>Az aktív feladat adatai</td></tr>
+        <tr><td>getTaskCount(src)</td><td>number</td><td>number</td><td>Teljesített feladatok száma az aktuális műszakban</td></tr>
+        <tr><td>getTotalEarned(src)</td><td>number</td><td>number</td><td>Műszakban összeszerzett fizetés</td></tr>
+        <tr><td>cancelTask(src, reason?)</td><td>number, string?</td><td>boolean</td><td>Aktív feladat lemondása</td></tr>
+        <tr><td>getLeaderboard(limit?)</td><td>number?</td><td>table</td><td>Top szállítók mai teljesítmény alapján</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>hasActiveTask()</td><td>boolean</td><td>Van-e aktív feladat lokálisan</td></tr>
+        <tr><td>getLocalTask()</td><td>table|nil</td><td>Aktív feladat adatai kliensen</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-delivery:server:requestTask</td><td>Client → Server</td><td>Feladat kérése diszpécsertől</td></tr>
+        <tr><td>nxn-delivery:server:pickupConfirmed</td><td>Client → Server</td><td>Csomag felvétele megerősítve</td></tr>
+        <tr><td>nxn-delivery:server:confirmDropoff</td><td>Client → Server</td><td>Csomag leadása megerősítve</td></tr>
+        <tr><td>nxn-delivery:client:taskStarted</td><td>Server → Client</td><td>Feladat elindítva</td></tr>
+        <tr><td>nxn-delivery:client:taskCompleted</td><td>Server → Client</td><td>Feladat teljesítve</td></tr>
+        <tr><td>nxn-delivery:client:taskFailed</td><td>Server → Client</td><td>Feladat sikertelen / törölve</td></tr>
+        <tr><td>nxn-delivery:server:taskStarted</td><td>Server broadcast</td><td>Más scriptek figyelhetik</td></tr>
+        <tr><td>nxn-delivery:server:taskCompleted</td><td>Server broadcast</td><td>Más scriptek figyelhetik</td></tr>
+        <tr><td>nxn-delivery:server:taskFailed</td><td>Server broadcast</td><td>Más scriptek figyelhetik</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Szerver exportok</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Kliens exportok</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Event figyelés</div>
+        <div class="tab" onclick="switchTab(this,'t4')">nxn-job módosítás</div>
+        <div class="tab" onclick="switchTab(this,'t5')">nxn-jobwork módosítás</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- Van-e aktív feladat?
+if exports['nxn-delivery']:hasActiveTask(src) then
+    print('Aktív szállítás van.')
+end
+
+-- Feladat adatai
+local task = exports['nxn-delivery']:getActiveTask(src)
+if task then
+    print('Kategória: ' .. task.category)
+    print('Jutalom: '   .. task.reward .. ' Ft')
+end
+
+-- Teljesített feladatok száma a műszakban
+local count = exports['nxn-delivery']:getTaskCount(src)
+print('Feladatok: ' .. count)
+
+-- Összkereset a műszakban
+local earned = exports['nxn-delivery']:getTotalEarned(src)
+print('Keresett: ' .. earned .. ' Ft')
+
+-- Feladat lemondása
+exports['nxn-delivery']:cancelTask(src, 'admin')
+
+-- Napi toplista (top 5)
+local lb = exports['nxn-delivery']:getLeaderboard(5)
+for _, row in ipairs(lb) do
+    print(row.identifier, row.total_tasks, row.total_earned)
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- Van-e aktív feladat lokálisan?
+if exports['nxn-delivery']:hasActiveTask() then
+    print('Aktív szállítás fut.')
+end
+
+-- Feladat adatok kliensen
+local task = exports['nxn-delivery']:getLocalTask()
+if task then
+    print('Célállomás: ' .. task.target.label)
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Szállítás teljesítve (más scriptből figyelve)
+AddEventHandler('nxn-delivery:server:taskCompleted', function(src, taskId, reward, bonus, timeTaken)
+    print(('Játékos #%d teljesítette a feladatot. Jutalom: %d Ft, bónusz: %s'):format(
+        src, reward, tostring(bonus)))
+end)
+
+-- Szállítás indult
+AddEventHandler('nxn-delivery:server:taskStarted', function(src, taskId, category, target, reward)
+    print(('Játékos #%d szállítást indított: %s → %s'):format(src, category, target.label))
+end)
+
+-- Szállítás sikertelen
+AddEventHandler('nxn-delivery:server:taskFailed', function(src, taskId, reason)
+    print(('Játékos #%d szállítása sikertelen: %s'):format(src, reason))
+end)</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- nxn-job/config.lua – delivery munkakör hozzáadása:
+['delivery'] = {
+    label  = 'Szállító',
+    color  = '#e67e22',
+    grades = {
+        [0] = { label = 'Futár',            salary = 0 },
+        [1] = { label = 'Tapasztalt Futár', salary = 0 },
+        [2] = { label = 'Főfutár',           salary = 0 },
+    },
+},
+-- salary = 0: nxn-jobwork nem fizet órabért,
+-- az nxn-delivery teljesítményalapú jutalmazást alkalmaz.</code></pre>
+    </div>
+    <div class="tab-content" id="t5">
+        <pre><code>-- nxn-jobwork/config.lua – delivery bejelentkezési pont:
+['delivery'] = {
+    label = 'Szállítás – Bejelentkezés',
+    npc = {
+        id       = 'delivery_duty_desk',
+        model    = 's_m_m_fiboffice_01',
+        coords   = vector4(103.7, -1089.1, 29.2, 180.0),
+        scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
+        blip     = { enabled=true, sprite=478, color=5, label='Szállítás – Iroda', scale=0.8 },
+    },
+    requiredJob   = 'delivery',
+    requiredGrade = 0,
+},</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-database-01"></i> Adatbázis</h2>
+    <pre><code>CREATE TABLE IF NOT EXISTS `nxn_delivery_tasks` (
+    `id`            INT UNSIGNED   NOT NULL AUTO_INCREMENT,
+    `identifier`    VARCHAR(100)   NOT NULL,
+    `category`      VARCHAR(20)    NOT NULL,
+    `dispatch_id`   VARCHAR(50)    NOT NULL,
+    `target_label`  VARCHAR(100)   NOT NULL,
+    `target_coords` VARCHAR(100)   NOT NULL,
+    `reward`        INT UNSIGNED   NOT NULL DEFAULT 0,
+    `distance_m`    FLOAT          DEFAULT NULL,
+    `time_limit`    INT UNSIGNED   NOT NULL,
+    `time_taken`    INT UNSIGNED   DEFAULT NULL,
+    `status`        ENUM('active','completed','failed','cancelled') NOT NULL DEFAULT 'active',
+    `bonus_applied` TINYINT(1)     NOT NULL DEFAULT 0,
+    `started_at`    DATETIME       NOT NULL,
+    `completed_at`  DATETIME       DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_delivery_ident`  (`identifier`),
+    INDEX `idx_delivery_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-terminal"></i> Admin parancs</h2>
+    <table>
+        <tr><th>Parancs</th><th>ACE jog</th><th>Leírás</th></tr>
+        <tr><td>/canceldelivery [src]</td><td>nxn.delivery.admin</td><td>Egy játékos aktív szállítási feladatának törlése</td></tr>
+    </table>
+
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>

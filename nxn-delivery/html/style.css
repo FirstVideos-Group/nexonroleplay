@@ -1,0 +1,169 @@
+/* ── Nexon Design System – nxn-delivery ── */
+:root {
+    --nxn-bg:       #0e0f14;
+    --nxn-surface:  #16181f;
+    --nxn-border:   #2a2d3a;
+    --nxn-accent:   #5b6af0;
+    --nxn-text:     #e4e6f0;
+    --nxn-muted:    #6b6f85;
+    --nxn-success:  #3ecf8e;
+    --nxn-danger:   #f05b5b;
+    --nxn-warning:  #f0a05b;
+    --nxn-radius:   10px;
+    --nxn-font:     'Inter', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: transparent;
+    font-family: var(--nxn-font);
+    color: var(--nxn-text);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.hidden { display: none !important; }
+
+/* ── Feladatkártya HUD ── */
+.delivery-card {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 300px;
+    background: var(--nxn-surface);
+    border: 1px solid var(--nxn-border);
+    border-left: 3px solid var(--nxn-accent);
+    border-radius: var(--nxn-radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,.55);
+    animation: nxnFadeIn .25s ease;
+    overflow: hidden;
+}
+
+.delivery-card__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nxn-border);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--nxn-accent);
+}
+
+.delivery-card__header i {
+    font-size: 18px;
+    color: var(--nxn-accent);
+}
+
+.delivery-card__body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ── Sorok ── */
+.delivery-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.delivery-label {
+    font-size: 12px;
+    color: var(--nxn-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.delivery-label i { font-size: 13px; }
+
+.delivery-value {
+    font-size: 12px;
+    color: var(--nxn-text);
+    font-weight: 600;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+}
+
+/* ── Timer ── */
+.delivery-timer {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.delivery-timer__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delivery-time {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--nxn-success);
+    font-variant-numeric: tabular-nums;
+    transition: color .3s;
+}
+
+.delivery-time.urgent { color: var(--nxn-danger); }
+
+/* ── Progress bar ── */
+.delivery-progress {
+    width: 100%;
+    height: 5px;
+    background: var(--nxn-border);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.delivery-progress__bar {
+    height: 100%;
+    width: 100%;
+    background: var(--nxn-success);
+    border-radius: 99px;
+    transition: width .5s linear, background-color .3s;
+}
+
+.delivery-progress__bar.urgent  { background: var(--nxn-danger);  }
+.delivery-progress__bar.warning { background: var(--nxn-warning); }
+
+/* ── Bónusz badge ── */
+.bonus-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: rgba(240, 160, 91, 0.12);
+    border: 1px solid var(--nxn-warning);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--nxn-warning);
+    margin-top: 2px;
+    animation: nxnPulse 1.5s ease infinite;
+}
+
+.bonus-badge i { font-size: 13px; }
+
+/* ── Animációk ── */
+@keyframes nxnFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes nxnPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.6; }
+}

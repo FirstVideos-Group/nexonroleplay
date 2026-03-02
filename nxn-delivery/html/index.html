@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nxn-delivery</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="delivery-card" class="delivery-card hidden">
+    <div class="delivery-card__header">
+        <i id="task-icon" class="hgi hgi-stroke hgi-package-01"></i>
+        <span>Szállítási Feladat</span>
+    </div>
+    <div class="delivery-card__body">
+        <div class="delivery-row">
+            <span class="delivery-label"><i class="hgi hgi-stroke hgi-tag-01"></i> Csomag</span>
+            <span id="task-category" class="delivery-value">–</span>
+        </div>
+        <div class="delivery-row">
+            <span class="delivery-label"><i class="hgi hgi-stroke hgi-location-01"></i> Cél</span>
+            <span id="task-target" class="delivery-value">–</span>
+        </div>
+        <div class="delivery-row">
+            <span class="delivery-label"><i class="hgi hgi-stroke hgi-money-01"></i> Jutalom</span>
+            <span id="task-reward" class="delivery-value">–</span>
+        </div>
+        <div class="delivery-row">
+            <span class="delivery-label"><i class="hgi hgi-stroke hgi-arrow-right-01"></i> Távolság</span>
+            <span id="task-distance" class="delivery-value">–</span>
+        </div>
+        <div class="delivery-timer">
+            <div class="delivery-timer__top">
+                <span class="delivery-label"><i class="hgi hgi-stroke hgi-clock-01"></i> Hátralévő</span>
+                <span id="task-time" class="delivery-time">–</span>
+            </div>
+            <div class="delivery-progress">
+                <div id="task-progress-bar" class="delivery-progress__bar"></div>
+            </div>
+        </div>
+        <div id="bonus-badge" class="bonus-badge hidden">
+            <i class="hgi hgi-stroke hgi-star-01"></i> Bónusz elérhető!
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
