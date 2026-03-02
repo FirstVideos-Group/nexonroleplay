@@ -22,11 +22,10 @@ local function NotifyLocal(msg, ntype)
     TriggerEvent('nxn-notify:client:show', msg, ntype or 'info')
 end
 
--- ── NPC & Blip init ──────────────────────────────────────────
+-- ── NPC & Blip init ────────────────────────────────────────────
 
 local function InitDealers()
     for _, dealer in ipairs(Config.Dealers) do
-        -- Blip
         if Config.BlipEnabled then
             local blip = AddBlipForCoord(dealer.npc.coords.x, dealer.npc.coords.y, dealer.npc.coords.z)
             SetBlipSprite(blip, dealer.blip.sprite)
@@ -39,7 +38,6 @@ local function InitDealers()
             dealerBlips[dealer.id] = blip
         end
 
-        -- NPC
         if dealer.npc.enabled then
             CreateThread(function()
                 local model = GetHashKey(dealer.npc.model)
@@ -57,7 +55,6 @@ local function InitDealers()
                 dealerNPCs[dealer.id] = npc
                 SetModelAsNoLongerNeeded(model)
 
-                -- nxn-npcconversation integráció
                 if GetResourceState('nxn-npcconversation') == 'started' then
                     local did = dealer.id
                     exports['nxn-npcconversation']:registerNPC(npc, dealer.label, {
@@ -74,7 +71,7 @@ local function InitDealers()
     end
 end
 
--- ── Shop megnyitás logika ────────────────────────────────────
+-- ── Shop megnyitás logika ────────────────────────────────────────
 
 local function FindDealerById(id)
     for _, d in ipairs(Config.Dealers) do
@@ -88,13 +85,11 @@ local function OpenShopForDealer(dealerId)
     if not dealer then return end
     currentDealerId = dealerId
 
-    -- Egyenleg lekérés a UI-hoz
     local balance = 0
     if GetResourceState('nxn-finance') == 'started' then
         TriggerServerEvent('nxn-vehicleshop:server:getBalance')
     end
 
-    -- Finanszírozás elérhetősége
     local financingAvailable = Config.FinancingEnabled and GetResourceState('nxn-finance') == 'started'
 
     SendNUIMessage({
@@ -112,7 +107,7 @@ local function OpenShopForDealer(dealerId)
     SetShopVisible(true, dealerId)
 end
 
--- ── NUI Callbacks ────────────────────────────────────────────
+-- ── NUI Callbacks ──────────────────────────────────────────────
 
 RegisterNUICallback('close', function(_, cb)
     SetShopVisible(false)
@@ -155,7 +150,7 @@ RegisterNUICallback('getBalance', function(_, cb)
     cb('ok')
 end)
 
--- ── Net Events (kliens) ──────────────────────────────────────
+-- ── Net Events (kliens) ─────────────────────────────────────────
 
 RegisterNetEvent('nxn-vehicleshop:client:purchased', function(model, label, plate)
     SetShopVisible(false)
@@ -167,7 +162,7 @@ RegisterNetEvent('nxn-vehicleshop:client:balanceUpdate', function(balances)
     SendNUIMessage({ action = 'balanceUpdate', bank = balances.bank, cash = balances.cash })
 end)
 
--- ── Teszt-menet ──────────────────────────────────────────────
+-- ── Teszt-menet ─────────────────────────────────────────────────
 
 local function StartTestDriveInternal(model, dealer)
     if testDriveVehicle then
@@ -190,7 +185,6 @@ local function StartTestDriveInternal(model, dealer)
     NXN.VehicleShop.Info(('Teszt-menet indul: model=%s duration=%d'):format(model, dealer.testDrive.duration))
     SendNUIMessage({ action = 'testDriveStart', duration = dealer.testDrive.duration })
 
-    -- Timer
     CreateThread(function()
         while testDriveTimer > 0 and testDriveVehicle do
             Wait(1000)
@@ -205,31 +199,33 @@ local function StartTestDriveInternal(model, dealer)
             end
             testDriveVehicle = nil
             SendNUIMessage({ action = 'testDriveEnd' })
-            -- nxn-notify
             TriggerEvent('nxn-notify:client:show', 'A teszt-menet véget ért.', 'info')
         end
     end)
 end
 
--- ── Proximity check (NPC közelség manuális nyitáshoz) ────────
+-- ── Proximity check (NPC közelSég manuális nyitáshoz) ───────────────
 
 CreateThread(function()
     Wait(3000)
     InitDealers()
 end)
 
+-- GetEntityCoords() FiveM-ben vector3 típusú értéket ad vissza, nem 3 külön számot.
+-- A korábbi "local px, py, pz = GetEntityCoords(ped)" formában px = teljes vector3,
+-- py és pz = nil, ami "bad argument #2 to vector3 (invalid vector dimensions)" crash-t okozott.
 CreateThread(function()
     while true do
         Wait(1000)
         if not isShopOpen then
-            local ped = PlayerPedId()
-            local px, py, pz = GetEntityCoords(ped)
+            local ped  = PlayerPedId()
+            local pPos = GetEntityCoords(ped)
             for _, dealer in ipairs(Config.Dealers) do
-                local c = dealer.npc.coords
-                local dist = #(vector3(px, py, pz) - vector3(c.x, c.y, c.z))
+                local c    = dealer.npc.coords
+                local cPos = vector3(c.x, c.y, c.z)
+                local dist = #(pPos - cPos)
                 if dist < 2.0 and not dealer.npc.enabled then
-                    -- Ha nincs NPC, marker interakció
-                    if IsControlJustPressed(0, 38) then -- E gomb
+                    if IsControlJustPressed(0, 38) then
                         OpenShopForDealer(dealer.id)
                     end
                 end
@@ -238,7 +234,7 @@ CreateThread(function()
     end
 end)
 
--- ── Exportok (kliens) ────────────────────────────────────────
+-- ── Exportok (kliens) ────────────────────────────────────────────
 
 exports('openShop', function(dealerId)
     OpenShopForDealer(dealerId or (Config.Dealers[1] and Config.Dealers[1].id))
@@ -259,7 +255,6 @@ exports('isTestDriving', function()
     return testDriveVehicle ~= nil
 end)
 
--- Parancs teszteléshez
 RegisterCommand('vehicleshop', function()
     OpenShopForDealer(Config.Dealers[1] and Config.Dealers[1].id)
 end, false)
