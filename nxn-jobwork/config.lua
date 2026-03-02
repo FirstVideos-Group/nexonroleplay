@@ -6,7 +6,7 @@ Config.Debug        = false
 -- Fizetés kiosztási mód:
 --   'clockout'  : fizetés csak műszak végén egyben
 --   'interval'  : megadott időközönként részfizetés
---   'both'      : részfizetés + végső kifizetés
+--   'both'      : részfizetés + végső kifizetis
 Config.PayMode = 'clockout'
 
 -- Részfizetési intervallum másodpercben (csak 'interval' vagy 'both' módban)
@@ -30,7 +30,7 @@ Config.AdminAce = 'nxn.jobwork.admin'
 -- Munkahelyi NPC-k definíciója
 Config.JobLocations = {
     ['police'] = {
-        label = 'Rendőrség – Bejelentkezs',
+        label = 'Rendőrség – Bejelentkezés',
         npc = {
             id       = 'police_duty_desk',
             model    = 'ig_officer',
@@ -42,7 +42,7 @@ Config.JobLocations = {
         requiredGrade = 0,
     },
     ['ems'] = {
-        label = 'Mentőszolgálat – Bejelentkezs',
+        label = 'Mentőszolgálat – Bejelentkezés',
         npc = {
             id       = 'ems_duty_desk',
             model    = 's_f_y_scrubs_01',
@@ -87,6 +87,19 @@ Config.JobLocations = {
             blip     = { enabled=true, sprite=477, color=47, label='Kamionos Bázis', scale=0.8 },
         },
         requiredJob   = 'trucker',
+        requiredGrade = 0,
+    },
+    -- [nxn-delivery] Szállítói műszak bejelentkezési pont
+    ['delivery'] = {
+        label = 'Szállítás – Bejelentkezés',
+        npc = {
+            id       = 'delivery_duty_desk',
+            model    = 's_m_m_fiboffice_01',
+            coords   = vector4(103.7, -1089.1, 29.2, 180.0),
+            scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
+            blip     = { enabled=true, sprite=478, color=5, label='Szállítás – Iroda', scale=0.8 },
+        },
+        requiredJob   = 'delivery',
         requiredGrade = 0,
     },
 }
