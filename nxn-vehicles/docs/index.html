@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-vehicles – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+            --danger:  #f05b5b;
+            --warning: #f0b429;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span.sub { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 920px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+        .req  { background: #f05b5b22; color: var(--danger);  border: 1px solid #f05b5b44; }
+        .opt  { background: #5b6af022; color: var(--accent);  border: 1px solid #5b6af044; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; }
+        .tab  { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .info-box { background: #5b6af011; border: 1px solid #5b6af044; border-radius: 8px; padding: 14px 18px; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+        .info-box strong { color: var(--accent); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-car-01"></i>
+    <div>
+        <h1>nxn-vehicles <span class="sub">v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <div class="info-box">
+        <strong>⚠️ Fontos:</strong> Az <code>nxn-vehicles</code> kizárólag az <strong>adat- és eseményréteget</strong> kezeli.
+        A garázs UI, spawn/despawn logika az <code>nxn-garage</code> scriptben valósíul meg, amely az itt definiált exportokat hívja.
+    </div>
+    <p>Az <code>nxn-vehicles</code> nyílvantartja a játékosok tulajdonában lévő járműveket, figyeli a járműbe lépésést, ellenőrzi a jogosítványokat és perzisztálja a motor HP-t.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-vehicles/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── docs/
+    └── index.html</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-plug-02"></i> Függőségek</h2>
+    <p>
+        <span class="badge req">Kötelező</span> <code>nxn-database</code> – getIdentifier, registerTable<br/>
+        <span class="badge req">Kötelező</span> <code>nxn-identity</code> – getIdentifier (plugin)<br/>
+        <span class="badge req">Kötelező</span> <code>nxn-notify</code> – visszajelzések<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-licenses</code> – hasLicense(src, type) – jogosítvány ellenőrzés<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-engine</code> – getEngineHP, setEngineHP – motor HP perzisztencia<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-vehicle-hud</code> – siren modul auto-engedélyezés<br/>
+        <span class="badge opt">Opcionális</span> <code>nxn-impound</code> – vehicleImpounded event figyelme
+    </p>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapérték</th><th>Leírás</th></tr>
+        <tr><td>Config.LicenseByClass</td><td>Lásd config.lua</td><td>Járműosztály → jogosítvány típus térkép</td></tr>
+        <tr><td>Config.EnableLicenseCheck</td><td>true</td><td>Jogosítvány-ellenőrzés be/ki</td></tr>
+        <tr><td>Config.PersistEngineHP</td><td>true</td><td>Motor HP DB-perzisztencia</td></tr>
+        <tr><td>Config.EmergencyClass</td><td>18</td><td>Emergency osztály (siren auto-engedélyezés)</td></tr>
+        <tr><td>Config.VehicleCheckInterval</td><td>200</td><td>Belépés-detekció loop intervalluma (ms)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Szerver exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Paraméterek</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getVehicles(identifier)</td><td>string</td><td>table[]</td><td>Játékos összes járműve</td></tr>
+        <tr><td>getVehicle(plate)</td><td>string</td><td>table|nil</td><td>Egy jármű adatai rendszám alapján</td></tr>
+        <tr><td>addVehicle(ident, model, label, class, plate?)</td><td>str, str, str, int, str?</td><td>string|nil</td><td>Új jármű regisztrálása (plate opcionális)</td></tr>
+        <tr><td>removeVehicle(plate)</td><td>string</td><td>boolean</td><td>Jármű törlése</td></tr>
+        <tr><td>setStored(plate, state)</td><td>str, bool</td><td>boolean</td><td>Garázsban/kint állapot</td></tr>
+        <tr><td>setImpounded(plate, state)</td><td>str, bool</td><td>boolean</td><td>Lefoglalás állapot</td></tr>
+        <tr><td>getEngineHP(plate)</td><td>string</td><td>number</td><td>Motor HP % (0-100)</td></tr>
+        <tr><td>saveEngineHP(plate, hp)</td><td>str, number</td><td>–</td><td>Motor HP mentése DB-be</td></tr>
+        <tr><td>isOwner(src, plate)</td><td>int, string</td><td>boolean</td><td>Tulajdonos-ellenőrzés</td></tr>
+        <tr><td>getLicenseTypeForClass(class)</td><td>integer</td><td>string|nil</td><td>Jogosítvány típus járműosztályhoz</td></tr>
+        <tr><td>setGarage(plate, garageId)</td><td>str, str</td><td>boolean</td><td>Garázs-azonosító frissítése</td></tr>
+        <tr><td>setMods(plate, mods)</td><td>str, table</td><td>boolean</td><td>Jármű módosítások mentése</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Kliens exportok</h2>
+    <table>
+        <tr><th>Export</th><th>Visszatérés</th><th>Leírás</th></tr>
+        <tr><td>getCurrentVehiclePlate()</td><td>string</td><td>Aktuális jármű rendszáma</td></tr>
+        <tr><td>getCurrentVehicleClass()</td><td>integer</td><td>Aktuális jármű GTA osztálya</td></tr>
+        <tr><td>isInVehicle()</td><td>boolean</td><td>Járműben van-e a játékos</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Paraméterek</th><th>Leírás</th></tr>
+        <tr><td>nxn-vehicles:server:entered</td><td>Client → Server</td><td>plate, vehicleClass</td><td>Járműbe lépés (#129)</td></tr>
+        <tr><td>nxn-vehicles:server:exited</td><td>Client → Server</td><td>plate</td><td>Járműből kilépés</td></tr>
+        <tr><td>nxn-vehicles:server:saveHP</td><td>Client → Server</td><td>plate, hp</td><td>Motor HP mentés kiszalláskor</td></tr>
+        <tr><td>nxn-vehicles:client:engineHPSync</td><td>Server → Client</td><td>{ plate, hp }</td><td>Motor HP visszatöltés (#125)</td></tr>
+    </table>
+    <table>
+        <tr><th>Szerver event (figyelhető)</th><th>Paraméterek</th><th>Leírás</th></tr>
+        <tr><td>nxn-vehicles:server:entered</td><td>src, plate, vehicleClass</td><td>nxn-licenses, nxn-hud figyeli</td></tr>
+        <tr><td>nxn-vehicles:server:exited</td><td>src, plate</td><td>Kiszallás</td></tr>
+        <tr><td>nxn-vehicles:server:spawned</td><td>src, plate, model</td><td>nxn-garage triggeri</td></tr>
+        <tr><td>nxn-vehicles:server:despawned</td><td>src, plate</td><td>nxn-garage triggeri</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">nxn-garage – spawn</div>
+        <div class="tab" onclick="switchTab(this,'t2')">nxn-licenses – belépés hook</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Jármű lekérés / tulajdonos</div>
+        <div class="tab" onclick="switchTab(this,'t4')">Motor HP perzisztencia</div>
+    </div>
+    <div class="tab-content active" id="t1">
+        <pre><code>-- nxn-garage/server.lua – Jármű spawnolása előtt:
+local plate = exports['nxn-vehicles']:addVehicle(identifier, 'adder', 'Adder', 14)
+if plate then
+    exports['nxn-vehicles']:setStored(plate, false)
+    local hp = exports['nxn-vehicles']:getEngineHP(plate)
+    TriggerClientEvent('nxn-vehicles:client:engineHPSync', src, { plate = plate, hp = hp })
+    -- nxn-keys kulcs adása:
+    if GetResourceState('nxn-keys') == 'started' then
+        exports['nxn-keys']:giveKey(src, plate)
+    end
+    TriggerEvent('nxn-vehicles:server:spawned', src, plate, 'adder')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t2">
+        <pre><code>-- nxn-licenses/server.lua – Járműbe lépés jogosítvány-ellenőrzés:
+AddEventHandler('nxn-vehicles:server:entered', function(src, plate, vehicleClass)
+    local licType = exports['nxn-vehicles']:getLicenseTypeForClass(vehicleClass)
+    if licType then
+        local ok = exports['nxn-licenses']:hasLicense(src, licType)
+        if not ok then
+            -- Figyelmeztetés a játékosnak
+            TriggerClientEvent('nxn-notify:client:warning', src,
+                'Nincs érvényes jogosítványod!')
+        end
+    end
+end)</code></pre>
+    </div>
+    <div class="tab-content" id="t3">
+        <pre><code>-- Játékos járműveinek listázása:
+local ident    = exports['nxn-database']:getIdentifier(src)
+local vehicles = exports['nxn-vehicles']:getVehicles(ident)
+for _, v in ipairs(vehicles) do
+    print(v.plate, v.model, v.stored)
+end
+
+-- Tulajdonos-ellenőrzés:
+if exports['nxn-vehicles']:isOwner(src, 'ABC-12-CD') then
+    print('Tulajdonos!')
+end</code></pre>
+    </div>
+    <div class="tab-content" id="t4">
+        <pre><code>-- Despawn előtt HP mentés:
+exports['nxn-vehicles']:saveEngineHP(plate, currentHP)
+exports['nxn-vehicles']:setStored(plate, true)
+TriggerEvent('nxn-vehicles:server:despawned', src, plate)
+
+-- Spawn után HP visszatöltés:
+local hp = exports['nxn-vehicles']:getEngineHP(plate)
+TriggerClientEvent('nxn-vehicles:client:engineHPSync', src, { plate = plate, hp = hp })</code></pre>
+    </div>
+
+    <h2><i class="hgi hgi-stroke hgi-database-02"></i> Adatbázis táblák</h2>
+    <pre><code>-- nxn_vehicles: jármű tulajdon
+CREATE TABLE `nxn_vehicles` (
+    id, identifier, plate UNIQUE, model, label, class,
+    mods JSON, garage, impounded, stored, created_at
+);
+
+-- nxn_vehicle_engine_hp: motor HP perzisztencia (#125)
+CREATE TABLE `nxn_vehicle_engine_hp` (
+    plate PRIMARY KEY, hp_percent FLOAT, updated_at
+);</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Kapcsolat</th></tr>
+        <tr><td>nxn-database</td><td>getIdentifier, registerTable</td></tr>
+        <tr><td>nxn-licenses</td><td>hasLicense (szerver event hook via nxn-vehicles:server:entered)</td></tr>
+        <tr><td>nxn-engine</td><td>getEngineHP, setEngineHP kliens exportok – HP sync</td></tr>
+        <tr><td>nxn-vehicle-hud</td><td>nxn-vehicle-hud:client:setModule – siren auto</td></tr>
+        <tr><td>nxn-impound</td><td>nxn-impound:server:vehicleImpounded → setImpounded()</td></tr>
+        <tr><td>nxn-garage</td><td>Fő felhasználó: getVehicles, addVehicle, setStored, getEngineHP, stb.</td></tr>
+        <tr><td>nxn-keys</td><td>giveKey(src, plate) – nxn-garage hívja spawn után</td></tr>
+        <tr><td>nxn-trunk</td><td>clearTrunk(plate) – nxn-garage hívja jármű törlésekor</td></tr>
+    </table>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
