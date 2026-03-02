@@ -21,15 +21,18 @@ local function Notify(msg, ntype)
     end
 end
 
+-- GetEntityCoords() FiveM-ben vector3 típusú értéket ad vissza, nem 3 külön számot.
+-- A korábbi "local vx, vy, vz = GetEntityCoords(veh)" formában vx a teljes vector3
+-- objektum lett, vy és vz nil — ez okozta a "bad argument #2 to vector3
+-- (invalid vector dimensions)" crash-t. Javítás: közvetlen vector3 változó használat.
 local function GetClosestLockedVehicle(maxDist)
-    local ped = PlayerPedId()
-    local px, py, pz = GetEntityCoords(ped)
+    local ped  = PlayerPedId()
+    local pPos = GetEntityCoords(ped)
     local closest, closestDist = 0, maxDist
     for _, veh in ipairs(GetGamePool('CVehicle')) do
-        -- Csak zárt és nem saját (nem ülünk benne)
         if GetPedInVehicleSeat(veh, -1) ~= ped then
-            local vx, vy, vz = GetEntityCoords(veh)
-            local d = #(vector3(px, py, pz) - vector3(vx, vy, vz))
+            local vPos = GetEntityCoords(veh)
+            local d = #(pPos - vPos)
             if d < closestDist then
                 closest     = veh
                 closestDist = d
@@ -41,7 +44,6 @@ end
 
 local function IsVehicleLocked(veh)
     local state = GetVehicleDoorLockStatus(veh)
-    -- 2 = locked, 3 = lockout, 4+ = various locked states
     return state >= 2
 end
 
@@ -104,14 +106,13 @@ local function ResetState()
     SendNUIMessage({ action = 'setVisible', visible = false })
 end
 
--- ── Feltörés indítása ──────────────────────────────────────
+-- ── Feltörés indítása ──────────────────────────────────────────
 
 local function StartBreakIn(veh)
     if isBreaking then return end
     local plate = NXN.CarTheft.NormalizePlate(GetVehicleNumberPlateText(veh))
     if plate == '' then return end
 
-    -- Kliens oldali gyors ellenőrzések
     if not IsVehicleLocked(veh) then
         Notify('Ez a jármű nincs lezárva!', 'warning')
         return
@@ -140,7 +141,7 @@ exports('cancelBreakIn', function()
     end
 end)
 
--- ── Közelség detekció loop ─────────────────────────────────
+-- ── KözelSég detekció loop ───────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -151,10 +152,7 @@ CreateThread(function()
                 if not promptActive then
                     promptActive = true
                 end
-                -- Prompt megjelenítés (Draw2DText)
                 local plate = NXN.CarTheft.NormalizePlate(GetVehicleNumberPlateText(veh))
-                -- Gyors kliens-oldali tulajdonos/kulcs check: ha nxn-keys van, legyen csöndes
-                -- (a szerver úgyis újraellenőriz, de UX szempontból hasznos)
             else
                 if promptActive then promptActive = false end
             end
@@ -162,7 +160,7 @@ CreateThread(function()
     end
 end)
 
--- ── Prompt + gomb loop ────────────────────────────────────
+-- ── Prompt + gomb loop ─────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -170,7 +168,6 @@ CreateThread(function()
         if not isBreaking then
             local veh = GetClosestLockedVehicle(Config.InteractDistance)
             if veh ~= 0 and IsVehicleLocked(veh) then
-                -- Prompt szöveg
                 local x, y, z = GetEntityCoords(veh)
                 SetTextFont(4)
                 SetTextProportional(true)
@@ -187,18 +184,16 @@ CreateThread(function()
             end
         end
 
-        -- ESC / mozgás = megszakítás
         if isBreaking then
-            if IsControlJustPressed(0, 200) then  -- ESC
+            if IsControlJustPressed(0, 200) then
                 exports['nxn-cartheft']:cancelBreakIn()
             end
         end
     end
 end)
 
--- ── Net Events (kliens) ────────────────────────────────────
+-- ── Net Events (kliens) ────────────────────────────────────────
 
--- Szerver visszajelzés: engedélyezett-e a kísérlet
 RegisterNetEvent('nxn-cartheft:client:attemptAllowed', function(data)
     if not data.ok then
         isBreaking = false
@@ -206,17 +201,14 @@ RegisterNetEvent('nxn-cartheft:client:attemptAllowed', function(data)
         return
     end
 
-    -- Animáció + prop
     PlayBreakInAnim()
     AttachProp()
 
-    -- Minijáték típus
     local mgType = Config.DefaultMinigame
     if mgType == 'random' then
         mgType = math.random(2) == 1 and 'lockpick' or 'keypad'
     end
 
-    -- NUI megnyitása
     SetNuiFocus(true, true)
     SendNUIMessage({
         action   = 'setVisible',
@@ -234,7 +226,6 @@ RegisterNetEvent('nxn-cartheft:client:attemptAllowed', function(data)
     })
 end)
 
--- Szerver: kinyitás delegált parancs (sikeres feltörés után)
 RegisterNetEvent('nxn-cartheft:client:doUnlock', function(data)
     local veh = NetworkGetEntityFromNetworkId(tonumber(data.vehicleNetId) or 0)
     if not DoesEntityExist(veh) then return end
@@ -242,14 +233,12 @@ RegisterNetEvent('nxn-cartheft:client:doUnlock', function(data)
         exports['nxn-engine']:setLocked(false)
     end
     SetVehicleDoorsLocked(veh, 1)
-    -- Belépés a járműbe
     CreateThread(function()
         Wait(400)
         TaskEnterVehicle(PlayerPedId(), veh, 10000, -1, 2.0, 1, 0)
     end)
 end)
 
--- Szerver: force lock (rendőr / admin)
 RegisterNetEvent('nxn-cartheft:client:forceLock', function(data)
     for _, veh in ipairs(GetGamePool('CVehicle')) do
         local p = NXN.CarTheft.NormalizePlate(GetVehicleNumberPlateText(veh))
@@ -263,7 +252,7 @@ RegisterNetEvent('nxn-cartheft:client:forceLock', function(data)
     end
 end)
 
--- ── NUI Callbacks ──────────────────────────────────────────
+-- ── NUI Callbacks ──────────────────────────────────────────────
 
 RegisterNUICallback('minigameResult', function(data, cb)
     local success = data.success == true
