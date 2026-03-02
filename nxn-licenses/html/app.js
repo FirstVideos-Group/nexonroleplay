@@ -52,7 +52,8 @@ function renderList() {
         if (pending) {
             statusKey = 'pending';
             iconClass = 'pending';
-            const rd = pending.ready_at ? pending.ready_at.split(' ')[0] : '?';
+            // String() védelem: ready_at lehet nem-string (pl. Unix timestamp)
+            const rd = pending.ready_at ? String(pending.ready_at).split(' ')[0] : '?';
             subText = `Feldolgozás: ${rd}`;
         } else if (license) {
             const expired = isExpired(license.expires_at);
@@ -117,20 +118,6 @@ function openViewModal(typeId) {
     $id('card-modal').classList.remove('hidden');
 }
 
-/*
- * Government-card HTML struktúra (fekvő, 480×290 px):
- *
- *  ┌──────────┬─────────────────────────────────────────┐
- *  │          │  TÍPUS NEVE                 [ÉRVÉNYES]  │
- *  │  [ikon]  │  Nexon Roleplay – Kiadó                 │
- *  │          ├─────────────────────────────────────────┤
- *  │  N E X O │  NÉV (wide)                             │
- *  │  N  R  P │  Születési dátum │ Nem                  │
- *  │          │  Azonosító       │ Kiállítva            │
- *  │          │  ──────────────  │ Lejár                │
- *  └──────────┴─────────────────────────────────────────┘
- *              🛡  Saját igazolvány          NEXON RP
- */
 function buildCard(container, entry, isShown) {
     const { def, license } = entry;
     const expired    = license.expires_at ? isExpired(license.expires_at) : false;
@@ -139,15 +126,12 @@ function buildCard(container, entry, isShown) {
     const gender     = entry.gender     || null;
     const fields     = def.showFields   || ['name','birthdate','id_number','issued','expires'];
 
-    // Mezők összeállítása a showFields sorrendje alapján.
-    // A 'name' mindig wide (teljes sor), a többi párosával kerül egymás mellé.
     let fieldHTML = '';
 
     if (fields.includes('name') && ownerName) {
         fieldHTML += fieldEl('Név', ownerName, true);
     }
 
-    // Nem-névmezők: párosával jelennek meg
     const rest = [];
     if (fields.includes('birthdate') && birthdate)      rest.push(fieldEl('Születési dátum', birthdate));
     if (fields.includes('gender')    && gender)         rest.push(fieldEl('Nem', gender));
@@ -206,7 +190,7 @@ function openShowModal(typeId) {
 function loadNearbyPlayers() {
     $id('show-players').innerHTML = `
         <div class="show-loading">
-            <i class="hgi hgi-stroke hgi-loading-01"></i> Keressük a közelben lévőket...
+            <i class="hgi hgi-stroke hgi-loading-01"></i> Keresslük a közelben lévőket...
         </div>`;
 
     nuiFetch('getNearbyPlayers').then(players => {
@@ -301,13 +285,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ── Segédfüggvények ──
 
+/**
+ * isExpired / fmtDate: a dtStr paraméter a szerverről érkezhet string helyett
+ * más típusként is (pl. Unix timestamp számként, Date objektumként).
+ * A String() konverzió biztosítja, hogy a .replace() hívás ne crasheljen.
+ * isNaN ellenőrzés véd az érvénytelen dátumformátumok ellen.
+ */
 function isExpired(dtStr) {
     if (!dtStr) return false;
-    return new Date(dtStr.replace(' ', 'T') + 'Z') < new Date();
+    const s = typeof dtStr === 'string' ? dtStr : String(dtStr);
+    const d = new Date(s.replace(' ', 'T') + 'Z');
+    if (isNaN(d.getTime())) return false;
+    return d < new Date();
 }
 
 function fmtDate(dtStr) {
     if (!dtStr) return '?';
-    const d = new Date(dtStr.replace(' ', 'T') + 'Z');
+    const s = typeof dtStr === 'string' ? dtStr : String(dtStr);
+    const d = new Date(s.replace(' ', 'T') + 'Z');
+    if (isNaN(d.getTime())) return String(dtStr);
     return d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
