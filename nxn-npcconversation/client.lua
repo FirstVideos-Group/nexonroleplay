@@ -3,7 +3,7 @@
 --  NPC spawnolos, interakcio, UI kezelese, export API
 -- ============================================================
 
--- ── Runtime allapot ─────────────────────────────────────────────────
+-- ── Runtime allapot ─────────────────────────────────────────────────────
 
 local spawnedNPCs     = {}   -- { id -> { ped, blip, config } }
 local extraDialogues  = {}   -- { npcId -> { { id, label, icon, response, event } } }
@@ -14,13 +14,11 @@ local currentNPCId    = nil
 local resourceStopped = false
 
 -- #90: runtime-regisztralt NPC-k kulonvalasztva a statikus Config.NPCs-tol
--- Igy a playerSpawned spawn loop, GetDialogues es az unregisterNPC
--- nem modositja a statikus konfiguracios tablat
 local runtimeNPCs = {}
 
--- ── NUI seged ───────────────────────────────────────────────────
+-- ── NUI seged ────────────────────────────────────────────────────────
 
--- #85: shallow copy payload – a hivok original tablaja nem kapja meg az action mezot
+-- #85: shallow copy payload
 local function NUISend(action, data)
     local payload = { action = action }
     if data then
@@ -30,22 +28,22 @@ local function NUISend(action, data)
     SendNUIMessage(payload)
 end
 
--- ── NPC config keresés (config + runtime) ─────────────────────────────
+-- ── NPC config keresés (config + runtime) ─────────────────────────────────
 
 -- #90: segéd – config.lua VAGY runtimeNPCs-ből adja vissza az NPC configját
 local function GetNPCConfig(npcId)
     return Config.NPCs[npcId] or runtimeNPCs[npcId]
 end
 
--- ── NPC spawn ───────────────────────────────────────────────────
+-- ── NPC spawn ────────────────────────────────────────────────────────
 
 ---@param npcId  string
 ---@param cfg    table
 local function SpawnNPC(npcId, cfg)
-    -- #88: ghost entry ellenorzes – ha a cache-ben van, de a ped mar nem letezik, torolje
+    -- #88: ghost entry ellenorzes
     if spawnedNPCs[npcId] then
         if DoesEntityExist(spawnedNPCs[npcId].ped) then
-            return  -- meg letezik, nincs teendo
+            return
         else
             NXN.NPC.Warn(('SpawnNPC: ghost entry, ujraspawn: %s'):format(npcId))
             if spawnedNPCs[npcId].blip then RemoveBlip(spawnedNPCs[npcId].blip) end
@@ -59,14 +57,16 @@ local function SpawnNPC(npcId, cfg)
     while not HasModelLoaded(modelHash) do
         Wait(100)
         t = t + 1
-        -- #87: resource stop vagy timeout eseten korai kilepes
-        if t > 50 or resourceStopped then
-            if t > 50 then NXN.NPC.Warn(('Model betoltesi timeout: %s'):format(cfg.model)) end
+        -- Timeout 150 iter x 100ms = 15 masodperc.
+        -- Korabban 50 iter (5s) volt, ami lassabb klienseken / nagy szerveren
+        -- nem volt eleg a GTA streaming engine-nek, ezert dobta a WARN-t.
+        if t > 150 or resourceStopped then
+            if t > 150 then NXN.NPC.Warn(('Model betoltesi timeout: %s'):format(cfg.model)) end
             return
         end
     end
 
-    -- #87: extra ellenorzes a Wait utan (resource kozben allhatott le)
+    -- #87: extra ellenorzes a Wait utan
     if resourceStopped then return end
 
     local c   = cfg.coords
@@ -111,12 +111,11 @@ local function DespawnNPC(npcId)
     NXN.NPC.Log(('NPC despawned: %s'):format(npcId))
 end
 
--- ── Dialogus lista osszegyujtese ──────────────────────────────────────
+-- ── Dialogus lista osszegyujtese ───────────────────────────────────────────
 
 ---@param npcId string
 ---@return table
 local function GetDialogues(npcId)
-    -- #90: GetNPCConfig hasznalata (config + runtime)
     local npcCfg = GetNPCConfig(npcId)
     local base   = (npcCfg and npcCfg.dialogues) or {}
     local extras = extraDialogues[npcId] or {}
@@ -126,7 +125,7 @@ local function GetDialogues(npcId)
     return merged
 end
 
--- ── UI nyitas / zaras ──────────────────────────────────────────────
+-- ── UI nyitas / zaras ────────────────────────────────────────────────
 
 local function OpenConversation(npcId)
     local entry = spawnedNPCs[npcId]
@@ -170,8 +169,6 @@ RegisterNUICallback('close', function(_, cb)
 end)
 
 -- #89: selectOption whitelist validacio
--- Csak a Config.NPCs vagy runtimeNPCs configban, illetve extraDialogues-ban
--- definalt event valtható ki – tetszoleges NUI-bol erkező event nem futhat le
 RegisterNUICallback('selectOption', function(data, cb)
     local npcId    = data.npcId
     local optionId = data.optionId
@@ -179,7 +176,6 @@ RegisterNUICallback('selectOption', function(data, cb)
 
     NXN.NPC.Log(('selectOption: npc=%s option=%s'):format(tostring(npcId), tostring(optionId)))
 
-    -- Whitelist: csak a configban rogzitett event valtható ki
     local allowedEvent = nil
     local npcCfg = GetNPCConfig(npcId)
     if npcCfg and npcCfg.dialogues then
@@ -190,7 +186,6 @@ RegisterNUICallback('selectOption', function(data, cb)
             end
         end
     end
-    -- extraDialogues ellenorzese (ha a config-ban nem talalt)
     if not allowedEvent and extraDialogues[npcId] then
         for _, d in ipairs(extraDialogues[npcId]) do
             if d.id == optionId then
@@ -200,10 +195,8 @@ RegisterNUICallback('selectOption', function(data, cb)
         end
     end
 
-    -- NPC valasz kuldese a UI-nak
     NUISend('showResponse', { response = response or '' })
 
-    -- Csak engedélyezett event valtható ki
     if allowedEvent and allowedEvent ~= '' then
         TriggerEvent(allowedEvent, { npcId = npcId, optionId = optionId })
         NXN.NPC.Log(('Event kivaltas (whitelist OK): %s'):format(allowedEvent))
@@ -212,18 +205,14 @@ RegisterNUICallback('selectOption', function(data, cb)
     cb('ok')
 end)
 
--- ── Kozelitesi interakcios loop ─────────────────────────────────────────
+-- ── Kozelitesi interakcios loop ─────────────────────────────────────────────
 
 -- #86: Proximity check kulonvalasztva az input check-tol
--- A GetEntityCoords / vektormuvelet 4x/masodpercenkent fut (250ms),
--- az input figyelés (billentyuzet, ESC) kulön Wait(0) thread-ben van
-
-local nearestNPC = nil  -- megoszott allapot a ket thread kozott
+local nearestNPC = nil
 
 CreateThread(function()
     while true do
-        Wait(250)  -- proximity szamitas 4x/masodperc eleg
-
+        Wait(250)
         if resourceStopped then return end
 
         local ped    = PlayerPedId()
@@ -248,8 +237,7 @@ end)
 
 CreateThread(function()
     while true do
-        Wait(0)  -- input check minden frame-ben
-
+        Wait(0)
         if resourceStopped then return end
 
         local nearest = nearestNPC
@@ -275,12 +263,13 @@ CreateThread(function()
     end
 end)
 
--- ── Inicializalas spawnnnal ─────────────────────────────────────────────
+-- ── Inicializalas spawnnnal ──────────────────────────────────────────────────
 
 AddEventHandler('playerSpawned', function()
     NXN.NPC.Log('playerSpawned – NPCek inicializalasa')
-    Wait(1000)
-    -- Csak statikus Config.NPCs-t spawnol (runtimeNPCs-t a regisztráló resource kezeli)
+    -- 3000ms delay: a GTA streaming engine-nek tobb idot adunk inicializalodni,
+    -- igy elkeruljuk a korai model-betoltesi timeoutokat (korabban 1000ms volt).
+    Wait(3000)
     for npcId, cfg in pairs(Config.NPCs) do
         if cfg.enabled ~= false then
             SpawnNPC(npcId, cfg)
@@ -298,10 +287,9 @@ AddEventHandler('onResourceStop', function(resourceName)
     NXN.NPC.Log('onResourceStop: osszes NPC eltavolitva')
 end)
 
--- ── Exportok ───────────────────────────────────────────────────
+-- ── Exportok ─────────────────────────────────────────────────────────
 
 -- #90: registerNPC / unregisterNPC a runtimeNPCs tablat hasznallja
--- Config.NPCs (statikus) es runtimeNPCs (dinamikus) kulonvalasztva
 exports('registerNPC', function(npcId, cfg)
     if Config.NPCs[npcId] or runtimeNPCs[npcId] then
         NXN.NPC.Warn(('registerNPC: ID mar foglalt: %s'):format(npcId))
@@ -316,7 +304,7 @@ end)
 exports('unregisterNPC', function(npcId)
     NXN.NPC.Log(('unregisterNPC: %s'):format(npcId))
     DespawnNPC(npcId)
-    runtimeNPCs[npcId] = nil  -- csak a runtime tablat modositja
+    runtimeNPCs[npcId] = nil
 end)
 
 exports('addDialogue', function(npcId, option)
