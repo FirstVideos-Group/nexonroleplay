@@ -3,7 +3,7 @@
 --  NPC spawnolos, interakcio, UI kezelese, export API
 -- ============================================================
 
--- ── Runtime allapot ─────────────────────────────────────────────────────
+-- ── Runtime allapot ────────────────────────────────────────────────────────────────
 
 local spawnedNPCs     = {}   -- { id -> { ped, blip, config } }
 local extraDialogues  = {}   -- { npcId -> { { id, label, icon, response, event } } }
@@ -16,7 +16,7 @@ local resourceStopped = false
 -- #90: runtime-regisztralt NPC-k kulonvalasztva a statikus Config.NPCs-tol
 local runtimeNPCs = {}
 
--- ── NUI seged ────────────────────────────────────────────────────────
+-- ── NUI seged ───────────────────────────────────────────────────────────────
 
 -- #85: shallow copy payload
 local function NUISend(action, data)
@@ -28,14 +28,14 @@ local function NUISend(action, data)
     SendNUIMessage(payload)
 end
 
--- ── NPC config keresés (config + runtime) ─────────────────────────────────
+-- ── NPC config keresés (config + runtime) ──────────────────────────────────────
 
 -- #90: segéd – config.lua VAGY runtimeNPCs-ből adja vissza az NPC configját
 local function GetNPCConfig(npcId)
     return Config.NPCs[npcId] or runtimeNPCs[npcId]
 end
 
--- ── NPC spawn ────────────────────────────────────────────────────────
+-- ── NPC spawn ───────────────────────────────────────────────────────────────
 
 ---@param npcId  string
 ---@param cfg    table
@@ -107,7 +107,7 @@ local function DespawnNPC(npcId)
     NXN.NPC.Log(('NPC despawned: %s'):format(npcId))
 end
 
--- ── Dialogus lista osszegyujtese ───────────────────────────────────────────
+-- ── Dialogus lista osszegyujtese ───────────────────────────────────────────────
 
 ---@param npcId string
 ---@return table
@@ -121,7 +121,7 @@ local function GetDialogues(npcId)
     return merged
 end
 
--- ── UI nyitas / zaras ────────────────────────────────────────────────
+-- ── UI nyitas / zaras ─────────────────────────────────────────────────────────
 
 local function OpenConversation(npcId)
     local entry = spawnedNPCs[npcId]
@@ -134,7 +134,6 @@ local function OpenConversation(npcId)
     isUIOpen     = true
     SetNuiFocus(true, true)
 
-    -- Hint elrejtese UI megnyitaskor
     NUISend('hideHint', {})
 
     local ped    = PlayerPedId()
@@ -160,14 +159,16 @@ local function CloseConversation()
     NXN.NPC.Log('ConversationUI bezarva')
 end
 
--- ── NUI callbackok ────────────────────────────────────────────────
-
+-- ── NUI callbackok ───────────────────────────────────────────────────────────
 RegisterNUICallback('close', function(_, cb)
     CloseConversation()
     cb('ok')
 end)
 
 -- #89: selectOption whitelist validacio
+-- #97: a dialogus `args` mezeje atadva az esemenynek, hogy
+--      a fogado resource (pl. nxn-shop) megkapja a szukseges
+--      adatokat (shopId, mode, stb.) anelkul, hogy elvesznek.
 RegisterNUICallback('selectOption', function(data, cb)
     local npcId    = data.npcId
     local optionId = data.optionId
@@ -175,12 +176,15 @@ RegisterNUICallback('selectOption', function(data, cb)
 
     NXN.NPC.Log(('selectOption: npc=%s option=%s'):format(tostring(npcId), tostring(optionId)))
 
-    local allowedEvent = nil
+    local allowedEvent  = nil
+    local allowedArgs   = nil  -- #97: a dialógus args mezeje
+
     local npcCfg = GetNPCConfig(npcId)
     if npcCfg and npcCfg.dialogues then
         for _, d in ipairs(npcCfg.dialogues) do
             if d.id == optionId then
                 allowedEvent = d.event
+                allowedArgs  = d.args
                 break
             end
         end
@@ -189,6 +193,7 @@ RegisterNUICallback('selectOption', function(data, cb)
         for _, d in ipairs(extraDialogues[npcId]) do
             if d.id == optionId then
                 allowedEvent = d.event
+                allowedArgs  = d.args
                 break
             end
         end
@@ -197,18 +202,25 @@ RegisterNUICallback('selectOption', function(data, cb)
     NUISend('showResponse', { response = response or '' })
 
     if allowedEvent and allowedEvent ~= '' then
-        TriggerEvent(allowedEvent, { npcId = npcId, optionId = optionId })
+        -- Esemenyadatok: npcId + optionId + a dialógus args mezői (pl. shopId, mode)
+        local eventData = { npcId = npcId, optionId = optionId }
+        if type(allowedArgs) == 'table' then
+            for k, v in pairs(allowedArgs) do
+                eventData[k] = v
+            end
+        end
+        TriggerEvent(allowedEvent, eventData)
         NXN.NPC.Log(('Event kivaltas (whitelist OK): %s'):format(allowedEvent))
     end
 
     cb('ok')
 end)
 
--- ── Kozelitesi interakcios loop ─────────────────────────────────────────────
+-- ── Kozelitesi interakcios loop ──────────────────────────────────────────────
 
 -- #86: Proximity check kulonvalasztva az input check-tol
 local nearestNPC  = nil
-local hintVisible = false  -- NUI hint aktualis allapota
+local hintVisible = false
 
 CreateThread(function()
     while true do
@@ -243,7 +255,6 @@ CreateThread(function()
         local nearest = nearestNPC
 
         if nearest and not isUIOpen and nearest.dist < Config.InteractDistance then
-            -- NXN NUI hint megjelenítése GTA natív helyett
             if not hintVisible then
                 NUISend('showHint', {
                     key   = Config.InteractKeyLabel,
@@ -256,7 +267,6 @@ CreateThread(function()
                 OpenConversation(nearest.id)
             end
         else
-            -- Hint elrejtése ha nincs közel NPC vagy UI nyitva
             if hintVisible then
                 NUISend('hideHint', {})
                 hintVisible = false
@@ -269,7 +279,7 @@ CreateThread(function()
     end
 end)
 
--- ── Inicializalas spawnnnal ──────────────────────────────────────────────────
+-- ── Inicializalas spawnnnal ──────────────────────────────────────────────────────────
 
 AddEventHandler('playerSpawned', function()
     NXN.NPC.Log('playerSpawned – NPCek inicializalasa')
@@ -291,7 +301,7 @@ AddEventHandler('onResourceStop', function(resourceName)
     NXN.NPC.Log('onResourceStop: osszes NPC eltavolitva')
 end)
 
--- ── Exportok ─────────────────────────────────────────────────────────
+-- ── Exportok ────────────────────────────────────────────────────────────────
 
 -- #90: registerNPC / unregisterNPC a runtimeNPCs tablat hasznallja
 exports('registerNPC', function(npcId, cfg)
