@@ -4,7 +4,6 @@
 --  #120: hideTimerSeq szamlalo a race condition elkerulesehez
 -- ============================================================
 
--- #120: Szekvencia szamlalos megkozelites (ugyanaz mint lights.lua #119)
 local hideTimerSeq = 0
 local lastState    = ''
 local cfg          = Config.Modules.engine
@@ -15,8 +14,8 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval * 5)
 
-        if not NXN.VehHUD.State.inVehicle              then goto continue end
-        if not NXN.VehHUD.State.moduleStates['engine'] then goto continue end
+        if not NXN.VehHUD.State.GetInVehicle()               then goto continue end
+        if not NXN.VehHUD.State.GetModuleStates()['engine']  then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
@@ -49,7 +48,6 @@ CreateThread(function()
 
             if not cfg.alwaysVisible then
                 if state == 'damaged' or state == 'critical' or state == 'off' then
-                    -- Regi hideTimer callback ervenytelenitese
                     hideTimerSeq = hideTimerSeq + 1
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'engine' })
                 else

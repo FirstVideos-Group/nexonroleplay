@@ -4,9 +4,6 @@
 --  #119: hideTimerSeq szamlalo a race condition elkerulesehez
 -- ============================================================
 
--- #119: Szekvencia szamlalos megkoezelites a SetTimeout race condition elkerulesehez.
--- FiveM SetTimeout nem megszakithato, ezert a regi callback-ek ervenytelenitesere
--- hideTimerSeq szamlalot hasznalunk.
 local hideTimerSeq = 0
 local HIDE_DELAY   = 1500
 
@@ -16,8 +13,8 @@ CreateThread(function()
     while true do
         Wait(200)
 
-        if not NXN.VehHUD.State.inVehicle             then goto continue end
-        if not NXN.VehHUD.State.moduleStates['lights'] then goto continue end
+        if not NXN.VehHUD.State.GetInVehicle()               then goto continue end
+        if not NXN.VehHUD.State.GetModuleStates()['lights']  then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
@@ -45,14 +42,12 @@ CreateThread(function()
 
             if not Config.Modules.lights.alwaysVisible then
                 if lightsOn or highbeamsOn or hazard then
-                    -- Regi hideTimer callback ervenytelenitese (seq noveles)
                     hideTimerSeq = hideTimerSeq + 1
                     SendNUIMessage({ action = 'showModuleTemporary', module = 'lights' })
                 else
                     local mySeq = hideTimerSeq + 1
                     hideTimerSeq = mySeq
                     SetTimeout(HIDE_DELAY, function()
-                        -- Csak akkor rejtjuk el ha a sequence meg ervenyes
                         if hideTimerSeq == mySeq then
                             SendNUIMessage({ action = 'hideModuleTemporary', module = 'lights' })
                         end

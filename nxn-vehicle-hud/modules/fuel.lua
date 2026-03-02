@@ -12,11 +12,9 @@ CreateThread(function()
     while true do
         Wait(2000)
 
-        if not NXN.VehHUD.State.inVehicle            then goto continue end
-        -- #121: moduleStates ellenorzese minden ciklusban (nem indulaskor egyszer)
-        if not NXN.VehHUD.State.moduleStates['fuel'] then goto continue end
+        if not NXN.VehHUD.State.GetInVehicle()             then goto continue end
+        if not NXN.VehHUD.State.GetModuleStates()['fuel']  then goto continue end
 
-        -- Ha az nxn-fuel fut, a setFuel export kezeli az erteket
         if GetResourceState('nxn-fuel') == 'started' then goto continue end
 
         local ped = PlayerPedId()

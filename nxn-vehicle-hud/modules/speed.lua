@@ -9,9 +9,8 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval)
 
-        -- Allapot ellenorzese
-        if not inVehicle then goto continue end
-        if not moduleStates['speed'] then goto continue end
+        if not NXN.VehHUD.State.GetInVehicle()              then goto continue end
+        if not NXN.VehHUD.State.GetModuleStates()['speed']  then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
@@ -28,7 +27,6 @@ CreateThread(function()
         if speed ~= lastSpeed then
             lastSpeed = speed
             NXN.VehHUD.Log(('speed: %d %s'):format(speed, Config.SpeedUnit))
-            -- Kozvetlenul SendNUIMessage: nem hudVisible-fuggoen
             SendNUIMessage({
                 action = 'updateModule',
                 module = 'speed',

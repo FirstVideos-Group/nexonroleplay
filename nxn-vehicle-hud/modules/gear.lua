@@ -10,8 +10,8 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval)
 
-        if not NXN.VehHUD.State.inVehicle    then goto continue end
-        if not NXN.VehHUD.State.moduleStates['gear'] then goto continue end
+        if not NXN.VehHUD.State.GetInVehicle()             then goto continue end
+        if not NXN.VehHUD.State.GetModuleStates()['gear']  then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
@@ -19,8 +19,6 @@ CreateThread(function()
 
         local gear = GetVehicleCurrentGear(veh)
 
-        -- Hatra-eszleles: vector3 mezo-hozzaferes (.x/.y) GetEntityForwardVector/Velocity
-        -- #118: table.unpack(vector3) runtime hibat dobott (vector3 != Lua table)
         local reverse = false
         if gear == 0 then
             local speed = GetEntitySpeed(veh)

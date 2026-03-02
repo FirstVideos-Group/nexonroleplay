@@ -4,9 +4,6 @@
 -- ============================================================
 
 -- ── Allapot ──────────────────────────────────────────────────────────
--- #115: local kulcsszo hozzaadva - globalisan nem lathato mas resource-nak
--- A modulok (modules/*.lua) NXN.VehHUD.State-en keresztul olvassak ezeket.
-
 local hudVisible   = false
 local inVehicle    = false
 local moduleStates = {}
@@ -15,12 +12,23 @@ for name, cfg in pairs(Config.Modules) do
     moduleStates[name] = cfg.enabled
 end
 
--- NXN.VehHUD.State namespace: a modulok ezen keresztul olvasnak (nem globalisan)
-NXN.VehHUD.State = {
-    get hudVisible()   return hudVisible   end,
-    get inVehicle()    return inVehicle    end,
-    get moduleStates() return moduleStates end,
-}
+-- NXN.VehHUD.State namespace: a modulok ezen keresztul olvasnak.
+-- Getter fuggvenyek hasznalata, mert Lua nem tamogatja a JS-stilus
+-- 'get kulcs() ... end' szintaxist – az function value-kent ertelmezodne,
+-- nem getter property-kent, ami 'attempt to index a function value' hibat okoz.
+NXN.VehHUD.State = {}
+
+function NXN.VehHUD.State.GetHudVisible()
+    return hudVisible
+end
+
+function NXN.VehHUD.State.GetInVehicle()
+    return inVehicle
+end
+
+function NXN.VehHUD.State.GetModuleStates()
+    return moduleStates
+end
 
 -- ── NUI kommunikacio ─────────────────────────────────────────────
 
@@ -55,9 +63,6 @@ local function SendConfig()
 end
 
 -- ── Jarmu eszleles loop ────────────────────────────────────────────
--- #117: wasInVehicle flag biztositja a reinit-et visszaszallaskor
--- ugyanabba a jarmuvebbe is (veh ~= lastVehicle felt etel eltavolitva)
-
 local lastVehicle   = 0
 local wasInVehicle  = false
 
@@ -69,7 +74,6 @@ CreateThread(function()
         local nowInVehicle = (veh ~= 0)
 
         if nowInVehicle and (not wasInVehicle or veh ~= lastVehicle) then
-            -- Uj jarmu VAGY visszaszallas ugyanabba (pl. TaskWarpPedIntoVehicle utan)
             lastVehicle   = veh
             inVehicle     = true
             wasInVehicle  = true
@@ -132,7 +136,6 @@ exports('getModuleState', function(name)
 end)
 
 exports('getAllModuleStates', function()
-    -- Shallow copy, belső referencia nem szivárog ki
     local copy = {}
     for k, v in pairs(moduleStates) do copy[k] = v end
     return copy
@@ -143,19 +146,16 @@ exports('setPosition', function(pos)
     NXN.VehHUD.Log(('Pozicio: %s'):format(pos))
 end)
 
---- Uzemanyag ertek frissitese (nxn-fuel fogja hivni)
---- #122: nil vs false megkulonboztetese warn loggal
 exports('setFuel', function(value)
     if moduleStates['fuel'] == nil then
         NXN.VehHUD.Warn('setFuel: fuel modul nem talalhato a Config.Modules-ban')
         return
     end
-    if not moduleStates['fuel'] then return end  -- ki van kapcsolva, OK
+    if not moduleStates['fuel'] then return end
     NXN.VehHUD.Log(('setFuel: %d'):format(value))
     SendNUIMessage({ action = 'updateModule', module = 'fuel', value = value })
 end)
 
---- Biztonsagi ov allapot
 exports('setSeatbelt', function(fastened)
     if not moduleStates['seatbelt'] then return end
     NXN.VehHUD.Log(('setSeatbelt: %s'):format(tostring(fastened)))
@@ -167,7 +167,6 @@ exports('setSeatbelt', function(fastened)
     end
 end)
 
---- Szirena allapot
 exports('setSiren', function(active, mode)
     if not moduleStates['siren'] then return end
     NXN.VehHUD.Log(('setSiren: active=%s mode=%s'):format(tostring(active), tostring(mode)))
@@ -179,15 +178,12 @@ exports('setSiren', function(active, mode)
     end
 end)
 
---- Motor allapot
 exports('setEngineState', function(state)
     if not moduleStates['engine'] then return end
     NXN.VehHUD.Log(('setEngineState: %s'):format(state))
     SendNUIMessage({ action = 'updateModule', module = 'engine', state = state })
 end)
 
---- Altalanos modul adat frissitese kulso resource-bol
---- #116: shallow copy keszul a data tablarol, nem mutaljuk a hivot
 exports('updateModuleData', function(moduleName, data)
     local payload = {}
     for k, v in pairs(data) do payload[k] = v end

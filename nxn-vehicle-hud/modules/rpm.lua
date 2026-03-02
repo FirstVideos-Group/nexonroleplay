@@ -9,14 +9,13 @@ CreateThread(function()
     while true do
         Wait(Config.PollInterval)
 
-        if not inVehicle then goto continue end
-        if not moduleStates['rpm'] then goto continue end
+        if not NXN.VehHUD.State.GetInVehicle()            then goto continue end
+        if not NXN.VehHUD.State.GetModuleStates()['rpm']  then goto continue end
 
         local ped = PlayerPedId()
         local veh = GetVehiclePedIsIn(ped, false)
         if veh == 0 then goto continue end
 
-        -- GetVehicleCurrentRpm: 0.0 - 1.0
         local rpm = math.floor(GetVehicleCurrentRpm(veh) * 100)
 
         if rpm ~= lastRpm then
