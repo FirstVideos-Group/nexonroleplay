@@ -6,7 +6,7 @@ local isOpen        = false
 local currentPlate  = ''
 local currentVehicle = 0
 
--- ── Segédfüggvények ─────────────────────────────────────────
+-- ── Segédfüggvények ─────────────────────────────────────────────
 
 local function SetVisible(state)
     isOpen = state
@@ -26,7 +26,11 @@ local function GetVehicleRearCoords(vehicle)
     )
 end
 
-local function DrawMarker(coords)
+-- Átnevezve DrawTrunkMarker-re, hogy ne ütközzön a natív GTA DrawMarker függvénnyel.
+-- Korábban a lokális DrawMarker(coords) árnyékolta a natívat, ezért a belső
+-- DrawMarker(...) hívás rekurzívan önmagat hívta. Az első paraméter (Config.Marker.type,
+-- egy szám) került coords helyére, ami "attempt to index a number value" crash-t okozott.
+local function DrawTrunkMarker(coords)
     local c = Config.Marker.color
     DrawMarker(
         Config.Marker.type,
@@ -61,7 +65,6 @@ local function GetNearbyVehicleRear()
             local rearCoords = GetVehicleRearCoords(v)
             local d = #(pos - rearCoords)
             if d < dist then
-                -- Halozati jármű ellőrzés
                 if Config.RequireNetworkVehicle then
                     local netId = NetworkGetNetworkIdFromEntity(v)
                     if netId and netId > 0 then
@@ -81,7 +84,6 @@ end
 local function OpenTrunkForVehicle(vehicle)
     local vClass = GetVehicleClass(vehicle)
 
-    -- Motorkerékpár kizárás
     if vClass == 8 and not Config.AllowMotorcycleTrunk then
         if GetResourceState('nxn-notify') == 'started' then
             exports['nxn-notify']:warning('Motorkerékpáron nincs csomagtartó!')
@@ -93,12 +95,9 @@ local function OpenTrunkForVehicle(vehicle)
     local plate    = NXN.Trunk.NormalizePlate(rawPlate)
     if plate == '' then return end
 
-    -- nxn-inventory itemDefs átadása szerver felé (súlyok tájékoztatásához)
     local invItemDefs = {}
     if GetResourceState('nxn-inventory') == 'started' then
         local localInv = exports['nxn-inventory']:getLocalInventory()
-        -- itemDefs-et a shared Config-ból vesszuk a játékos kliensjén
-        -- (nxn-inventory shared.lua is fut client-en)
         if NXN.Inventory and NXN.Inventory.GetItemDef then
             for name, _ in pairs(localInv.items or {}) do
                 local def = NXN.Inventory.GetItemDef(name)
@@ -114,7 +113,7 @@ local function OpenTrunkForVehicle(vehicle)
     TriggerServerEvent('nxn-trunk:server:open', plate, vClass, invItemDefs)
 end
 
--- ── Közelség-loop ─────────────────────────────────────────────
+-- ── KözelSég-loop ───────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -129,7 +128,7 @@ CreateThread(function()
                 local dist = #(pos - rearCoords)
                 if dist < Config.InteractDistance * 4 then
                     sleep = 0
-                    if Config.Marker.enabled then DrawMarker(rearCoords) end
+                    if Config.Marker.enabled then DrawTrunkMarker(rearCoords) end
                     local plate = NXN.Trunk.NormalizePlate(GetVehicleNumberPlateText(v))
                     DrawText3D(rearCoords, ('[%s] Csomagtartó – %s'):format(
                         IsControlJustReleased and 'G' or 'G', plate
@@ -141,7 +140,7 @@ CreateThread(function()
     end
 end)
 
--- ── Interakció billentyű ──────────────────────────────────────
+-- ── Interakció billentyű ─────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -157,7 +156,7 @@ CreateThread(function()
     end
 end)
 
--- ── Escape bezárás ─────────────────────────────────────────────
+-- ── Escape bezárás ──────────────────────────────────────────────────
 
 CreateThread(function()
     while true do
@@ -171,7 +170,7 @@ CreateThread(function()
     end
 end)
 
--- ── NUI callbacks ─────────────────────────────────────────────
+-- ── NUI callbacks ─────────────────────────────────────────────────
 
 RegisterNUICallback('close', function(_, cb)
     SetVisible(false)
@@ -199,14 +198,12 @@ RegisterNUICallback('moveToTrunk', function(data, cb)
     cb('ok')
 end)
 
--- ── Net eventek ───────────────────────────────────────────────
+-- ── Net eventek ───────────────────────────────────────────────────
 
 RegisterNetEvent('nxn-trunk:client:sync', function(data)
-    -- Inventory adat lekérés nxn-inventory kliensexportból
     local invData = {}
     if GetResourceState('nxn-inventory') == 'started' then
         local localInv = exports['nxn-inventory']:getLocalInventory()
-        -- Item defíniációk felgázdágatása
         if NXN.Inventory and NXN.Inventory.GetItemDef then
             for name, slot in pairs(localInv.items or {}) do
                 local def = NXN.Inventory.GetItemDef(name)
@@ -223,15 +220,14 @@ RegisterNetEvent('nxn-trunk:client:sync', function(data)
         end
     end
 
-    -- Trunk itemek gazdagítása label/icon-nal ha hozzáférhető
     local enrichedTrunk = {}
     for _, item in ipairs(data.items or {}) do
         local entry = { name = item.name, count = item.count or 1, weight = item.weight or 0, label = item.label or item.name, icon = item.icon or '' }
         if NXN.Inventory and NXN.Inventory.GetItemDef then
             local def = NXN.Inventory.GetItemDef(item.name)
             if def then
-                entry.label = def.label
-                entry.icon  = def.icon
+                entry.label  = def.label
+                entry.icon   = def.icon
                 entry.weight = def.weight
             end
         end
@@ -246,7 +242,7 @@ RegisterNetEvent('nxn-trunk:client:sync', function(data)
         trunkCurrent  = data.currentWeight,
         invItems      = invData,
         invMax        = (GetResourceState('nxn-inventory') == 'started') and exports['nxn-inventory']:getLocalWeight and exports['nxn-inventory']:getLocalWeight() or 0,
-        invMaxWeight  = 30.0,  -- nxn-inventory Config.MaxWeight default
+        invMaxWeight  = 30.0,
     })
 
     if not isOpen then
@@ -258,7 +254,7 @@ RegisterNetEvent('nxn-trunk:client:moveResult', function(data)
     SendNUIMessage({ action = 'moveResult', ok = data.ok, message = data.message, direction = data.direction })
 end)
 
--- ── Kliens exportok ──────────────────────────────────────────
+-- ── Kliens exportok ───────────────────────────────────────────────
 
 exports('openTrunk', function(vehicle)
     if not vehicle or not DoesEntityExist(vehicle) then return end
