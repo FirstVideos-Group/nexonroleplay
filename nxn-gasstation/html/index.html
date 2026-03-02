@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-gasstation</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="overlay" class="hidden">
+    <div id="modal">
+        <div class="modal-header">
+            <i class="hgi hgi-stroke hgi-fuel-station"></i>
+            <div class="modal-title">
+                <span id="station-label">Benzinkút</span>
+                <small>Tankálás</small>
+            </div>
+            <button id="btn-close" class="icon-btn"><i class="hgi hgi-stroke hgi-cancel-01"></i></button>
+        </div>
+
+        <div class="modal-body">
+            <div class="info-row">
+                <span class="info-label"><i class="hgi hgi-stroke hgi-petrol"></i> Jelenlegi szint</span>
+                <span id="fuel-pct" class="info-value">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="fuel-bar" class="progress-fill" style="width:0%"></div>
+            </div>
+
+            <div class="info-row mt">
+                <span class="info-label"><i class="hgi hgi-stroke hgi-droplet"></i> Max. feltölthető</span>
+                <span id="max-liters" class="info-value">0 L</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="hgi hgi-stroke hgi-money-bag-01"></i> Ár / liter</span>
+                <span id="price-per-liter" class="info-value">0 Ft</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="liter-picker">
+                <button id="btn-minus" class="stepper-btn"><i class="hgi hgi-stroke hgi-minus-sign"></i></button>
+                <input id="liter-input" type="number" min="1" step="1" value="1"/>
+                <button id="btn-plus" class="stepper-btn"><i class="hgi hgi-stroke hgi-plus-sign"></i></button>
+            </div>
+
+            <div class="total-row">
+                <span>Végösszeg:</span>
+                <span id="total-price" class="total-value">0 Ft</span>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button id="btn-fill" class="btn btn-secondary">
+                <i class="hgi hgi-stroke hgi-petrol"></i> Tele szint
+            </button>
+            <button id="btn-confirm" class="btn btn-primary">
+                <i class="hgi hgi-stroke hgi-tick-01"></i> Tankálás!
+            </button>
+        </div>
+        <div class="modal-footer-cancel">
+            <button id="btn-cancel" class="btn btn-ghost">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i> Mégse
+            </button>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

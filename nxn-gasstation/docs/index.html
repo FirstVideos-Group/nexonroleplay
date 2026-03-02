@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8"/>
+    <title>nxn-gasstation – Dokumentáció</title>
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css"/>
+    <style>
+        :root {
+            --accent:  #5b6af0;
+            --bg:      #0e0f14;
+            --surface: #16181f;
+            --border:  #2a2d3a;
+            --text:    #e4e6f0;
+            --muted:   #6b6f85;
+            --success: #3ecf8e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; line-height: 1.7; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; gap: 14px; }
+        header i { font-size: 28px; color: var(--accent); }
+        header h1 { font-size: 22px; font-weight: 700; }
+        header span { color: var(--muted); font-size: 13px; margin-left: 10px; }
+        main { max-width: 860px; margin: 40px auto; padding: 0 24px; }
+        h2 { font-size: 18px; color: var(--accent); margin: 36px 0 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; margin-bottom: 16px; }
+        code { color: var(--success); }
+        .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+        .badge-opt { background: #3a3d55; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: var(--surface); color: var(--accent); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-family: monospace; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab { padding: 8px 18px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; color: var(--muted); transition: color .15s; }
+        .tab.active { color: var(--text); background: #1e2030; }
+        .tab-content { display: none; background: #1e2030; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 16px; }
+        .tab-content.active { display: block; }
+        .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; font-size: 13px; color: var(--muted); line-height: 2; margin-bottom: 20px; }
+        .flow b { color: var(--text); }
+    </style>
+</head>
+<body>
+<header>
+    <i class="hgi hgi-stroke hgi-fuel-station"></i>
+    <div>
+        <h1>nxn-gasstation <span>v1.0.0</span></h1>
+    </div>
+</header>
+<main>
+    <p>Az <strong>nxn-gasstation</strong> a Nexon RP szerver töltőállomás rendszere. Kezeli a tankálási interakciót (marker + NPC alapú), a fizetést az <code>nxn-finance</code>-en keresztül, és az üzemanyag hozzáadását az <code>nxn-fuel</code> exportján át.</p>
+
+    <h2><i class="hgi hgi-stroke hgi-folder-02"></i> Fájlstruktúra</h2>
+    <pre><code>nxn-gasstation/
+├── fxmanifest.lua
+├── config.lua
+├── shared.lua
+├── client.lua
+├── server.lua
+└── html/ (index.html, style.css, app.js)</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-link-01"></i> Kapcsolódó scriptek</h2>
+    <table>
+        <tr><th>Script</th><th>Típus</th><th>Szerep</th></tr>
+        <tr><td>nxn-fuel</td><td><span class="badge">Kötelező</span></td><td>getFuel, getTankSize, addFuel exportok</td></tr>
+        <tr><td>nxn-finance</td><td><span class="badge">Kötelező</span></td><td>getMoney, removeMoney exportok</td></tr>
+        <tr><td>nxn-notify</td><td><span class="badge">Kötelező</span></td><td>Visszajelzések megjelenítése</td></tr>
+        <tr><td>nxn-npcconversation</td><td><span class="badge badge-opt">Opcionális</span></td><td>NPC kúltos regisztrálása</td></tr>
+        <tr><td>nxn-vehicles</td><td><span class="badge badge-opt">Opcionális</span></td><td>getPlate – rendszám azonosítás</td></tr>
+        <tr><td>nxn-minimap</td><td><span class="badge badge-opt">Opcionális</span></td><td>addBlip – benzinkút blipek</td></tr>
+        <tr><td>nxn-identity</td><td><span class="badge badge-opt">Opcionális</span></td><td>getIdentifier – tranzakció log</td></tr>
+        <tr><td>nxn-database</td><td><span class="badge badge-opt">Opcionális</span></td><td>Tranzakció logolás DB-be</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-settings-01"></i> Konfiguráció (config.lua)</h2>
+    <table>
+        <tr><th>Kulcs</th><th>Alapértelmezett</th><th>Leírás</th></tr>
+        <tr><td>Config.Debug</td><td>false</td><td>Debug logok engedélyezése</td></tr>
+        <tr><td>Config.Stations</td><td>–</td><td>Töltőállomás helyek táblája</td></tr>
+        <tr><td>Config.RefuelAnim</td><td>timetable@gardener...</td><td>Tankálási animáció dict/name</td></tr>
+        <tr><td>Config.InteractionDistance</td><td>3.0</td><td>E-gomb hatótáv (méter)</td></tr>
+        <tr><td>Config.MarkerDrawDistance</td><td>25.0</td><td>Marker rajzolási távolság</td></tr>
+        <tr><td>Config.DefaultPricePerLiter</td><td>13.0</td><td>Fallback ár Ft/liter</td></tr>
+        <tr><td>Config.MinRefuelAmount</td><td>1.0</td><td>Minimum tankálható liter</td></tr>
+        <tr><td>Config.RefuelRate</td><td>2.0</td><td>Tankálási sebesség (L/s)</td></tr>
+        <tr><td>Config.RealtimeRefuel</td><td>false</td><td>Valósidős töltés engedélyezése</td></tr>
+        <tr><td>Config.ServerCheckDistance</td><td>10.0</td><td>Szerver oldali max. távolság</td></tr>
+        <tr><td>Config.LogTransactions</td><td>true</td><td>Tranzakciók DB logolása</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-database-01"></i> Adatbázis séma</h2>
+    <pre><code>CREATE TABLE IF NOT EXISTS `nxn_gasstation_log` (
+    `id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `identifier`  VARCHAR(100) NOT NULL,
+    `plate`       VARCHAR(20)  NOT NULL,
+    `station`     VARCHAR(50)  NOT NULL,
+    `amount_l`    FLOAT        NOT NULL,
+    `price`       INT          NOT NULL,
+    `created_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+
+    <h2><i class="hgi hgi-stroke hgi-export-01"></i> Exportok</h2>
+    <table>
+        <tr><th>Export neve</th><th>Oldal</th><th>Paraméterek</th><th>Leírás</th></tr>
+        <tr><td>getStations()</td><td>server</td><td>–</td><td>Összes töltőállomás konfig táblája</td></tr>
+        <tr><td>getPricePerLiter(stationId)</td><td>server</td><td>string</td><td>Adott állomás literára Ft-ban</td></tr>
+        <tr><td>isRefueling(plate)</td><td>server</td><td>string</td><td>Folyamatban van-e tankálás az adott rendszámra</td></tr>
+        <tr><td>startRefuel(vehicle, stationId)</td><td>client</td><td>entity, string</td><td>Tankálás indítása külső scriptből</td></tr>
+        <tr><td>isRefueling()</td><td>client</td><td>–</td><td>Folyamatban van-e tankálás kliens oldalon</td></tr>
+        <tr><td>cancelRefuel()</td><td>client</td><td>–</td><td>Aktív tankálás megszakítása</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-code-circle"></i> Export használati példák</h2>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t1')">Kliens (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t2')">Szerver (Lua)</div>
+        <div class="tab" onclick="switchTab(this,'t3')">Másik resource-ból</div>
+    </div>
+    <div class="tab-content active" id="t1"><pre><code>-- Tankálás indítása
+exports['nxn-gasstation']:startRefuel(vehicle, 'paleto_bp')
+
+-- Tankálás alatt van?
+if exports['nxn-gasstation']:isRefueling() then
+    print('Tankálás folyamatban')
+end
+
+-- Megszakítás
+exports['nxn-gasstation']:cancelRefuel()</code></pre></div>
+    <div class="tab-content" id="t2"><pre><code>-- Összes állomás lekérése
+local stations = exports['nxn-gasstation']:getStations()
+
+-- Ár lekérése
+local price = exports['nxn-gasstation']:getPricePerLiter('alta_st_gas')
+print('Ár: ' .. price .. ' Ft/L')
+
+-- Folyamatban van-e tankálás?
+if exports['nxn-gasstation']:isRefueling('ABC-123') then
+    print('Ez a jármű most tankál')
+end</code></pre></div>
+    <div class="tab-content" id="t3"><pre><code>-- nxn-dispatch: figyeli a tranzakciós eventet
+AddEventHandler('nxn-gasstation:server:transaction', function(src, plate, stationId, liters, price)
+    print(plate .. ' tankált ' .. liters .. 'L-t ' .. stationId .. '-nál, ' .. price .. ' Ft-ért')
+end)
+
+-- nxn-fuel figyelhet a sync eventre:
+AddEventHandler('nxn-fuel:client:sync', function(data)
+    -- data.plate, data.level
+end)</code></pre></div>
+
+    <h2><i class="hgi hgi-stroke hgi-chat-01"></i> Net Events</h2>
+    <table>
+        <tr><th>Event neve</th><th>Irány</th><th>Leírás</th></tr>
+        <tr><td>nxn-gasstation:server:startRefuel</td><td>Client → Server</td><td>Tankálás engedélyezési kérelem</td></tr>
+        <tr><td>nxn-gasstation:server:confirmRefuel</td><td>Client → Server</td><td>Fizetés + addFuel hívás</td></tr>
+        <tr><td>nxn-gasstation:server:cancelRefuel</td><td>Client → Server</td><td>Tankálás megszakítása</td></tr>
+        <tr><td>nxn-gasstation:client:refuelAllowed</td><td>Server → Client</td><td>Engedélyezés + animáció indítás</td></tr>
+        <tr><td>nxn-gasstation:client:refuelDone</td><td>Server → Client</td><td>Sikeres tankálás visszajelzés</td></tr>
+        <tr><td>nxn-gasstation:client:refuelFailed</td><td>Server → Client</td><td>Hiba visszajelzés</td></tr>
+        <tr><td>nxn-gasstation:client:openRefuelUI</td><td>NPC/Event → Client</td><td>UI megnyitása (pl. NPC dialóg)</td></tr>
+        <tr><td>nxn-gasstation:server:transaction</td><td>Server broadcast</td><td>Más scriptek figyelhetik (dispatch, log)</td></tr>
+    </table>
+
+    <h2><i class="hgi hgi-stroke hgi-flow-square"></i> Működési folyamat</h2>
+    <div class="flow">
+        <b>1.</b> Játékos megközelíti a pumpát (marker / NPC) <br/>
+        <b>2.</b> [E] vagy NPC dialóg → UI megnyílik (aktuális szint, max. liter, ár) <br/>
+        <b>3.</b> Játékos beállítja a litert → megerősíti <br/>
+        <b>4.</b> <code>startRefuel</code> → szerver ellenőrzi közelséget, tankálási zárat, pénzegyenleget <br/>
+        <b>5.</b> <code>refuelAllowed</code> → kliens animációt indít, várakozik (liter / sebesség másodperc) <br/>
+        <b>6.</b> <code>confirmRefuel</code> → szerver: <code>nxn-finance:removeMoney</code> + <code>nxn-fuel:addFuel</code> + DB log <br/>
+        <b>7.</b> <code>refuelDone</code> → animáció leáll, értesítés jelenik meg
+    </div>
+</main>
+<script>
+    function switchTab(el, id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
