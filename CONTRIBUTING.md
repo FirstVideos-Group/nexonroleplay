@@ -143,26 +143,143 @@ chore: update fxmanifest versions
 
 ---
 
-## 🐛 Hiba jelentés
+## 🐛 Issue létrehozása
 
-Ha hibát találsz, nyiss egy GitHub Issue-t az alábbi információkkal:
+Mielőtt új issue-t nyitnál, kérjük **keresd meg a meglévő issue-kat**, hogy ne duplikálj már bejelentett hibát vagy javaslatot.
 
-- **Érintett resource:** `nxn-xxx`
-- **FiveM szerver verzió**
-- **Hiba leírása** — mi történt vs. mi kellett volna történni
-- **Reprodukálási lépések**
-- **Konzol log/hibaüzenet** (ha van)
+### 🔴 Hiba jelentés (Bug Report)
+
+Ha hibát találsz valamelyik `nxn-*` scriptben, nyiss egy **Bug Report** issue-t. Címezd értelmesén, pl.:
+> `[nxn-hud] A stamina sáv nem frissül jármű kilépés után`
+
+Az issue leírásában add meg az alábbiakat:
+
+```markdown
+## 🐛 Hiba leírása
+<!-- Rövid, értelmes leírás arról, hogy mi a probléma -->
+
+## 📋 Érintett resource
+- **Resource neve:** `nxn-xxx`
+- **Fájl (ha ismert):** `client/main.lua`
+
+## ✅ Várt viselkedés
+<!-- Mi kéne, hogy történjen? -->
+
+## ❌ Jelenlegi viselkedés
+<!-- Mi történik helyette? -->
+
+## 🔁 Reprodukálási lépések
+1. ...
+2. ...
+3. ...
+
+## 📸 Képernyőkép / konzol log
+<!-- Ha van, illeszd ide a hibaüzenetet vagy képernyőképet -->
+
+## 💻 Környezet
+- **FiveM Build:** 
+- **Szerver artefakt verzió:**
+- **Érintett OS:**
+```
+
+**Címkék:** használd a `bug` és az érintett resource nevét (pl. `nxn-hud`) címkéként, ha elérhetők.
 
 ---
 
-## 💡 Feature javaslat
+### 🟡 Feature javaslat (Feature Request)
 
-Feature javaslat esetén nyiss egy GitHub Issue-t a következőkkel:
+Ha új funkciót szeretnél javasolni, nyiss egy **Feature Request** issue-t. Címe legyen leíró, pl.:
+> `[nxn-inventory] Drag & drop támogatott tárgyak között`
 
-- A javasolt funkció részletes leírása
-- Melyik resource-t érinti vagy új resourcera van szükség?
-- Hogyan illeszkedik a projekt architektúrájába?
-- Esetleges export API javaslat
+Az issue leírásában add meg az alábbiakat:
+
+```markdown
+## 💡 Ötlet leírása
+<!-- Mit szeretnél, hogy a script tudjon? -->
+
+## 📋 Érintett resource
+- **Resource neve:** `nxn-xxx` *(vagy új resource kell)*
+
+## 🎯 Probléma / Motiváció
+<!-- Miért lenne hasznos ez a funkció? Mit old meg? -->
+
+## 🛠️ Javasolt megvalósítás
+<!-- Ha van ötleted a megvalósításról, írd le itt (opcionális) -->
+
+## 🔗 Export API javaslat
+<!-- Ha új exportot igényel, add meg a javasolt szignatúrát (opcionális) -->
+```lua
+exports['nxn-xxx']:functionName(param1, param2)
+```
+
+## ⚖️ Alternatívák
+<!-- Fontoltál-e más megoldásokat? -->
+```
+
+**Címkék:** használd az `enhancement` és az érintett resource nevét címkéként.
+
+---
+
+### 🟢 Új resource javaslat (New Resource)
+
+Ha teljesen új `nxn-*` scriptet javasolsz, nyiss egy **New Resource** issue-t. Címe legyen:
+> `[NEW] nxn-mechanic — Szerelői munkakör rendszer`
+
+```markdown
+## 📦 Resource neve
+`nxn-<név>`
+
+## 📝 Leírás
+<!-- Mit csinál ez a script? Mi a fő feladata? -->
+
+## 🔗 Függőségek
+<!-- Mely meglévő nxn-* resourcek exportjait használná fel? -->
+- `nxn-database` — adatmentéshez
+- `nxn-notify` — értesítésekhez
+
+## 📤 Javasolt exportok
+<!-- Milyen exportokat biztosítana más scriptek számára? -->
+```lua
+exports['nxn-xxx']:functionName(param)
+```
+
+## 🎨 UI igény
+<!-- Van szükség UI-ra? Ha igen, milyen jellegű? (menü, HUD elem, értesítés stb.) -->
+
+## ⚖️ Prioritás / indoklás
+<!-- Miért fontos ez a szerver számára? -->
+```
+
+**Címkék:** használd a `new resource` és `enhancement` címkéket.
+
+---
+
+### 🟣 Dokumentációs issue
+
+Ha hibás, hiányos vagy elavult dokumentációt találsz:
+
+```markdown
+## 📄 Érintett fájl
+<!-- pl. `nxn-inventory/docs/index.html` vagy `CONTRIBUTING.md` -->
+
+## ❌ Probléma
+<!-- Mi a hibás vagy hiányzó rész? -->
+
+## ✅ Javasolt javítás
+<!-- Hogyan kéne kinéznie a helyes verziónak? -->
+```
+
+**Címkék:** használd a `documentation` címkét.
+
+---
+
+### ❗ Issue írási tippek
+
+- **Egy issue = egy probléma vagy javaslat** — ne írd össze a különböző dolgokat
+- **Magyar nyelven írj** — a projekt magyar nyelvű
+- **Legyenek konkrétak** a leírások — kerüld az általános fogalmazást
+- **Ne nyasíts el információt** — mindig add meg az érintett resource nevét
+- **Kommentelj, ne nyáss új issue-t** ha már létezik hasonló bejelentés
 
 ---
 
