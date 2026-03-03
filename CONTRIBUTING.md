@@ -60,8 +60,8 @@ Minden UI elemet a [`design-guide.html`](./design-guide.html) alapján kell elk�
 
 Minden scriptnek export funkciókat kell biztosítania más resourcek számára. Ellenőrizd, hogy:
 
-- Az új script exportjai nem ütköznek meglévő exportokkal
-- Ha módosít egy meglévő resource exportját, az összes érintett scriptet **ugyanabban a PR-ban** frissítsd
+- Az új script exportjai nem ütköznek a meglévő exportokkal
+- Ha módosítasz egy meglévő resource exportján, az összes érintett scriptet **ugyanabban a PR-ban** frissítsd
 - Teszteld az exportokat a kapcsolódó resourcekkal együtt
 
 Export deklarálása (`server/main.lua` vagy `client/main.lua`):
@@ -93,6 +93,7 @@ docs/nxn-<resource>-<rövid-leírás>
 ```
 
 Példák:
+
 ```
 feature/nxn-inventory-drag-drop
 fix/nxn-hud-stamina-display
@@ -149,7 +150,8 @@ Mielőtt új issue-t nyitnál, kérjük **keresd meg a meglévő issue-kat**, ho
 
 ### 🔴 Hiba jelentés (Bug Report)
 
-Ha hibát találsz valamelyik `nxn-*` scriptben, nyiss egy **Bug Report** issue-t. Címezd értelmesen, pl.:
+Ha hibát találsz valamelyik `nxn-*` scriptben, nyiss egy **Bug Report** issue-t. Címezd értelmesén, pl.:
+
 > `[nxn-hud] A stamina sáv nem frissül jármű kilépés után`
 
 Az issue leírásában add meg az alábbiakat:
@@ -177,7 +179,7 @@ Az issue leírásában add meg az alábbiakat:
 <!-- Ha van, illeszd ide a hibaüzenetet vagy képernyőképet -->
 
 ## 💻 Környezet
-- **FiveM Build:** 
+- **FiveM Build:**
 - **Szerver artefakt verzió:**
 - **Érintett OS:**
 ```
@@ -189,6 +191,7 @@ Az issue leírásában add meg az alábbiakat:
 ### 🟡 Feature javaslat (Feature Request)
 
 Ha új funkciót szeretnél javasolni, nyiss egy **Feature Request** issue-t. Címe legyen leíró, pl.:
+
 > `[nxn-inventory] Drag & drop támogatott tárgyak között`
 
 Az issue leírásában add meg az alábbiakat:
@@ -198,7 +201,7 @@ Az issue leírásában add meg az alábbiakat:
 <!-- Mit szeretnél, hogy a script tudjon? -->
 
 ## 📋 Érintett resource
-- **Resource neve:** `nxn-xxx` *(vagy új resource kell)*
+- **Resource neve:** `nxn-xxx` *(vagy új resource szükséges)*
 
 ## 🎯 Probléma / Motiváció
 <!-- Miért lenne hasznos ez a funkció? Mit old meg? -->
@@ -207,22 +210,21 @@ Az issue leírásában add meg az alábbiakat:
 <!-- Ha van ötleted a megvalósításról, írd le itt (opcionális) -->
 
 ## 🔗 Export API javaslat
-<!-- Ha új exportot igényel, add meg a javasolt szignatúrát (opcionális) -->
-```lua
-exports['nxn-xxx']:functionName(param1, param2)
-```
+<!-- Ha új exportot igényel, add meg a javasolt szignatúrát (opcionális)
+exports['nxn-xxx']:functionName(param1, param2) -->
 
 ## ⚖️ Alternatívák
 <!-- Fontoltál-e más megoldásokat? -->
 ```
 
-**Címkék:** használd az `enhancement` és az érintett resource nevét címkeként.
+**Címkék:** használd az `enhancement` és az érintett resource nevét címkéként.
 
 ---
 
 ### 🟢 Új resource javaslat (New Resource)
 
 Ha teljesen új `nxn-*` scriptet javasolsz, nyiss egy **New Resource** issue-t. Címe legyen:
+
 > `[NEW] nxn-mechanic — Szerelői munkakör rendszer`
 
 ```markdown
@@ -238,10 +240,8 @@ Ha teljesen új `nxn-*` scriptet javasolsz, nyiss egy **New Resource** issue-t. 
 - `nxn-notify` — értesítésekhez
 
 ## 📤 Javasolt exportok
-<!-- Milyen exportokat biztosítana más scriptek számára? -->
-```lua
-exports['nxn-xxx']:functionName(param)
-```
+<!-- Milyen exportokat biztosítana más scriptek számára?
+exports['nxn-xxx']:functionName(param) -->
 
 ## 🎨 UI igény
 <!-- Van szükség UI-ra? Ha igen, milyen jellegű? (menü, HUD elem, értesítés stb.) -->
@@ -278,8 +278,8 @@ Ha hibás, hiányos vagy elavult dokumentációt találsz:
 - **Egy issue = egy probléma vagy javaslat** — ne írd össze a különböző dolgokat
 - **Magyar nyelven írj** — a projekt magyar nyelvű
 - **Legyenek konkrétak** a leírások — kerüld az általános fogalmazást
-- **Ne nyasíts el információt** — mindig add meg az érintett resource nevét
-- **Kommentelj, ne nyiss új issue-t** ha már létezik hasonló bejelentés
+- **Ne hagyj ki információt** — mindig add meg az érintett resource nevét
+- **Kommentelj, ne nyiss új issue-t**, ha már létezik hasonló bejelentés
 
 ---
 
