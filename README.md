@@ -39,6 +39,15 @@
 | [`nxn-inventory`](./nxn-inventory) | Inventory / tárgykezelő rendszer |
 | [`nxn-cityhall`](./nxn-cityhall) | Városháza rendszer — ügyintézés, iratok, karakterkezelés |
 
+### 💼 Munka & Foglalkoztatás
+
+| Resource | Leírás |
+|---|---|
+| [`nxn-job`](./nxn-job) | Munkahelyek kezelése — foglalkozások, szerepkörök, besorolás |
+| [`nxn-jobwork`](./nxn-jobwork) | Munkafeladatok rendszere — aktiválható munkafolyamatok |
+| [`nxn-delivery`](./nxn-delivery) | Kézbesítői munkakör rendszer |
+| [`nxn-unemployment`](./nxn-unemployment) | Munkanélküli segély és állami támogatás kezelése |
+
 ### 💰 Gazdaság & Kereskedelem
 
 | Resource | Leírás |
@@ -52,11 +61,25 @@
 
 | Resource | Leírás |
 |---|---|
+| [`nxn-vehicles`](./nxn-vehicles) | Jármű adatbázis és alapkezelés |
+| [`nxn-vehicleshop`](./nxn-vehicleshop) | Jármű vásárlás — showroom, vétel, finanszírozás |
+| [`nxn-garage`](./nxn-garage) | Garázsrendszer — jármű tárolás, ki- és beparkoltatás |
+| [`nxn-keys`](./nxn-keys) | Járműkulcs rendszer — kulcsosztás, zár/nyit |
+| [`nxn-trunk`](./nxn-trunk) | Jármű csomagtartó — tárolt tárgyak kezelése |
+| [`nxn-fuel`](./nxn-fuel) | Üzemányag rendszer — fogyasztás, feltöltés logika |
+| [`nxn-gasstation`](./nxn-gasstation) | Benzínkut interakció — feltöltés, fizetés |
 | [`nxn-engine`](./nxn-engine) | Jármű motor kezelése — motor indítás, leállítás és állapot logika |
 | [`nxn-seatbelt`](./nxn-seatbelt) | Biztonsági öv rendszer — állapot nyilvántartás és logika |
 | [`nxn-autoseatbelt`](./nxn-autoseatbelt) | Automatikus biztonsági öv felcsatolása járműbe szállásnál |
 | [`nxn-seatbelt-extras`](./nxn-seatbelt-extras) | Kiegészítők az `nxn-seatbelt` scripthez |
 | [`nxn-antiwanted`](./nxn-antiwanted) | Körözöttség (wanted level) automatikus kezelése és blokkolása |
+
+### 🔓 Bűnözés
+
+| Resource | Leírás |
+|---|---|
+| [`nxn-cartheft`](./nxn-cartheft) | Autólopás rendszer — jármű eltulajonítási mechanika |
+| [`nxn-hotwire`](./nxn-hotwire) | Drótokosolás (hotwire) — jármű indítása kulcs nélkül |
 
 ### 🌍 Világ
 
@@ -102,6 +125,12 @@ ensure nxn-licenses
 ensure nxn-inventory
 ensure nxn-cityhall
 
+# Munka & Foglalkoztatás
+ensure nxn-job
+ensure nxn-jobwork
+ensure nxn-delivery
+ensure nxn-unemployment
+
 # Gazdaság & Kereskedelem
 ensure nxn-finance
 ensure nxn-bank
@@ -109,11 +138,22 @@ ensure nxn-shop
 ensure nxn-food
 
 # Járművek
+ensure nxn-vehicles
+ensure nxn-vehicleshop
+ensure nxn-garage
+ensure nxn-keys
+ensure nxn-trunk
+ensure nxn-fuel
+ensure nxn-gasstation
 ensure nxn-engine
 ensure nxn-seatbelt
 ensure nxn-autoseatbelt
 ensure nxn-seatbelt-extras
 ensure nxn-antiwanted
+
+# Bűnözés
+ensure nxn-cartheft
+ensure nxn-hotwire
 
 # Világ
 ensure nxn-signs
