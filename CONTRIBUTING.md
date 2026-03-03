@@ -149,7 +149,7 @@ Mielőtt új issue-t nyitnál, kérjük **keresd meg a meglévő issue-kat**, ho
 
 ### 🔴 Hiba jelentés (Bug Report)
 
-Ha hibát találsz valamelyik `nxn-*` scriptben, nyiss egy **Bug Report** issue-t. Címezd értelmesén, pl.:
+Ha hibát találsz valamelyik `nxn-*` scriptben, nyiss egy **Bug Report** issue-t. Címezd értelmesen, pl.:
 > `[nxn-hud] A stamina sáv nem frissül jármű kilépés után`
 
 Az issue leírásában add meg az alábbiakat:
@@ -216,7 +216,7 @@ exports['nxn-xxx']:functionName(param1, param2)
 <!-- Fontoltál-e más megoldásokat? -->
 ```
 
-**Címkék:** használd az `enhancement` és az érintett resource nevét címkéként.
+**Címkék:** használd az `enhancement` és az érintett resource nevét címkeként.
 
 ---
 
@@ -279,7 +279,7 @@ Ha hibás, hiányos vagy elavult dokumentációt találsz:
 - **Magyar nyelven írj** — a projekt magyar nyelvű
 - **Legyenek konkrétak** a leírások — kerüld az általános fogalmazást
 - **Ne nyasíts el információt** — mindig add meg az érintett resource nevét
-- **Kommentelj, ne nyáss új issue-t** ha már létezik hasonló bejelentés
+- **Kommentelj, ne nyiss új issue-t** ha már létezik hasonló bejelentés
 
 ---
 
