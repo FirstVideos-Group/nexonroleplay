@@ -283,6 +283,106 @@ Ha hibás, hiányos vagy elavult dokumentációt találsz:
 
 ---
 
+## 📝 Verziókezelés & Changelog
+
+Minden `nxn-*` resource saját verziószámmal rendelkezik, amit a `fxmanifest.lua` fájlban kell karbantartani. A projekt a **[Szemantikus Verziózás (SemVer)](https://semver.org/lang/hu/)** szabványt követi.
+
+### Verziószám formátum
+
+```
+MAJOR.MINOR.PATCH
+```
+
+| Típus | Mikor növelendő | Példa |
+|---|---|---|
+| **MAJOR** | Visszafelé nem kompatibilis, törő változtatás (pl. export átnevezése, eltávolítása) | `1.0.0` → `2.0.0` |
+| **MINOR** | Új funkció, visszafelé kompatibilis | `1.0.0` → `1.1.0` |
+| **PATCH** | Hibajavítás, apró módosítás | `1.0.0` → `1.0.1` |
+
+A verzió frissítése a `fxmanifest.lua`-ban:
+
+```lua
+fx_version 'cerulean'
+game 'gta5'
+
+name 'nxn-sajatscript'
+version '1.2.0'
+```
+
+---
+
+### CHANGELOG.md vezetése
+
+Minden `nxn-*` resource gyökérmappájában legyen egy `CHANGELOG.md` fájl. A formátum a **[Keep a Changelog](https://keepachangelog.com/hu/1.0.0/)** szabványt követi.
+
+#### Sablon
+
+```markdown
+# Changelog — nxn-sajatscript
+
+Minden jelentősebb változtatás ebben a fájlban kerül dokumentálásra.
+A formátum a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) alapján készül,
+és a projekt a [Szemantikus Verziózást](https://semver.org/lang/hu/) követi.
+
+## [Unreleased]
+### Hozzáadva
+- ...
+
+## [1.2.0] - 2026-03-03
+### Hozzáadva
+- Új export: `getPlayerBalance(source)` — lekéri a játékos egyenlegét
+
+### Változtatva
+- `config.lua`: új `Config.MaxBalance` paraméter hozzáadva
+
+### Javítva
+- Javítva: egyenleg nem frissült kilépés után (#42)
+
+## [1.1.0] - 2026-02-10
+### Hozzáadva
+- Banki átutalás funkció
+
+## [1.0.0] - 2026-01-15
+### Hozzáadva
+- Első kiadás
+```
+
+#### Changelog szekciók
+
+| Szekció | Mire használják |
+|---|---|
+| `Hozzáadva` | Új funkciók, exportok, UI elemek |
+| `Változtatva` | Meglévő funkciók módosítása |
+| `Elavult` | Hamarosan eltávolítandó funkciók jelzése |
+| `Eltávolítva` | Törölt funkciók, exportok |
+| `Javítva` | Hibajavítások (hivatkozz az issue számára ha van) |
+| `Biztonsági` | Biztonsági javítások |
+
+---
+
+### Changelog követelmények
+
+- **Új resource első commit-jánál** hozz létre a `CHANGELOG.md`-t `1.0.0` verzióval
+- **Minden PR-hoz** frissítsd a changelog-ot az `[Unreleased]` szekcióban
+- **Merge előtt** az `[Unreleased]` szekció tartalmát mozd át az új verziószám alá, dátummal együtt
+- **Törő változtatás esetén** (MAJOR bumpp) emeld ki egy `> ⚠️ Törő változtatás` megjegyzéssel
+- A `fxmanifest.lua` verziója mindig egyezzen a `CHANGELOG.md` legfrissebb bejegyzésével
+
+Törő változtatás jelzése:
+
+```markdown
+## [2.0.0] - 2026-03-03
+> ⚠️ **Törő változtatás:** Az `getOldFunction` export eltávolítva, használd helyette a `getNewFunction`-t.
+
+### Eltávolítva
+- `getOldFunction` export — lásd az új `getNewFunction` exportot
+
+### Hozzáadva
+- `getNewFunction(source, param)` export az újratervezett logikával
+```
+
+---
+
 ## 📄 Dokumentáció
 
 Minden új vagy módosított resource esetén frissíteni kell a `docs/index.html` fájlt. A dokumentációnak tartalmaznia kell:
